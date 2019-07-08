@@ -1,0 +1,32 @@
+baseurl = "https://strconv.com"
+languageCode = "en-us"
+title = "Strconv - A go module"
+theme = "hugo-grapes"
+enableEmoji = true
+publishDir = "."
+googleAnalytics = "UA-143191829-1"
+disableKinds = ["RSS"]
+
+[permalinks]
+  post = "/posts/:slug/"
+
+[menu]
+
+  [[menu.main]]
+    identifier = "home"
+    name = "Home"
+    url = "/"
+    weight = 10
+
+  [[menu.main]]
+    identifier = "posts"
+    name = "Posts"
+    url = "/posts"
+    weight = 20
+  [[menu.main]]
+    identifier = "categories"
+    name = "Categories"
+    url = "/categories"
+    weight = 20
+
+[params]

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en-us"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>用Golang写爬虫(一) - Strconv - A go module</title>
+    <base href="https://strconv.com">
+    <link rel="stylesheet" href="https://strconv.com/css/styles.css">
+    <link rel="stylesheet" href="https://strconv.com/css/font.css">
+    
+      
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+    
+</head>
+<body><header>
+    <nav class="breadcrumb green">
+	<h4><a href="/">Strconv - A go module</a></h4>
+	<div id="space"></div>
+        
+        <a href="/">Home</a>
+        
+        <a href="/categories">Categories</a>
+        
+        <a href="/posts">Posts</a>
+        
+    </nav>
+</header>
+
+<main id="single">
+    <div id="post" class="white">
+	<div class="container">
+	    <div id="title">
+                <h1>用Golang写爬虫(一)</h1>
+                <time datetime="2019-07-03T21:18:56&#43;0800">2019-07-03</time>
+
+	    </div>
+            <section class="post-content">
+                <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+	<span style="color:#a6e22e">start</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">10</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+		<span style="color:#a6e22e">parseUrls</span>(<span style="color:#e6db74">&#34;https://movie.douban.com/top250?start=&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Itoa</span>(<span style="color:#ae81ff">25</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">i</span>))
+	}
+	<span style="color:#a6e22e">elapsed</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Since</span>(<span style="color:#a6e22e">start</span>)
+	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Took %s&#34;</span>, <span style="color:#a6e22e">elapsed</span>)
+}</code></pre></div>
+
+            </section>
+	</div>
+    </div>
+</main>
+<footer class="sand">
+    <span class="footer-text">Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></span>
+</footer>
+<link rel="stylesheet" href="https://strconv.com/css/solarized-light.css"/>
+<script src="https://strconv.com/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
