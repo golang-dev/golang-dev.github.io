@@ -43,9 +43,13 @@ if (!doNotTrack) {
                 
                 <li>
                     <a href="/posts/web-crawler-exercise-1/">用Golang写爬虫(一)</a>
-                    <p><time datetime="2019-07-03T21:18:56&#43;0800">2019-07-03</time>
+                    <p><time datetime="2019-07-04T21:18:56&#43;0800">2019-07-04</time>
 </p>
-		    <p>func main() { start := time.Now() for i := 0; i &lt; 10; i++ { parseUrls(&#34;https://movie.douban.com/top250?start=&#34; + strconv.Itoa(25 * i)) } elapsed := time.Since(start) fmt.Printf(&#34;Took %s&#34;, elapsed) } ...</p>
+		    <p>之前一直都是再用Python写爬虫，最近想体验下Golang写爬虫的感觉，所以就有了这个系列。我想要抓取的页面是豆瓣Top250页面，选择它的理由有3个:
+ 豆瓣页面代码相对规范 豆瓣对爬虫爱好者相对更宽容 Top250页面简洁，很适合拿来练手  我们先看第一版的代码。
+按逻辑我把抓取代码分成2个部分：
+ HTTP请求 解析页面中的内容  我们先看HTTP请求，Golang语言的HTTP请求库不需要使用第三方的库，标准库就内置了足够好的支持：
+import ( &#34;fmt&#34; &#34;net/http&#34; &#34;io/ioutil&#34; ) func fetch (url string) string { fmt.Println(&#34;Fetch Url&#34;, url) client := &amp;http.Client{} req, _ := http.NewRequest(&#34;GET&#34;, url, nil) req.Header.Set(&#34;User-Agent&#34;, &#34;Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)&#34;) resp, err := client.Do(req) if err != nil { fmt.Println(&#34;Http get err:&#34;, err) return &#34;&#34; } if resp.StatusCode != 200 { fmt.Println(&#34;Http status code:&#34;, resp.StatusCode) return &#34;&#34; } defer resp....</p>
                 </li>
                 
             </ul>

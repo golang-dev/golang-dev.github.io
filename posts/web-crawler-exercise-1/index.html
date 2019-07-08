@@ -40,18 +40,118 @@ if (!doNotTrack) {
 	<div class="container">
 	    <div id="title">
                 <h1>用Golang写爬虫(一)</h1>
-                <time datetime="2019-07-03T21:18:56&#43;0800">2019-07-03</time>
+                <time datetime="2019-07-04T21:18:56&#43;0800">2019-07-04</time>
 
 	    </div>
             <section class="post-content">
-                <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-	<span style="color:#a6e22e">start</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
-	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">10</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
-		<span style="color:#a6e22e">parseUrls</span>(<span style="color:#e6db74">&#34;https://movie.douban.com/top250?start=&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Itoa</span>(<span style="color:#ae81ff">25</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">i</span>))
+                
+
+<p>之前一直都是再用Python写爬虫，最近想体验下Golang写爬虫的感觉，所以就有了这个系列。我想要抓取的页面是<a href="https://movie.douban.com/top250">豆瓣Top250页面</a>，选择它的理由有3个:</p>
+
+<ol>
+<li>豆瓣页面代码相对规范</li>
+<li>豆瓣对爬虫爱好者相对更宽容</li>
+<li>Top250页面简洁，很适合拿来练手</li>
+</ol>
+
+<p>我们先看第一版的代码。</p>
+
+<p>按逻辑我把抓取代码分成2个部分：</p>
+
+<ol>
+<li>HTTP请求</li>
+<li>解析页面中的内容</li>
+</ol>
+
+<p>我们先看HTTP请求，Golang语言的HTTP请求库不需要使用第三方的库，标准库就内置了足够好的支持：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#f92672">import</span> (
+	<span style="color:#e6db74">&#34;fmt&#34;</span>
+	<span style="color:#e6db74">&#34;net/http&#34;</span>
+	<span style="color:#e6db74">&#34;io/ioutil&#34;</span>
+)
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">fetch</span> (<span style="color:#a6e22e">url</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">string</span> {
+	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Fetch Url&#34;</span>, <span style="color:#a6e22e">url</span>)
+	<span style="color:#a6e22e">client</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Client</span>{}
+	<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">NewRequest</span>(<span style="color:#e6db74">&#34;GET&#34;</span>, <span style="color:#a6e22e">url</span>, <span style="color:#66d9ef">nil</span>)
+	<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">Header</span>.<span style="color:#a6e22e">Set</span>(<span style="color:#e6db74">&#34;User-Agent&#34;</span>, <span style="color:#e6db74">&#34;Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)&#34;</span>)
+	<span style="color:#a6e22e">resp</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">Do</span>(<span style="color:#a6e22e">req</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Http get err:&#34;</span>, <span style="color:#a6e22e">err</span>)
+        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;&#34;</span>
 	}
-	<span style="color:#a6e22e">elapsed</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Since</span>(<span style="color:#a6e22e">start</span>)
-	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Took %s&#34;</span>, <span style="color:#a6e22e">elapsed</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">StatusCode</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">200</span> {
+		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Http status code:&#34;</span>, <span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">StatusCode</span>)
+		<span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;&#34;</span>
+	}
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">Body</span>.<span style="color:#a6e22e">Close</span>()
+	<span style="color:#a6e22e">body</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ioutil</span>.<span style="color:#a6e22e">ReadAll</span>(<span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">Body</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Read error&#34;</span>, <span style="color:#a6e22e">err</span>)
+		<span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;&#34;</span>
+	}
+	<span style="color:#66d9ef">return</span> string(<span style="color:#a6e22e">body</span>)
 }</code></pre></div>
+
+<p>我把URL请求的逻辑都放在了fetch函数中，里面做了一些异常处理。值得说的有2点：</p>
+
+<ol>
+<li>在Header中设置了User-Agent，让访问看起来更像搜索引擎Bot。如果一个网站希望自己的内容被Google收录那么他就不会拒绝这样的UA的访问。</li>
+<li>需要通过ioutil.ReadAll 读取resp的body内容，最后用string(body)把它转化成字符串</li>
+</ol>
+
+<p>接着就是解析页面的部分：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#f92672">import</span> (
+    <span style="color:#e6db74">&#34;regexp&#34;</span>
+	<span style="color:#e6db74">&#34;strings&#34;</span>
+)
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">parseUrls</span>(<span style="color:#a6e22e">url</span> <span style="color:#66d9ef">string</span>) {
+	<span style="color:#a6e22e">body</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#a6e22e">url</span>)
+	<span style="color:#a6e22e">body</span> = <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">Replace</span>(<span style="color:#a6e22e">body</span>, <span style="color:#e6db74">&#34;\n&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+	<span style="color:#a6e22e">rp</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">regexp</span>.<span style="color:#a6e22e">MustCompile</span>(<span style="color:#e6db74">`&lt;div class=&#34;hd&#34;&gt;(.*?)&lt;/div&gt;`</span>)
+	<span style="color:#a6e22e">titleRe</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">regexp</span>.<span style="color:#a6e22e">MustCompile</span>(<span style="color:#e6db74">`&lt;span class=&#34;title&#34;&gt;(.*?)&lt;/span&gt;`</span>)
+	<span style="color:#a6e22e">idRe</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">regexp</span>.<span style="color:#a6e22e">MustCompile</span>(<span style="color:#e6db74">`&lt;a href=&#34;https://movie.douban.com/subject/(\d+)/&#34;`</span>)
+	<span style="color:#a6e22e">items</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rp</span>.<span style="color:#a6e22e">FindAllStringSubmatch</span>(<span style="color:#a6e22e">body</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">item</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">items</span> {
+		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">idRe</span>.<span style="color:#a6e22e">FindStringSubmatch</span>(<span style="color:#a6e22e">item</span>[<span style="color:#ae81ff">1</span>])[<span style="color:#ae81ff">1</span>],
+			<span style="color:#a6e22e">titleRe</span>.<span style="color:#a6e22e">FindStringSubmatch</span>(<span style="color:#a6e22e">item</span>[<span style="color:#ae81ff">1</span>])[<span style="color:#ae81ff">1</span>])
+	}
+}</code></pre></div>
+
+<p>这篇文章我们主要体验用标准库完成页面的解析，也就是用正则表达式包regexp来完成。不过要注意需要用<code>strings.Replace(body, &quot;\n&quot;, &quot;&quot;, -1)</code>这步把body内容中的回车符去掉，要不然下面的正则表达式<code>.*</code>就不符合了。<code>FindAllStringSubmatch</code>方法会把符合正则表达式的结果都解析出来（一个列表），而<code>FindStringSubmatch</code>是找第一个符合的结果。</p>
+
+<p>Top250页面是要翻页的，最后在main函数里面实现抓取全部Top250页面。另外为了和之后的改进做对比，我们加上代码运行耗时的逻辑：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#f92672">import</span> (
+       <span style="color:#e6db74">&#34;time&#34;</span>
+       <span style="color:#e6db74">&#34;strconv&#34;</span>
+)
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+        <span style="color:#a6e22e">start</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">10</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+                <span style="color:#a6e22e">parseUrls</span>(<span style="color:#e6db74">&#34;https://movie.douban.com/top250?start=&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Itoa</span>(<span style="color:#ae81ff">25</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">i</span>))
+        }
+        <span style="color:#a6e22e">elapsed</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Since</span>(<span style="color:#a6e22e">start</span>)
+        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Took %s&#34;</span>, <span style="color:#a6e22e">elapsed</span>)
+}</code></pre></div>
+
+<p>在Golang中把数字转成字符串需要使用<code>strconv.Itoa</code>（嘿嘿，本博客域名就是这个模块），这样就可以根据start的参数的不通拼出正确的页面路径。用一个for循环完成翻页。</p>
+
+<p>运行起来非常快：</p>
+
+<pre><code>❯ go run crawler/doubanCrawler1.go
+... # 省略输出
+Took 1.454627547s
+</code></pre>
+
+<p>通过终端输出可以看到我们拿到了对应电影条目的ID和电影标题！</p>
+
+<h3 id="代码地址">代码地址</h3>
+
+<p>完整代码可以在<a href="https://github.com/golang-dev/strconv.code/blob/master/crawler/doubanCrawler1.go">这个地址</a>找到。</p>
 
             </section>
 	</div>
