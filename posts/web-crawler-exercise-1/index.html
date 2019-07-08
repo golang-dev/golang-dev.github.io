@@ -1,50 +1,136 @@
 <!DOCTYPE html>
-<html lang="en-us"><head>
+<html lang="en">
+
+  <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>用Golang写爬虫(一) - Strconv - A go module</title>
-    <base href="https://strconv.com">
-    <link rel="stylesheet" href="https://strconv.com/css/styles.css">
-    <link rel="stylesheet" href="https://strconv.com/css/font.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="用Golang写爬虫(一)"/>
+<meta name="twitter:description" content="之前一直都是再用Python写爬虫，最近想体验下Golang写爬虫的感觉，所以就有了这个系列。我想要抓取的页面是豆瓣Top250页面，选择它的理由有3个:
+ 豆瓣页面代码相对规范 豆瓣对爬虫爱好者相对更宽容 Top250页面简洁，很适合拿来练手  我们先看第一版的代码。
+按逻辑我把抓取代码分成2个部分：
+ HTTP请求 解析页面中的内容  我们先看HTTP请求，Golang语言的HTTP请求库不需要使用第三方的库，标准库就内置了足够好的支持：
+import ( &#34;fmt&#34; &#34;net/http&#34; &#34;io/ioutil&#34; ) func fetch (url string) string { fmt.Println(&#34;Fetch Url&#34;, url) client := &amp;http.Client{} req, _ := http.NewRequest(&#34;GET&#34;, url, nil) req.Header.Set(&#34;User-Agent&#34;, &#34;Mozilla/5.0 (compatible; Googlebot/2.1; &#43;http://www.google.com/bot.html)&#34;) resp, err := client.Do(req) if err != nil { fmt.Println(&#34;Http get err:&#34;, err) return &#34;&#34; } if resp.StatusCode != 200 { fmt.Println(&#34;Http status code:&#34;, resp.StatusCode) return &#34;&#34; } defer resp."/>
+
+    <meta property="og:title" content="用Golang写爬虫(一)" />
+<meta property="og:description" content="之前一直都是再用Python写爬虫，最近想体验下Golang写爬虫的感觉，所以就有了这个系列。我想要抓取的页面是豆瓣Top250页面，选择它的理由有3个:
+ 豆瓣页面代码相对规范 豆瓣对爬虫爱好者相对更宽容 Top250页面简洁，很适合拿来练手  我们先看第一版的代码。
+按逻辑我把抓取代码分成2个部分：
+ HTTP请求 解析页面中的内容  我们先看HTTP请求，Golang语言的HTTP请求库不需要使用第三方的库，标准库就内置了足够好的支持：
+import ( &#34;fmt&#34; &#34;net/http&#34; &#34;io/ioutil&#34; ) func fetch (url string) string { fmt.Println(&#34;Fetch Url&#34;, url) client := &amp;http.Client{} req, _ := http.NewRequest(&#34;GET&#34;, url, nil) req.Header.Set(&#34;User-Agent&#34;, &#34;Mozilla/5.0 (compatible; Googlebot/2.1; &#43;http://www.google.com/bot.html)&#34;) resp, err := client.Do(req) if err != nil { fmt.Println(&#34;Http get err:&#34;, err) return &#34;&#34; } if resp.StatusCode != 200 { fmt.Println(&#34;Http status code:&#34;, resp.StatusCode) return &#34;&#34; } defer resp." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/web-crawler-exercise-1/" />
+<meta property="article:published_time" content="2019-07-04T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-04T00:00:00&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/web-crawler-exercise-1/">
+    
+    <title>
+  用Golang写爬虫(一) · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/web-crawler-exercise-1/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
       
-<script type="application/javascript">
-var doNotTrack = false;
-if (!doNotTrack) {
-	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-	ga('create', 'UA-143191829-1', 'auto');
-	
-	ga('send', 'pageview');
-}
-</script>
-<script async src='https://www.google-analytics.com/analytics.js'></script>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
 
-    
-</head>
-<body><header>
-    <nav class="breadcrumb green">
-	<h4><a href="/">Strconv - A go module</a></h4>
-	<div id="space"></div>
-        
-        <a href="/">Home</a>
-        
-        <a href="/categories">Categories</a>
-        
-        <a href="/posts">Posts</a>
-        
-    </nav>
-</header>
 
-<main id="single">
-    <div id="post" class="white">
-	<div class="container">
-	    <div id="title">
-                <h1>用Golang写爬虫(一)</h1>
-                <time datetime="2019-07-04T21:18:56&#43;0800">2019-07-04</time>
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">用Golang写爬虫(一)</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-07-04T00:00:00Z'>
+                July 4, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              One minute read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/crawler/">crawler</a></div>
 
-	    </div>
-            <section class="post-content">
-                
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="https://strconv.com/tags/crawler/">crawler</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
 
 <p>之前一直都是再用Python写爬虫，最近想体验下Golang写爬虫的感觉，所以就有了这个系列。我想要抓取的页面是<a href="https://movie.douban.com/top250">豆瓣Top250页面</a>，选择它的理由有3个:</p>
 
@@ -65,33 +151,33 @@ if (!doNotTrack) {
 
 <p>我们先看HTTP请求，Golang语言的HTTP请求库不需要使用第三方的库，标准库就内置了足够好的支持：</p>
 
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#f92672">import</span> (
-	<span style="color:#e6db74">&#34;fmt&#34;</span>
-	<span style="color:#e6db74">&#34;net/http&#34;</span>
-	<span style="color:#e6db74">&#34;io/ioutil&#34;</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+	<span style="color:#f1fa8c">&#34;net/http&#34;</span>
+	<span style="color:#f1fa8c">&#34;io/ioutil&#34;</span>
 )
 
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">fetch</span> (<span style="color:#a6e22e">url</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">string</span> {
-	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Fetch Url&#34;</span>, <span style="color:#a6e22e">url</span>)
-	<span style="color:#a6e22e">client</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Client</span>{}
-	<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">NewRequest</span>(<span style="color:#e6db74">&#34;GET&#34;</span>, <span style="color:#a6e22e">url</span>, <span style="color:#66d9ef">nil</span>)
-	<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">Header</span>.<span style="color:#a6e22e">Set</span>(<span style="color:#e6db74">&#34;User-Agent&#34;</span>, <span style="color:#e6db74">&#34;Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)&#34;</span>)
-	<span style="color:#a6e22e">resp</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">Do</span>(<span style="color:#a6e22e">req</span>)
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Http get err:&#34;</span>, <span style="color:#a6e22e">err</span>)
-        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;&#34;</span>
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">fetch</span> (url <span style="color:#8be9fd">string</span>) <span style="color:#8be9fd">string</span> {
+	fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Fetch Url&#34;</span>, url)
+	client <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">&amp;</span>http.Client{}
+	req, _ <span style="color:#ff79c6">:=</span> http.<span style="color:#50fa7b">NewRequest</span>(<span style="color:#f1fa8c">&#34;GET&#34;</span>, url, <span style="color:#ff79c6">nil</span>)
+	req.Header.<span style="color:#50fa7b">Set</span>(<span style="color:#f1fa8c">&#34;User-Agent&#34;</span>, <span style="color:#f1fa8c">&#34;Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)&#34;</span>)
+	resp, err <span style="color:#ff79c6">:=</span> client.<span style="color:#50fa7b">Do</span>(req)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Http get err:&#34;</span>, err)
+        <span style="color:#ff79c6">return</span> <span style="color:#f1fa8c">&#34;&#34;</span>
 	}
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">StatusCode</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">200</span> {
-		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Http status code:&#34;</span>, <span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">StatusCode</span>)
-		<span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;&#34;</span>
+	<span style="color:#ff79c6">if</span> resp.StatusCode <span style="color:#ff79c6">!=</span> <span style="color:#bd93f9">200</span> {
+		fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Http status code:&#34;</span>, resp.StatusCode)
+		<span style="color:#ff79c6">return</span> <span style="color:#f1fa8c">&#34;&#34;</span>
 	}
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">Body</span>.<span style="color:#a6e22e">Close</span>()
-	<span style="color:#a6e22e">body</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ioutil</span>.<span style="color:#a6e22e">ReadAll</span>(<span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">Body</span>)
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Read error&#34;</span>, <span style="color:#a6e22e">err</span>)
-		<span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;&#34;</span>
+	<span style="color:#ff79c6">defer</span> resp.Body.<span style="color:#50fa7b">Close</span>()
+	body, err <span style="color:#ff79c6">:=</span> ioutil.<span style="color:#50fa7b">ReadAll</span>(resp.Body)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Read error&#34;</span>, err)
+		<span style="color:#ff79c6">return</span> <span style="color:#f1fa8c">&#34;&#34;</span>
 	}
-	<span style="color:#66d9ef">return</span> string(<span style="color:#a6e22e">body</span>)
+	<span style="color:#ff79c6">return</span> <span style="color:#8be9fd;font-style:italic">string</span>(body)
 }</code></pre></div>
 
 <p>我把URL请求的逻辑都放在了fetch函数中，里面做了一些异常处理。值得说的有2点：</p>
@@ -103,21 +189,21 @@ if (!doNotTrack) {
 
 <p>接着就是解析页面的部分：</p>
 
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#f92672">import</span> (
-    <span style="color:#e6db74">&#34;regexp&#34;</span>
-	<span style="color:#e6db74">&#34;strings&#34;</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">import</span> (
+    <span style="color:#f1fa8c">&#34;regexp&#34;</span>
+	<span style="color:#f1fa8c">&#34;strings&#34;</span>
 )
 
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">parseUrls</span>(<span style="color:#a6e22e">url</span> <span style="color:#66d9ef">string</span>) {
-	<span style="color:#a6e22e">body</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#a6e22e">url</span>)
-	<span style="color:#a6e22e">body</span> = <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">Replace</span>(<span style="color:#a6e22e">body</span>, <span style="color:#e6db74">&#34;\n&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
-	<span style="color:#a6e22e">rp</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">regexp</span>.<span style="color:#a6e22e">MustCompile</span>(<span style="color:#e6db74">`&lt;div class=&#34;hd&#34;&gt;(.*?)&lt;/div&gt;`</span>)
-	<span style="color:#a6e22e">titleRe</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">regexp</span>.<span style="color:#a6e22e">MustCompile</span>(<span style="color:#e6db74">`&lt;span class=&#34;title&#34;&gt;(.*?)&lt;/span&gt;`</span>)
-	<span style="color:#a6e22e">idRe</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">regexp</span>.<span style="color:#a6e22e">MustCompile</span>(<span style="color:#e6db74">`&lt;a href=&#34;https://movie.douban.com/subject/(\d+)/&#34;`</span>)
-	<span style="color:#a6e22e">items</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rp</span>.<span style="color:#a6e22e">FindAllStringSubmatch</span>(<span style="color:#a6e22e">body</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
-	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">item</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">items</span> {
-		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">idRe</span>.<span style="color:#a6e22e">FindStringSubmatch</span>(<span style="color:#a6e22e">item</span>[<span style="color:#ae81ff">1</span>])[<span style="color:#ae81ff">1</span>],
-			<span style="color:#a6e22e">titleRe</span>.<span style="color:#a6e22e">FindStringSubmatch</span>(<span style="color:#a6e22e">item</span>[<span style="color:#ae81ff">1</span>])[<span style="color:#ae81ff">1</span>])
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">parseUrls</span>(url <span style="color:#8be9fd">string</span>) {
+	body <span style="color:#ff79c6">:=</span> <span style="color:#50fa7b">fetch</span>(url)
+	body = strings.<span style="color:#50fa7b">Replace</span>(body, <span style="color:#f1fa8c">&#34;\n&#34;</span>, <span style="color:#f1fa8c">&#34;&#34;</span>, <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>)
+	rp <span style="color:#ff79c6">:=</span> regexp.<span style="color:#50fa7b">MustCompile</span>(<span style="color:#f1fa8c">`&lt;div class=&#34;hd&#34;&gt;(.*?)&lt;/div&gt;`</span>)
+	titleRe <span style="color:#ff79c6">:=</span> regexp.<span style="color:#50fa7b">MustCompile</span>(<span style="color:#f1fa8c">`&lt;span class=&#34;title&#34;&gt;(.*?)&lt;/span&gt;`</span>)
+	idRe <span style="color:#ff79c6">:=</span> regexp.<span style="color:#50fa7b">MustCompile</span>(<span style="color:#f1fa8c">`&lt;a href=&#34;https://movie.douban.com/subject/(\d+)/&#34;`</span>)
+	items <span style="color:#ff79c6">:=</span> rp.<span style="color:#50fa7b">FindAllStringSubmatch</span>(body, <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>)
+	<span style="color:#ff79c6">for</span> _, item <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">range</span> items {
+		fmt.<span style="color:#50fa7b">Println</span>(idRe.<span style="color:#50fa7b">FindStringSubmatch</span>(item[<span style="color:#bd93f9">1</span>])[<span style="color:#bd93f9">1</span>],
+			titleRe.<span style="color:#50fa7b">FindStringSubmatch</span>(item[<span style="color:#bd93f9">1</span>])[<span style="color:#bd93f9">1</span>])
 	}
 }</code></pre></div>
 
@@ -125,27 +211,26 @@ if (!doNotTrack) {
 
 <p>Top250页面是要翻页的，最后在main函数里面实现抓取全部Top250页面。另外为了和之后的改进做对比，我们加上代码运行耗时的逻辑：</p>
 
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#f92672">import</span> (
-       <span style="color:#e6db74">&#34;time&#34;</span>
-       <span style="color:#e6db74">&#34;strconv&#34;</span>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">import</span> (
+       <span style="color:#f1fa8c">&#34;time&#34;</span>
+       <span style="color:#f1fa8c">&#34;strconv&#34;</span>
 )
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-        <span style="color:#a6e22e">start</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
-        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">10</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
-                <span style="color:#a6e22e">parseUrls</span>(<span style="color:#e6db74">&#34;https://movie.douban.com/top250?start=&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Itoa</span>(<span style="color:#ae81ff">25</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">i</span>))
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+        start <span style="color:#ff79c6">:=</span> time.<span style="color:#50fa7b">Now</span>()
+        <span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">0</span>; i &lt; <span style="color:#bd93f9">10</span>; i<span style="color:#ff79c6">++</span> {
+                <span style="color:#50fa7b">parseUrls</span>(<span style="color:#f1fa8c">&#34;https://movie.douban.com/top250?start=&#34;</span> <span style="color:#ff79c6">+</span> strconv.<span style="color:#50fa7b">Itoa</span>(<span style="color:#bd93f9">25</span> <span style="color:#ff79c6">*</span> i))
         }
-        <span style="color:#a6e22e">elapsed</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Since</span>(<span style="color:#a6e22e">start</span>)
-        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Took %s&#34;</span>, <span style="color:#a6e22e">elapsed</span>)
+        elapsed <span style="color:#ff79c6">:=</span> time.<span style="color:#50fa7b">Since</span>(start)
+        fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Took %s&#34;</span>, elapsed)
 }</code></pre></div>
 
 <p>在Golang中把数字转成字符串需要使用<code>strconv.Itoa</code>（嘿嘿，本博客域名就是这个模块），这样就可以根据start的参数的不通拼出正确的页面路径。用一个for循环完成翻页。</p>
 
 <p>运行起来非常快：</p>
 
-<pre><code>❯ go run crawler/doubanCrawler1.go
-... # 省略输出
-Took 1.454627547s
-</code></pre>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run crawler/doubanCrawler1.go
+... <span style="color:#6272a4"># 省略输出</span>
+Took <span style="color:#bd93f9">1</span>.454627547s</code></pre></div>
 
 <p>通过终端输出可以看到我们拿到了对应电影条目的ID和电影标题！</p>
 
@@ -153,15 +238,54 @@ Took 1.454627547s
 
 <p>完整代码可以在<a href="https://github.com/golang-dev/strconv.code/blob/master/crawler/doubanCrawler1.go">这个地址</a>找到。</p>
 
-            </section>
-	</div>
-    </div>
-</main>
-<footer class="sand">
-    <span class="footer-text">Powered by <a href="https://gohugo.io/" target="_blank">Hugo</a></span>
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://strconv.com/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
 </footer>
-<link rel="stylesheet" href="https://strconv.com/css/solarized-light.css"/>
-<script src="https://strconv.com/js/highlight.pack.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
-</body>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
 </html>

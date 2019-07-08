@@ -1,0 +1,16 @@
+<section class="container list">
+  <h1 class="title">
+    {{- if eq .Kind "taxonomy" -}}
+      {{- i18n .Data.Singular | title -}}
+      {{- print ": " -}}
+    {{- end -}}
+
+    {{- .Title -}}
+  </h1>
+  <ul>
+    {{ range .Paginator.Pages }}
+      {{- .Render "li" -}}
+    {{ end }}
+  </ul>
+  {{ partial "pagination.html" . }}
+</section>

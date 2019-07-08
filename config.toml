@@ -1,14 +1,37 @@
 baseurl = "https://strconv.com"
 languageCode = "en-us"
-title = "Strconv - A go module"
-theme = "hugo-grapes"
-enableEmoji = true
+title = "strconv"
+theme = "hugo-coder"
 publishDir = "."
+paginate = 10
 googleAnalytics = "UA-143191829-1"
 disableKinds = ["RSS"]
+canonifyurls = true
+pygmentsCodefences = true
+pygmentsStyle = "dracula"
 
-[permalinks]
-  post = "/posts/:slug/"
+[params]
+    description = "strconv - 我是一个Golang模块"
+    keywords = "golang,go"
+    footercontent = "我是一个Golang模块."
+
+    dateformat = "January 2, 2006"
+
+    hideCopyright = false
+
+    rtl = false
+
+    # Use inverted colors
+    inverted = false
+
+    # Series see also post count
+    maxSeeAlsoItems = 10
+
+    # Custom CSS
+    custom_css = []
+
+    # Custom JS
+    custom_js = []
 
 [menu]
 
@@ -16,17 +39,19 @@ disableKinds = ["RSS"]
     identifier = "home"
     name = "Home"
     url = "/"
-    weight = 10
-
+    weight = 1
   [[menu.main]]
-    identifier = "posts"
-    name = "Posts"
-    url = "/posts"
-    weight = 20
+    identifier = "tags"
+    name = "Tags"
+    url = "/tags/"
+    weight = 2
   [[menu.main]]
     identifier = "categories"
     name = "Categories"
-    url = "/categories"
-    weight = 20
-
-[params]
+    url = "/categories/"
+    weight = 3
+  [[menu.main]]
+    identifier = "about"
+    name = "About"
+    url = "/about/"
+    weight = 4

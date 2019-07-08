@@ -1,8 +1,10 @@
----
-title: "用Golang写爬虫(一)"
-date: 2019-07-04T21:18:56+08:00
-categories: crawler
----
++++
+date = "2019-07-04"
+title = "用Golang写爬虫(一)"
+slug = "web-crawler-exercise-1"
+tags = ["crawler"]
+categories = ["crawler"]
++++
 
 之前一直都是再用Python写爬虫，最近想体验下Golang写爬虫的感觉，所以就有了这个系列。我想要抓取的页面是[豆瓣Top250页面](https://movie.douban.com/top250)，选择它的理由有3个:
 
@@ -19,7 +21,7 @@ categories: crawler
 
 我们先看HTTP请求，Golang语言的HTTP请求库不需要使用第三方的库，标准库就内置了足够好的支持：
 
-{{< highlight golang >}}
+{{< highlight go >}}
 import (
 	"fmt"
 	"net/http"
@@ -57,7 +59,7 @@ func fetch (url string) string {
 
 接着就是解析页面的部分：
 
-{{< highlight golang >}}
+{{< highlight go >}}
 import (
     "regexp"
 	"strings"
@@ -81,7 +83,7 @@ func parseUrls(url string) {
 
 Top250页面是要翻页的，最后在main函数里面实现抓取全部Top250页面。另外为了和之后的改进做对比，我们加上代码运行耗时的逻辑：
 
-{{< highlight golang >}}
+{{< highlight go >}}
 import (
        "time"
        "strconv"
@@ -100,11 +102,11 @@ func main() {
 
 运行起来非常快：
 
-```
+{{< highlight bash >}}
 ❯ go run crawler/doubanCrawler1.go
 ... # 省略输出
 Took 1.454627547s
-```
+{{< /highlight >}}
 
 通过终端输出可以看到我们拿到了对应电影条目的ID和电影标题！
 
