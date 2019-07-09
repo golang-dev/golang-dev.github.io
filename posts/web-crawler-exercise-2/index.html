@@ -10,7 +10,7 @@
     <meta name="keywords" content="golang,go">
 
     <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="用Golang写爬虫(二)"/>
+<meta name="twitter:title" content="用Golang写爬虫(二) - 并发"/>
 <meta name="twitter:description" content="在上篇文章里面我用Go写了一个爬虫，但是它的执行是串行的，效率很低，这篇文章把它改成并发的。由于这个程序只抓取10个页面，大概1s多就完成了，为了对比我们先给之前的doubanCrawler1.go加一点Sleep的代码，让它跑的「慢」些：
 func parseUrls(url string) { ... time.Sleep(2 * time.Second) } 这样运行起来大体可以计算出来程序跑完约需要21s&#43;，我们运行一下试试：
 ❯ go run doubanCrawler2.go ... Took 21.315744555s 已经很慢了。接着我们开始让它变得更快~
@@ -18,7 +18,7 @@ goroutine的错误用法 先修改成用Go原生支持的并发方案goroutine�
 func main() { start := time.Now() for i := 0; i &lt; 10; i&#43;&#43; { go parseUrls(&#34;https://movie.douban.com/top250?start=&#34; &#43; strconv.Itoa(25*i)) } elapsed := time.Since(start) fmt.Printf(&#34;Took %s&#34;, elapsed) } 就是在parseUrls函数前加了go关键字。但其实这样就是不对的，运行的话不会抓取到任何结果。因为协程刚生成，整个程序就结束了，goroutine还没抓完呢。怎么办呢？可以结束前Sleep一个时间，这个时间应该要大于所有goroutine执行最慢的那个，这样就保证了全部协程都能正常运行完再结束(doubanCrawler3.go)：
 func main() { start := time.Now() for i := 0; i &lt; 10; i&#43;&#43; { go parseUrls(&#34;https://movie.douban.com/top250?start=&#34; &#43; strconv.Itoa(25*i)) } time."/>
 
-    <meta property="og:title" content="用Golang写爬虫(二)" />
+    <meta property="og:title" content="用Golang写爬虫(二) - 并发" />
 <meta property="og:description" content="在上篇文章里面我用Go写了一个爬虫，但是它的执行是串行的，效率很低，这篇文章把它改成并发的。由于这个程序只抓取10个页面，大概1s多就完成了，为了对比我们先给之前的doubanCrawler1.go加一点Sleep的代码，让它跑的「慢」些：
 func parseUrls(url string) { ... time.Sleep(2 * time.Second) } 这样运行起来大体可以计算出来程序跑完约需要21s&#43;，我们运行一下试试：
 ❯ go run doubanCrawler2.go ... Took 21.315744555s 已经很慢了。接着我们开始让它变得更快~
@@ -35,7 +35,7 @@ func main() { start := time.Now() for i := 0; i &lt; 10; i&#43;&#43; { go parseU
       <base href="https://strconv.com/posts/web-crawler-exercise-2/">
     
     <title>
-  用Golang写爬虫(二) · strconv
+  用Golang写爬虫(二) - 并发 · strconv
 </title>
 
     
@@ -105,7 +105,7 @@ func main() { start := time.Now() for i := 0; i &lt; 10; i&#43;&#43; { go parseU
     <article>
       <header>
         <div class="post-title">
-          <h1 class="title">用Golang写爬虫(二)</h1>
+          <h1 class="title">用Golang写爬虫(二) - 并发</h1>
         </div>
         <div class="post-meta">
           <div class="date">
@@ -196,7 +196,7 @@ Took <span style="color:#bd93f9">4</span>.000849896s  <span style="color:#6272a4
         <span style="color:#ff79c6">go</span> <span style="color:#50fa7b">parseUrls</span>(<span style="color:#f1fa8c">&#34;https://movie.douban.com/top250?start=&#34;</span><span style="color:#ff79c6">+</span>strconv.<span style="color:#50fa7b">Itoa</span>(<span style="color:#bd93f9">25</span><span style="color:#ff79c6">*</span>i), ch)
     }
 
-    <span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">1</span>; i &lt; <span style="color:#bd93f9">10</span>; i<span style="color:#ff79c6">++</span> {
+    <span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">0</span>; i &lt; <span style="color:#bd93f9">10</span>; i<span style="color:#ff79c6">++</span> {
         <span style="color:#ff79c6">&lt;-</span>ch
     }
 
@@ -247,7 +247,7 @@ Took <span style="color:#bd93f9">2</span>.450826901s  <span style="color:#6272a4
 
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run doubanCrawler5.go
 ...
-Took <span style="color:#bd93f9">2</span>.403050294s  <span style="color:#6272a4"># 这个时间和之前的信道用法效果一致！</span></code></pre></div>
+Took <span style="color:#bd93f9">2</span>.382876529s  <span style="color:#6272a4"># 这个时间和之前的信道用法效果一致！</span></code></pre></div>
 
 <h3 id="后记">后记</h3>
 

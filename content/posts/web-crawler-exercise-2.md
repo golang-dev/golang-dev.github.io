@@ -1,6 +1,6 @@
 +++
 date = "2019-07-08"
-title = "用Golang写爬虫(二)"
+title = "用Golang写爬虫(二) - 并发"
 slug = "web-crawler-exercise-2"
 tags = ["crawler"]
 categories = ["crawler"]
@@ -79,7 +79,7 @@ func main() {
         go parseUrls("https://movie.douban.com/top250?start="+strconv.Itoa(25*i), ch)
     }
 
-    for i := 1; i < 10; i++ {
+    for i := 0; i < 10; i++ {
         <-ch
     }
 
@@ -136,7 +136,7 @@ func main() {
 {{< highlight bash >}}
 ❯ go run doubanCrawler5.go
 ...
-Took 2.403050294s  # 这个时间和之前的信道用法效果一致！
+Took 2.382876529s  # 这个时间和之前的信道用法效果一致！
 {{< /highlight >}}
 
 ### 后记
