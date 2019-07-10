@@ -98,7 +98,7 @@ PS：其实爬虫练习的目的已经达到了，获得更多内容就是多写
 
 ### 代码地址
 
-完整代码可以在[这个地址](https://github.com/golang-dev/strconv.code/blob/master/qoquery/doubanCrawler.go)找到。
+完整代码可以在[这个地址](https://github.com/golang-dev/strconv.code/blob/master/goquery/doubanCrawler.go)找到。
 
 ### 延伸阅读
 
