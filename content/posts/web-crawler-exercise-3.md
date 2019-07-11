@@ -2,7 +2,7 @@
 date = "2019-07-09"
 title = "用Golang写爬虫(三) - 使用goquery"
 slug = "web-crawler-exercise-3"
-tags = ["crawler", "concurrency"]
+tags = ["crawler", "goquery"]
 categories = ["crawler"]
 +++
 

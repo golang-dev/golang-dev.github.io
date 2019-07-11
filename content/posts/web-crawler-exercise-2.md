@@ -2,7 +2,7 @@
 date = "2019-07-08"
 title = "用Golang写爬虫(二) - 并发"
 slug = "web-crawler-exercise-2"
-tags = ["crawler"]
+tags = ["crawler", "concurrency"]
 categories = ["crawler"]
 +++
 
@@ -54,13 +54,15 @@ func main() {
 }
 {{< /highlight >}}
 
-在for循环后加了Sleep 4秒。当然这个Sleep的时间不要控制，假设某次请求花的时间超了，让总体时间超过4s就看到结果程序结束了，假如全部goroutine都在3秒（2秒固定Sleep+1秒程序运行）结束，那么多Sleep的一秒就浪费了！运行一下：
+在for循环后加了Sleep 4秒。运行一下：
 
 {{< highlight bash >}}
 ❯ go run doubanCrawler3.go
 ...
 Took 4.000849896s  # 这个时间大致就是4s
 {{< /highlight >}}
+
+当然这个Sleep的时间不好控制，假设某次请求花的时间超了，总体时间超过4s程序结束了但这个协程其实还没运行结束；而假如全部goroutine都在3秒（2秒固定Sleep+1秒程序运行）结束，那么多Sleep的一秒就浪费了！
 
 ### goroutine的正确用法
 
@@ -100,7 +102,7 @@ Took 2.450826901s  # 这个时间比之前的写死了4s的那个优化太多了
 
 ### sync.WaitGroup
 
-还有一个好的方案sync.WaitGroup。我们这个程序只是打印抓到到的对应内容，所以正好用WaitGroup：等待一组并发操作完成：
+还有一个好的方案sync.WaitGroup。我们这个程序只是打印抓到的对应内容，所以正好用WaitGroup：等待一组并发操作完成：
 
 {{< highlight go >}}
 import (

@@ -126,7 +126,9 @@ func main() { start := time.Now() for i := 0; i &lt; 10; i&#43;&#43; { go parseU
 
           <div class="tags">
   <i class="fas fa-tag"></i>
-    <a href="https://strconv.com/tags/crawler/">crawler</a></div>
+    <a href="https://strconv.com/tags/crawler/">crawler</a>
+      <span class="separator">•</span>
+    <a href="https://strconv.com/tags/concurrency/">concurrency</a></div>
 
         </div>
       </header>
@@ -174,11 +176,13 @@ Took <span style="color:#bd93f9">21</span>.315744555s</code></pre></div>
     fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Took %s&#34;</span>, elapsed)
 }</code></pre></div>
 
-<p>在for循环后加了Sleep 4秒。当然这个Sleep的时间不要控制，假设某次请求花的时间超了，让总体时间超过4s就看到结果程序结束了，假如全部goroutine都在3秒（2秒固定Sleep+1秒程序运行）结束，那么多Sleep的一秒就浪费了！运行一下：</p>
+<p>在for循环后加了Sleep 4秒。运行一下：</p>
 
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run doubanCrawler3.go
 ...
 Took <span style="color:#bd93f9">4</span>.000849896s  <span style="color:#6272a4"># 这个时间大致就是4s</span></code></pre></div>
+
+<p>当然这个Sleep的时间不好控制，假设某次请求花的时间超了，总体时间超过4s程序结束了但这个协程其实还没运行结束；而假如全部goroutine都在3秒（2秒固定Sleep+1秒程序运行）结束，那么多Sleep的一秒就浪费了！</p>
 
 <h3 id="goroutine的正确用法">goroutine的正确用法</h3>
 
@@ -214,7 +218,7 @@ Took <span style="color:#bd93f9">2</span>.450826901s  <span style="color:#6272a4
 
 <h3 id="sync-waitgroup">sync.WaitGroup</h3>
 
-<p>还有一个好的方案sync.WaitGroup。我们这个程序只是打印抓到到的对应内容，所以正好用WaitGroup：等待一组并发操作完成：</p>
+<p>还有一个好的方案sync.WaitGroup。我们这个程序只是打印抓到的对应内容，所以正好用WaitGroup：等待一组并发操作完成：</p>
 
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">import</span> (
 	<span style="color:#ff79c6">...</span>

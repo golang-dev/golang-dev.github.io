@@ -2,7 +2,7 @@
 date = "2019-07-10"
 title = "用Golang写爬虫(四) - 使用soup"
 slug = "web-crawler-exercise-4"
-tags = ["crawler"]
+tags = ["crawler", "soup"]
 categories = ["crawler"]
 +++
 
