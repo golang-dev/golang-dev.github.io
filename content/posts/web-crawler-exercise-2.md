@@ -116,10 +116,10 @@ func main() {
 	wg.Add(10)
 
 	for i := 0; i < 10; i++ {
-		go func() {
+		go func(i int) {
 			defer wg.Done()
 			parseUrls("https://movie.douban.com/top250?start="+strconv.Itoa(25*i))
-		}()
+		}(i)
 	}
 
 	wg.Wait()
@@ -131,7 +131,31 @@ func main() {
 
 一开始我们给调用wg.Add添加要等待的goroutine量，我们的页面总数就是10，所以这里可以直接写出来。
 
-另外这里使用了defer关键字来调用wg.Done，以确保在退出goroutine的闭包之前，向WaitGroup表明了我们已经退出。由于要执行wg.Done和parseUrls2件事，所以不能直接用go关键字，需要把语句包一下。
+另外这里使用了defer关键字来调用wg.Done，以确保在退出goroutine的闭包之前，向WaitGroup表明了我们已经退出。由于要执行wg.Done和parseUrls2件事，所以不能直接用go关键字，需要把语句包一下。不过要注意，在闭包中需要把参数i作为func的参数传入，要不然i会使用最后一次循环的那个值：
+
+{{< highlight go >}}
+// 错误代码👇
+for i := 0; i < 10; i++ {
+    go func() {
+        defer wg.Done()
+        parseUrls("https://movie.douban.com/top250?start="+strconv.Itoa(25*i))
+    }()
+}
+❯ go run crawler/doubanCrawler5.go
+Fetch Url https://movie.douban.com/top250?start=75
+Fetch Url https://movie.douban.com/top250?start=250
+Fetch Url https://movie.douban.com/top250?start=250
+Fetch Url https://movie.douban.com/top250?start=250
+Fetch Url https://movie.douban.com/top250?start=250
+Fetch Url https://movie.douban.com/top250?start=250
+Fetch Url https://movie.douban.com/top250?start=250
+Fetch Url https://movie.douban.com/top250?start=250
+Fetch Url https://movie.douban.com/top250?start=250
+Fetch Url https://movie.douban.com/top250?start=200
+...
+{{< /highlight >}}
+
+咦，看代码，i在等于9的时候循环结束，start应该是225(9 *  25)，但为什么250呢？这是因为在最后还有个`i++`，虽然不符合条件没有进行循环，但是i的值确实发生了改变！
 
 在这样的用法中，WaitGroup相当于是一个协程安全的并发计数器：调用Add增加计数，调用Done减少计数。调用Wait会阻塞并等待至计数器归零。这样也实现了并发和等待全部goroutine执行完成：
 
