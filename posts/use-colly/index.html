@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="用Golang写爬虫(六) - 使用colly"/>
+<meta name="twitter:description" content="Colly是Golang世界最知名的Web爬虫框架了，它的API清晰明了，高度可配置和可扩展，支持分布式抓取，还支持多种存储后端（如内存、Redis、MongoDB等）。这篇文章记录我学习使用它的的一些感受和理解。
+首先安装它：
+❯ go get -u github.com/gocolly/colly/... 这个go get和之前安装包不太一样，最后有...这样的省略号，它的意思是也获取这个包的子包和依赖。
+从最简单的例子开始 Colly的文档写的算是很详细很完整的了，而且项目下的_examples目录里面也有很多爬虫例子，上手非常容易。先看我的一个例子：
+package main import ( &#34;fmt&#34; &#34;github.com/gocolly/colly&#34; ) func main() { c := colly.NewCollector( colly.UserAgent(&#34;Mozilla/5.0 (compatible; Googlebot/2.1; &#43;http://www.google.com/bot.html)&#34;), ) c.OnRequest(func(r *colly.Request) { fmt.Println(&#34;Visiting&#34;, r.URL) }) c.OnError(func(_ *colly.Response, err error) { fmt.Println(&#34;Something went wrong:&#34;, err) }) c.OnResponse(func(r *colly.Response) { fmt.Println(&#34;Visited&#34;, r.Request.URL) }) c.OnHTML(&#34;.paginator a&#34;, func(e *colly.HTMLElement) { e.Request.Visit(e.Attr(&#34;href&#34;)) }) c.OnScraped(func(r *colly.Response) { fmt.Println(&#34;Finished&#34;, r.Request.URL) }) c.Visit(&#34;https://movie.douban.com/top250?start=0&amp;filter=&#34;) } 这个程序就是去找豆瓣电影Top250的全部链接，如OnHTML方法的第一个函数所描述，找类名是paginator的标签下的a标签的href属性值。
+运行一下：
+❯ go run colly/doubanCrawler1."/>
+
+    <meta property="og:title" content="用Golang写爬虫(六) - 使用colly" />
+<meta property="og:description" content="Colly是Golang世界最知名的Web爬虫框架了，它的API清晰明了，高度可配置和可扩展，支持分布式抓取，还支持多种存储后端（如内存、Redis、MongoDB等）。这篇文章记录我学习使用它的的一些感受和理解。
+首先安装它：
+❯ go get -u github.com/gocolly/colly/... 这个go get和之前安装包不太一样，最后有...这样的省略号，它的意思是也获取这个包的子包和依赖。
+从最简单的例子开始 Colly的文档写的算是很详细很完整的了，而且项目下的_examples目录里面也有很多爬虫例子，上手非常容易。先看我的一个例子：
+package main import ( &#34;fmt&#34; &#34;github.com/gocolly/colly&#34; ) func main() { c := colly.NewCollector( colly.UserAgent(&#34;Mozilla/5.0 (compatible; Googlebot/2.1; &#43;http://www.google.com/bot.html)&#34;), ) c.OnRequest(func(r *colly.Request) { fmt.Println(&#34;Visiting&#34;, r.URL) }) c.OnError(func(_ *colly.Response, err error) { fmt.Println(&#34;Something went wrong:&#34;, err) }) c.OnResponse(func(r *colly.Response) { fmt.Println(&#34;Visited&#34;, r.Request.URL) }) c.OnHTML(&#34;.paginator a&#34;, func(e *colly.HTMLElement) { e.Request.Visit(e.Attr(&#34;href&#34;)) }) c.OnScraped(func(r *colly.Response) { fmt.Println(&#34;Finished&#34;, r.Request.URL) }) c.Visit(&#34;https://movie.douban.com/top250?start=0&amp;filter=&#34;) } 这个程序就是去找豆瓣电影Top250的全部链接，如OnHTML方法的第一个函数所描述，找类名是paginator的标签下的a标签的href属性值。
+运行一下：
+❯ go run colly/doubanCrawler1." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/use-colly/" />
+<meta property="article:published_time" content="2019-07-12T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-12T00:00:00&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/use-colly/">
+    
+    <title>
+  用Golang写爬虫(六) - 使用colly · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/use-colly/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">用Golang写爬虫(六) - 使用colly</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-07-12T00:00:00Z'>
+                July 12, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              2 minutes read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/crawler/">crawler</a></div>
+
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="https://strconv.com/tags/crawler/">crawler</a>
+      <span class="separator">•</span>
+    <a href="https://strconv.com/tags/colly/">colly</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+
+<p>Colly是Golang世界最知名的Web爬虫框架了，它的API清晰明了，高度可配置和可扩展，支持分布式抓取，还支持多种存储后端（如内存、Redis、MongoDB等）。这篇文章记录我学习使用它的的一些感受和理解。</p>
+
+<p>首先安装它：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go get -u github.com/gocolly/colly/...</code></pre></div>
+
+<p>这个<code>go get</code>和之前安装包不太一样，最后有<code>...</code>这样的省略号，它的意思是也获取这个包的子包和依赖。</p>
+
+<h3 id="从最简单的例子开始">从最简单的例子开始</h3>
+
+<p>Colly的文档写的算是很详细很完整的了，而且项目下的_examples目录里面也有很多爬虫例子，上手非常容易。先看我的一个例子：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+
+	<span style="color:#f1fa8c">&#34;github.com/gocolly/colly&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	c <span style="color:#ff79c6">:=</span> colly.<span style="color:#50fa7b">NewCollector</span>(
+		colly.<span style="color:#50fa7b">UserAgent</span>(<span style="color:#f1fa8c">&#34;Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)&#34;</span>),
+	)
+
+	c.<span style="color:#50fa7b">OnRequest</span>(<span style="color:#8be9fd;font-style:italic">func</span>(r <span style="color:#ff79c6">*</span>colly.Request) {
+		fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Visiting&#34;</span>, r.URL)
+	})
+
+	c.<span style="color:#50fa7b">OnError</span>(<span style="color:#8be9fd;font-style:italic">func</span>(_ <span style="color:#ff79c6">*</span>colly.Response, err <span style="color:#8be9fd">error</span>) {
+		fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Something went wrong:&#34;</span>, err)
+	})
+
+	c.<span style="color:#50fa7b">OnResponse</span>(<span style="color:#8be9fd;font-style:italic">func</span>(r <span style="color:#ff79c6">*</span>colly.Response) {
+		fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Visited&#34;</span>, r.Request.URL)
+	})
+
+	c.<span style="color:#50fa7b">OnHTML</span>(<span style="color:#f1fa8c">&#34;.paginator a&#34;</span>, <span style="color:#8be9fd;font-style:italic">func</span>(e <span style="color:#ff79c6">*</span>colly.HTMLElement) {
+		e.Request.<span style="color:#50fa7b">Visit</span>(e.<span style="color:#50fa7b">Attr</span>(<span style="color:#f1fa8c">&#34;href&#34;</span>))
+	})
+
+    c.<span style="color:#50fa7b">OnScraped</span>(<span style="color:#8be9fd;font-style:italic">func</span>(r <span style="color:#ff79c6">*</span>colly.Response) {
+        fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Finished&#34;</span>, r.Request.URL)
+    })
+
+	c.<span style="color:#50fa7b">Visit</span>(<span style="color:#f1fa8c">&#34;https://movie.douban.com/top250?start=0&amp;filter=&#34;</span>)
+}</code></pre></div>
+
+<p>这个程序就是去找豆瓣电影Top250的全部链接，如OnHTML方法的第一个函数所描述，找类名是paginator的标签下的a标签的href属性值。</p>
+
+<p>运行一下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run colly/doubanCrawler1.go
+Visiting https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">0</span>&amp;<span style="color:#8be9fd;font-style:italic">filter</span><span style="color:#ff79c6">=</span>
+Visited https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">0</span>&amp;<span style="color:#8be9fd;font-style:italic">filter</span><span style="color:#ff79c6">=</span>
+Visiting https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">25</span>&amp;<span style="color:#8be9fd;font-style:italic">filter</span><span style="color:#ff79c6">=</span>
+Visited https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">25</span>&amp;<span style="color:#8be9fd;font-style:italic">filter</span><span style="color:#ff79c6">=</span>
+...
+Finished https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">25</span>&amp;<span style="color:#8be9fd;font-style:italic">filter</span><span style="color:#ff79c6">=</span>
+Finished https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">0</span>&amp;<span style="color:#8be9fd;font-style:italic">filter</span><span style="color:#ff79c6">=</span></code></pre></div>
+
+<p>在Colly中主要实体就是一个Collector对象(用colly.NewCollector创建)，Collector管理网络通信和对于响应的回调执行。Collector在初始化时可以接受多种设置项，例如这个例子里面我就设置了UserAgent的值。其他的设置项可以去看官方网站。</p>
+
+<p>Collector对象接受多种回调方法，有不同的作用，按调用顺序我列出来：</p>
+
+<ol>
+<li>OnRequest。请求前</li>
+<li>OnError。请求过程中发生错误</li>
+<li>OnResponse。收到响应后</li>
+<li>OnHTML。如果收到的响应内容是HTML调用它。</li>
+<li>OnXML。如果收到的响应内容是XML 调用它。写爬虫基本用不到，所以上面我没有使用它。</li>
+<li>OnScraped。在OnXML/OnHTML回调完成后调用。不过官网写的是<code>Called after OnXML callbacks</code>，实际上对于OnHTML也有效，大家可以注意一下。</li>
+</ol>
+
+<h3 id="抓取条目id和标题">抓取条目ID和标题</h3>
+
+<p>还是之前的需求，先看看豆瓣Top250页面每个条目的部分HTML代码：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#ff79c6">ol</span> <span style="color:#50fa7b">class</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;grid_view&#34;</span>&gt;
+  &lt;<span style="color:#ff79c6">li</span>&gt;
+    &lt;<span style="color:#ff79c6">div</span> <span style="color:#50fa7b">class</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;item&#34;</span>&gt;
+      &lt;<span style="color:#ff79c6">div</span> <span style="color:#50fa7b">class</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;info&#34;</span>&gt;
+        &lt;<span style="color:#ff79c6">div</span> <span style="color:#50fa7b">class</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;hd&#34;</span>&gt;
+          &lt;<span style="color:#ff79c6">a</span> <span style="color:#50fa7b">href</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;https://movie.douban.com/subject/1292052/&#34;</span> <span style="color:#50fa7b">class</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;&#34;</span>&gt;
+            &lt;<span style="color:#ff79c6">span</span> <span style="color:#50fa7b">class</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;title&#34;</span>&gt;肖申克的救赎&lt;/<span style="color:#ff79c6">span</span>&gt;
+            &lt;<span style="color:#ff79c6">span</span> <span style="color:#50fa7b">class</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;title&#34;</span>&gt;&amp;nbsp;/&amp;nbsp;The Shawshank Redemption&lt;/<span style="color:#ff79c6">span</span>&gt;
+            &lt;<span style="color:#ff79c6">span</span> <span style="color:#50fa7b">class</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;other&#34;</span>&gt;&amp;nbsp;/&amp;nbsp;月黑高飞(港)  /  刺激 1995(台)&lt;/<span style="color:#ff79c6">span</span>&gt;
+          &lt;/<span style="color:#ff79c6">a</span>&gt;
+          &lt;<span style="color:#ff79c6">span</span> <span style="color:#50fa7b">class</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;playable&#34;</span>&gt;[可播放]&lt;/<span style="color:#ff79c6">span</span>&gt;
+        &lt;/<span style="color:#ff79c6">div</span>&gt;
+      &lt;/<span style="color:#ff79c6">div</span>&gt;
+    &lt;/<span style="color:#ff79c6">div</span>&gt;
+  &lt;/<span style="color:#ff79c6">li</span>&gt;
+  ....
+&lt;/<span style="color:#ff79c6">ol</span>&gt;</code></pre></div>
+
+<p>看看这个程序怎么写的：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;log&#34;</span>
+	<span style="color:#f1fa8c">&#34;strings&#34;</span>
+
+	<span style="color:#f1fa8c">&#34;github.com/gocolly/colly&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	c <span style="color:#ff79c6">:=</span> colly.<span style="color:#50fa7b">NewCollector</span>(
+		colly.<span style="color:#50fa7b">Async</span>(<span style="color:#ff79c6">true</span>),
+		colly.<span style="color:#50fa7b">UserAgent</span>(<span style="color:#f1fa8c">&#34;Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)&#34;</span>),
+	)
+
+	c.<span style="color:#50fa7b">Limit</span>(<span style="color:#ff79c6">&amp;</span>colly.LimitRule{DomainGlob:  <span style="color:#f1fa8c">&#34;*.douban.*&#34;</span>, Parallelism: <span style="color:#bd93f9">5</span>})
+
+	c.<span style="color:#50fa7b">OnRequest</span>(<span style="color:#8be9fd;font-style:italic">func</span>(r <span style="color:#ff79c6">*</span>colly.Request) {
+		log.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Visiting&#34;</span>, r.URL)
+	})
+
+	c.<span style="color:#50fa7b">OnError</span>(<span style="color:#8be9fd;font-style:italic">func</span>(_ <span style="color:#ff79c6">*</span>colly.Response, err <span style="color:#8be9fd">error</span>) {
+		log.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Something went wrong:&#34;</span>, err)
+	})
+
+	c.<span style="color:#50fa7b">OnHTML</span>(<span style="color:#f1fa8c">&#34;.hd&#34;</span>, <span style="color:#8be9fd;font-style:italic">func</span>(e <span style="color:#ff79c6">*</span>colly.HTMLElement) {
+		log.<span style="color:#50fa7b">Println</span>(strings.<span style="color:#50fa7b">Split</span>(e.<span style="color:#50fa7b">ChildAttr</span>(<span style="color:#f1fa8c">&#34;a&#34;</span>, <span style="color:#f1fa8c">&#34;href&#34;</span>), <span style="color:#f1fa8c">&#34;/&#34;</span>)[<span style="color:#bd93f9">4</span>],
+			strings.<span style="color:#50fa7b">TrimSpace</span>(e.DOM.<span style="color:#50fa7b">Find</span>(<span style="color:#f1fa8c">&#34;span.title&#34;</span>).<span style="color:#50fa7b">Eq</span>(<span style="color:#bd93f9">0</span>).<span style="color:#50fa7b">Text</span>()))
+    })
+
+	c.<span style="color:#50fa7b">OnHTML</span>(<span style="color:#f1fa8c">&#34;.paginator a&#34;</span>, <span style="color:#8be9fd;font-style:italic">func</span>(e <span style="color:#ff79c6">*</span>colly.HTMLElement) {
+		e.Request.<span style="color:#50fa7b">Visit</span>(e.<span style="color:#50fa7b">Attr</span>(<span style="color:#f1fa8c">&#34;href&#34;</span>))
+	})
+
+	c.<span style="color:#50fa7b">Visit</span>(<span style="color:#f1fa8c">&#34;https://movie.douban.com/top250?start=0&amp;filter=&#34;</span>)
+	c.<span style="color:#50fa7b">Wait</span>()
+}</code></pre></div>
+
+<p>如果你有心运行上面的那个例子，可以感受到抓取时同步的，比较慢。而这次在<code>colly.NewCollector</code>里面加了一项<code>colly.Async(true)</code>，表示抓取时异步的。在Colly里面非常方便控制并发度，只抓取符合某个(些)规则的URLS，有一句<code>c.Limit(&amp;colly.LimitRule{DomainGlob:  &quot;*.douban.*&quot;, Parallelism: 5})</code>，表示限制只抓取域名是douban(域名后缀和二级域名不限制)的地址，当然还支持正则匹配某些符合的 URLS，具体的可以看官方文档。</p>
+
+<p>另外Limit方法中也限制了并发是5。为什么要控制并发度呢？因为抓取的瓶颈往往来自对方网站的抓取频率的限制，如果在一段时间内达到某个抓取频率很容易被封，所以我们要控制抓取的频率。另外为了不给对方网站带来额外的压力和资源消耗，也应该控制你的抓取机制。</p>
+
+<p>这个例子里面没有OnResponse方法，主要是里面没有实际的逻辑。但是多用了Wait方法，这是因为在Async为true时需要等待协程都完成再结束。但是呢，有2个OnHTML方法，一个用来确认都访问那些页面，另外一个里面就是抓取条目信息的逻辑了。也就是这部分：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">c.<span style="color:#50fa7b">OnHTML</span>(<span style="color:#f1fa8c">&#34;.hd&#34;</span>, <span style="color:#8be9fd;font-style:italic">func</span>(e <span style="color:#ff79c6">*</span>colly.HTMLElement) {
+    log.<span style="color:#50fa7b">Println</span>(strings.<span style="color:#50fa7b">Split</span>(e.<span style="color:#50fa7b">ChildAttr</span>(<span style="color:#f1fa8c">&#34;a&#34;</span>, <span style="color:#f1fa8c">&#34;href&#34;</span>), <span style="color:#f1fa8c">&#34;/&#34;</span>)[<span style="color:#bd93f9">4</span>],
+        strings.<span style="color:#50fa7b">TrimSpace</span>(e.DOM.<span style="color:#50fa7b">Find</span>(<span style="color:#f1fa8c">&#34;span.title&#34;</span>).<span style="color:#50fa7b">Eq</span>(<span style="color:#bd93f9">0</span>).<span style="color:#50fa7b">Text</span>()))
+})</code></pre></div>
+
+<p>Colly的HTML解析库用的是goquery，所以写起来遵循goquery的语法就可以了。ChildAttr方法可以获得元素对应属性的值，另外一个没有列出来的ChildText，用于获得元素的文本内容。但是我们这个例子中类名为title的span标签有2个，用ChildText回直接返回2个标签的全部的值，但是Colly又没有提供ChildTexts方法（有ChildAttrs），所以只能看源码看ChildText实现改成了<code>strings.TrimSpace(e.DOM.Find(&quot;span.title&quot;).Eq(0).Text())</code>，这样就可以拿到第一个符合的文本了。</p>
+
+<h3 id="在colly中使用xpath">在Colly中使用XPath</h3>
+
+<p>如果你不喜欢goquery这种形式，当然也可以切换HTML解析方案，看我这个例子：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">import</span> <span style="color:#f1fa8c">&#34;github.com/antchfx/htmlquery&#34;</span>
+
+c.<span style="color:#50fa7b">OnResponse</span>(<span style="color:#8be9fd;font-style:italic">func</span>(r <span style="color:#ff79c6">*</span>colly.Response) {
+    doc, err <span style="color:#ff79c6">:=</span> htmlquery.<span style="color:#50fa7b">Parse</span>(strings.<span style="color:#50fa7b">NewReader</span>(<span style="color:#8be9fd;font-style:italic">string</span>(r.Body)))
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        log.<span style="color:#50fa7b">Fatal</span>(err)
+    }
+    nodes <span style="color:#ff79c6">:=</span> htmlquery.<span style="color:#50fa7b">Find</span>(doc, <span style="color:#f1fa8c">`//ol[@class=&#34;grid_view&#34;]/li//div[@class=&#34;hd&#34;]`</span>)
+    <span style="color:#ff79c6">for</span> _, node <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">range</span> nodes {
+        url <span style="color:#ff79c6">:=</span> htmlquery.<span style="color:#50fa7b">FindOne</span>(node, <span style="color:#f1fa8c">&#34;./a/@href&#34;</span>)
+        title <span style="color:#ff79c6">:=</span> htmlquery.<span style="color:#50fa7b">FindOne</span>(node, <span style="color:#f1fa8c">`.//span[@class=&#34;title&#34;]/text()`</span>)
+        log.<span style="color:#50fa7b">Println</span>(strings.<span style="color:#50fa7b">Split</span>(htmlquery.<span style="color:#50fa7b">InnerText</span>(url), <span style="color:#f1fa8c">&#34;/&#34;</span>)[<span style="color:#bd93f9">4</span>],
+            htmlquery.<span style="color:#50fa7b">InnerText</span>(title))
+    }
+})</code></pre></div>
+
+<p>这次我改在OnResponse方法里面获得条目ID和标题。<code>htmlquery.Parse</code>需要接受一个实现io.Reader接口的对象，所以用了<code>strings.NewReader(string(r.Body))</code>。其他的代码是之前 <a href="https://strconv.com/posts/web-crawler-exercise-5/">用Golang写爬虫(五) - 使用XPath</a>里面写过的，直接拷贝过来就可以了。</p>
+
+<h3 id="后记">后记</h3>
+
+<p>试用Colly后就喜欢上了它，你呢？</p>
+
+<h3 id="代码地址">代码地址</h3>
+
+<p>完整代码可以在<a href="https://github.com/golang-dev/strconv.code/blob/master/colly">这个地址</a>找到。</p>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://strconv.com/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
+</html>
