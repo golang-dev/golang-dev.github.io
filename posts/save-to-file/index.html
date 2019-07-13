@@ -25,8 +25,8 @@ PS: 说一个细节，在Python中字符串拼接用&#43;最好应该用join方�
 2. 修改main方法，初始化文件，并用defer在函数执行结束后关闭文件 func main() { start := time.Now() ch := make(chan bool) f, err := os.Create(&#34;movie.txt&#34;) checkError(err) defer f.Close() _, err = f.WriteString(&#34;ID\tTitle\n&#34;) checkError(err) for i := 0; i &lt; 10; i&#43;&#43; { go parseUrls(&#34;https://movie.douban.com/top250?start=&#34;&#43;strconv.Itoa(25*i), ch, f) } for i := 0; i &lt; 10; i&#43;&#43; { &lt;-ch } f." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://strconv.com/posts/save-to-file/" />
-<meta property="article:published_time" content="2019-07-13T00:00:00&#43;00:00"/>
-<meta property="article:modified_time" content="2019-07-13T00:00:00&#43;00:00"/>
+<meta property="article:published_time" content="2019-07-13T10:10:10&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-13T10:10:10&#43;00:00"/>
 
 
     
@@ -109,7 +109,7 @@ PS: 说一个细节，在Python中字符串拼接用&#43;最好应该用join方�
           <div class="date">
             <span class="posted-on">
               <i class="fas fa-calendar"></i>
-              <time datetime='2019-07-13T00:00:00Z'>
+              <time datetime='2019-07-13T10:10:10Z'>
                 July 13, 2019
               </time>
             </span>

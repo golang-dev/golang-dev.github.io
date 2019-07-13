@@ -1,5 +1,5 @@
 +++
-date = "2019-07-13"
+date = "2019-07-13T10:10:10"
 title = "用Golang写爬虫(七) - 如何保存数据到文件"
 slug = "save-to-file"
 tags = ["crawler", "csv"]

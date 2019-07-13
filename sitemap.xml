@@ -4,48 +4,59 @@
   
   <url>
     <loc>https://strconv.com/categories/</loc>
-    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-13T12:10:10+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://strconv.com/</loc>
-    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-13T12:10:10+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://strconv.com/posts/</loc>
-    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-13T12:10:10+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://strconv.com/tags/</loc>
-    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://strconv.com/categories/crawler/</loc>
-    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-13T12:10:10+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://strconv.com/tags/crawler/</loc>
-    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-13T12:10:10+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
+    <loc>https://strconv.com/categories/crawler/</loc>
+    <lastmod>2019-07-13T12:10:10+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://strconv.com/tags/gorm/</loc>
+    <lastmod>2019-07-13T12:10:10+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://strconv.com/posts/use-gorm/</loc>
+    <lastmod>2019-07-13T12:10:10+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://strconv.com/tags/csv/</loc>
-    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-13T10:10:10+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://strconv.com/posts/save-to-file/</loc>
-    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
+    <lastmod>2019-07-13T10:10:10+00:00</lastmod>
   </url>
   
   <url>

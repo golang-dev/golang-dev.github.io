@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="用Golang写爬虫(八) - 使用GORM存入MySQL数据库"/>
+<meta name="twitter:description" content="上篇文章把数据存进了文件，这篇文章将把数据存入MySQL数据库。数据库的使用是每个开发者必备的技能，所以本篇文章我们使用Golang操作数据库。Golang没有内置的驱动支持任何的数据库，但是Go定义了database/sql接口，开发者可以基于驱动接口开发相应数据库的驱动。当然现在各种数据库驱动生态已经很稳定了，可以直接使用。
+我在实际开发工作中一般不直接用数据库驱动（如github.com/go-sql-driver/mysql），而是用ORM。ORM有三大优点：
+ 安全性。使用底层的数据库驱动是在「拼」SQL，这样很容易出现SQL注入等风险。 易于理解。拼 SQL 这种形式放在代码中是很乱的，只有开发者在当时编写时可以理解，但是后来的维护者就不那么好理解了。 易于维护。如果数据库操作代码写多了往往会有很多重复、可重用的SQL其实是可以避免的，如果用ORM，他把CURD这些操作都费装起来，这种代码看起来会非常直观，很容易找到一些错误的，不好的，重复的用法。 可移植。ORM往往支持多种数据库，如MySQL、PostgreSQL、SQLite等，这样在本地开发你可选择SQLite，而在生产环境可以切换MySQL，完全不需要改动代码逻辑，只是改一下配置。  所以使用ORM能提高开发效率，降低开发成本，但是缺点是ORM的封装是有成本的，会稍微影响到性能，不过我认为这点性能损耗微乎其微。
+目前Golang世界里面最受欢迎的ORM叫做gorm，我们就使用它，先安装它：
+❯ go get -u github.com/jinzhu/gorm ❯ go get -u github.com/go-sql-driver/mysql # 也要安装对应数据库驱动 gorm用的MySQL驱动其实就是go-sql-driver/mysql，但通常这么import：
+import ( &#34;github.com/jinzhu/gorm&#34; _ &#34;github.com/jinzhu/gorm/dialects/mysql&#34; ) 有时候对于某个包，不需要把整个包都导入进来，只是执行他的init函数。可以使用import _这样的写法，不过要注意，这种方式无法通过包名来调用包中的其他函数。
+定义模型 接着我们声明Model:
+type Movie struct { ID int Title string `gorm:&#34;type:varchar(100);unique_index&#34;` } 这个结构体叫做Movie，模型有2个字段ID和Title。Title后面有个反引号，这个部分叫做成员变量标签(Tag)，当需要用到Tag中的内容时可以使用反射包（reflect）中的方法来获取，这是gorm支持的用法。它表示定义title资格字段的长度是100，并且有唯一索引。其他支持的标签可以看官方文档。
+如果看文档或者很多文章，经常能看到继承了gorm.Model的模型，如下面这个：
+type Movie struct { gorm.Model Title string `gorm:&#34;type:varchar(100);unique_index&#34;` } gorm.Model 自带了ID, CreatedAt, UpdatedAt, DeletedAt这么4个字段，在我们这里完全必要。
+初始化 在main函数里面连接数据库，并创建表：
+func main() { start := time.Now() ch := make(chan bool) db, err := gorm."/>
+
+    <meta property="og:title" content="用Golang写爬虫(八) - 使用GORM存入MySQL数据库" />
+<meta property="og:description" content="上篇文章把数据存进了文件，这篇文章将把数据存入MySQL数据库。数据库的使用是每个开发者必备的技能，所以本篇文章我们使用Golang操作数据库。Golang没有内置的驱动支持任何的数据库，但是Go定义了database/sql接口，开发者可以基于驱动接口开发相应数据库的驱动。当然现在各种数据库驱动生态已经很稳定了，可以直接使用。
+我在实际开发工作中一般不直接用数据库驱动（如github.com/go-sql-driver/mysql），而是用ORM。ORM有三大优点：
+ 安全性。使用底层的数据库驱动是在「拼」SQL，这样很容易出现SQL注入等风险。 易于理解。拼 SQL 这种形式放在代码中是很乱的，只有开发者在当时编写时可以理解，但是后来的维护者就不那么好理解了。 易于维护。如果数据库操作代码写多了往往会有很多重复、可重用的SQL其实是可以避免的，如果用ORM，他把CURD这些操作都费装起来，这种代码看起来会非常直观，很容易找到一些错误的，不好的，重复的用法。 可移植。ORM往往支持多种数据库，如MySQL、PostgreSQL、SQLite等，这样在本地开发你可选择SQLite，而在生产环境可以切换MySQL，完全不需要改动代码逻辑，只是改一下配置。  所以使用ORM能提高开发效率，降低开发成本，但是缺点是ORM的封装是有成本的，会稍微影响到性能，不过我认为这点性能损耗微乎其微。
+目前Golang世界里面最受欢迎的ORM叫做gorm，我们就使用它，先安装它：
+❯ go get -u github.com/jinzhu/gorm ❯ go get -u github.com/go-sql-driver/mysql # 也要安装对应数据库驱动 gorm用的MySQL驱动其实就是go-sql-driver/mysql，但通常这么import：
+import ( &#34;github.com/jinzhu/gorm&#34; _ &#34;github.com/jinzhu/gorm/dialects/mysql&#34; ) 有时候对于某个包，不需要把整个包都导入进来，只是执行他的init函数。可以使用import _这样的写法，不过要注意，这种方式无法通过包名来调用包中的其他函数。
+定义模型 接着我们声明Model:
+type Movie struct { ID int Title string `gorm:&#34;type:varchar(100);unique_index&#34;` } 这个结构体叫做Movie，模型有2个字段ID和Title。Title后面有个反引号，这个部分叫做成员变量标签(Tag)，当需要用到Tag中的内容时可以使用反射包（reflect）中的方法来获取，这是gorm支持的用法。它表示定义title资格字段的长度是100，并且有唯一索引。其他支持的标签可以看官方文档。
+如果看文档或者很多文章，经常能看到继承了gorm.Model的模型，如下面这个：
+type Movie struct { gorm.Model Title string `gorm:&#34;type:varchar(100);unique_index&#34;` } gorm.Model 自带了ID, CreatedAt, UpdatedAt, DeletedAt这么4个字段，在我们这里完全必要。
+初始化 在main函数里面连接数据库，并创建表：
+func main() { start := time.Now() ch := make(chan bool) db, err := gorm." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/use-gorm/" />
+<meta property="article:published_time" content="2019-07-13T12:10:10&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-13T12:10:10&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/use-gorm/">
+    
+    <title>
+  用Golang写爬虫(八) - 使用GORM存入MySQL数据库 · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/use-gorm/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">用Golang写爬虫(八) - 使用GORM存入MySQL数据库</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-07-13T12:10:10Z'>
+                July 13, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              2 minutes read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/crawler/">crawler</a></div>
+
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="https://strconv.com/tags/crawler/">crawler</a>
+      <span class="separator">•</span>
+    <a href="https://strconv.com/tags/gorm/">gorm</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+
+<p>上篇文章把数据存进了文件，这篇文章将把数据存入MySQL数据库。数据库的使用是每个开发者必备的技能，所以本篇文章我们使用Golang操作数据库。Golang没有内置的驱动支持任何的数据库，但是Go定义了database/sql接口，开发者可以基于驱动接口开发相应数据库的驱动。当然现在各种数据库驱动生态已经很稳定了，可以直接使用。</p>
+
+<p>我在实际开发工作中一般不直接用数据库驱动（如github.com/go-sql-driver/mysql），而是用ORM。ORM有三大优点：</p>
+
+<ol>
+<li>安全性。使用底层的数据库驱动是在「拼」SQL，这样很容易出现SQL注入等风险。</li>
+<li>易于理解。拼 SQL 这种形式放在代码中是很乱的，只有开发者在当时编写时可以理解，但是后来的维护者就不那么好理解了。</li>
+<li>易于维护。如果数据库操作代码写多了往往会有很多重复、可重用的SQL其实是可以避免的，如果用ORM，他把CURD这些操作都费装起来，这种代码看起来会非常直观，很容易找到一些错误的，不好的，重复的用法。</li>
+<li>可移植。ORM往往支持多种数据库，如MySQL、PostgreSQL、SQLite等，这样在本地开发你可选择SQLite，而在生产环境可以切换MySQL，完全不需要改动代码逻辑，只是改一下配置。</li>
+</ol>
+
+<p>所以使用ORM能提高开发效率，降低开发成本，但是缺点是ORM的封装是有成本的，会稍微影响到性能，不过我认为这点性能损耗微乎其微。</p>
+
+<p>目前Golang世界里面最受欢迎的ORM叫做<a href="https://github.com/jinzhu/gorm">gorm</a>，我们就使用它，先安装它：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go get -u github.com/jinzhu/gorm
+❯ go get -u github.com/go-sql-driver/mysql  <span style="color:#6272a4"># 也要安装对应数据库驱动</span></code></pre></div>
+
+<p>gorm用的MySQL驱动其实就是<code>go-sql-driver/mysql</code>，但通常这么import：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">import</span> (
+  <span style="color:#f1fa8c">&#34;github.com/jinzhu/gorm&#34;</span>
+  _ <span style="color:#f1fa8c">&#34;github.com/jinzhu/gorm/dialects/mysql&#34;</span>
+)</code></pre></div>
+
+<p>有时候对于某个包，不需要把整个包都导入进来，只是执行他的init函数。可以使用<code>import _</code>这样的写法，不过要注意，这种方式无法通过包名来调用包中的其他函数。</p>
+
+<h3 id="定义模型">定义模型</h3>
+
+<p>接着我们声明Model:</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">type</span> Movie <span style="color:#8be9fd;font-style:italic">struct</span> {
+    ID <span style="color:#8be9fd">int</span>
+    Title <span style="color:#8be9fd">string</span> <span style="color:#f1fa8c">`gorm:&#34;type:varchar(100);unique_index&#34;`</span>
+}</code></pre></div>
+
+<p>这个结构体叫做Movie，模型有2个字段ID和Title。Title后面有个反引号，这个部分叫做成员变量标签(Tag)，当需要用到Tag中的内容时可以使用反射包（reflect）中的方法来获取，这是gorm支持的用法。它表示定义title资格字段的长度是100，并且有唯一索引。其他支持的标签可以看官方文档。</p>
+
+<p>如果看文档或者很多文章，经常能看到继承了<code>gorm.Model</code>的模型，如下面这个：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">type</span> Movie <span style="color:#8be9fd;font-style:italic">struct</span> {
+    gorm.Model
+    Title <span style="color:#8be9fd">string</span> <span style="color:#f1fa8c">`gorm:&#34;type:varchar(100);unique_index&#34;`</span>
+}</code></pre></div>
+
+<p>gorm.Model 自带了ID, CreatedAt, UpdatedAt, DeletedAt这么4个字段，在我们这里完全必要。</p>
+
+<h3 id="初始化">初始化</h3>
+
+<p>在main函数里面连接数据库，并创建表：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+    start <span style="color:#ff79c6">:=</span> time.<span style="color:#50fa7b">Now</span>()
+    ch <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">make</span>(<span style="color:#8be9fd;font-style:italic">chan</span> <span style="color:#8be9fd">bool</span>)
+    db, err <span style="color:#ff79c6">:=</span> gorm.<span style="color:#50fa7b">Open</span>(<span style="color:#f1fa8c">&#34;mysql&#34;</span>, <span style="color:#f1fa8c">&#34;root:@/test?charset=utf8&#34;</span>)
+    <span style="color:#ff79c6">defer</span> db.<span style="color:#50fa7b">Close</span>()
+    <span style="color:#50fa7b">checkError</span>(err)
+
+    db.<span style="color:#50fa7b">DropTableIfExists</span>(<span style="color:#ff79c6">&amp;</span>Movie{})
+    db.<span style="color:#50fa7b">Set</span>(<span style="color:#f1fa8c">&#34;gorm:table_options&#34;</span>, <span style="color:#f1fa8c">&#34;ENGINE=InnoDB&#34;</span>).<span style="color:#50fa7b">AutoMigrate</span>(<span style="color:#ff79c6">&amp;</span>Movie{})
+
+    <span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">0</span>; i &lt; <span style="color:#bd93f9">11</span>; i<span style="color:#ff79c6">++</span> {
+        <span style="color:#ff79c6">go</span> <span style="color:#50fa7b">parseUrls</span>(<span style="color:#f1fa8c">&#34;https://movie.douban.com/top250?start=&#34;</span><span style="color:#ff79c6">+</span>strconv.<span style="color:#50fa7b">Itoa</span>(<span style="color:#bd93f9">25</span><span style="color:#ff79c6">*</span>i), ch, db)
+    }
+
+    <span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">0</span>; i &lt; <span style="color:#bd93f9">11</span>; i<span style="color:#ff79c6">++</span> {
+        <span style="color:#ff79c6">&lt;-</span>ch
+    }
+
+    elapsed <span style="color:#ff79c6">:=</span> time.<span style="color:#50fa7b">Since</span>(start)
+    log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Took %s&#34;</span>, elapsed)
+}</code></pre></div>
+
+<p>gorm.Open的第一个参数是数据库驱动名字，第二个就是具体的db uri，我这里用了默认的test库，用户名root，密码为空，字符集为utf-8。</p>
+
+<p>为了每次都初始化表，所以先用<code>DropTableIfExists</code>删除表，再用<code>AutoMigrate</code>创建表。Migrate是迁移的意思，自动迁移仅仅会创建表，缺少列和索引，并且不会改变现有列的类型或删除未使用的列以保护数据。这样可以更新表结构，一般不会直接用CreateTable创建表了。db.Set是为了创建表时添加表后缀。</p>
+
+<p>parseUrls的最后一个参数db是*gorm.DB类型的。</p>
+
+<p>好了，运行一下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run doubanCrawler.go</code></pre></div>
+
+<p>执行结束可以用MySQL CLI看到数据了：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sql" data-lang="sql">mysql<span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">select</span> <span style="color:#ff79c6">*</span> <span style="color:#ff79c6">from</span> movies <span style="color:#ff79c6">order</span> <span style="color:#ff79c6">by</span> id <span style="color:#ff79c6">desc</span> <span style="color:#ff79c6">limit</span> <span style="color:#bd93f9">3</span>;
+<span style="color:#ff79c6">+</span><span style="color:#6272a4">----------|-----------------------------+
+</span><span style="color:#6272a4"></span><span style="color:#ff79c6">|</span> id       <span style="color:#ff79c6">|</span> title                       <span style="color:#ff79c6">|</span>
+<span style="color:#ff79c6">+</span><span style="color:#6272a4">----------|-----------------------------+
+</span><span style="color:#6272a4"></span><span style="color:#ff79c6">|</span> <span style="color:#bd93f9">30170448</span> <span style="color:#ff79c6">|</span> 何以为家                    <span style="color:#ff79c6">|</span>
+<span style="color:#ff79c6">|</span> <span style="color:#bd93f9">27191492</span> <span style="color:#ff79c6">|</span> 四个春天                    <span style="color:#ff79c6">|</span>
+<span style="color:#ff79c6">|</span> <span style="color:#bd93f9">26799731</span> <span style="color:#ff79c6">|</span> 请以你的名字呼唤我          <span style="color:#ff79c6">|</span>
+<span style="color:#ff79c6">+</span><span style="color:#6272a4">----------|-----------------------------+
+</span><span style="color:#6272a4"></span><span style="color:#bd93f9">3</span> <span style="color:#ff79c6">rows</span> <span style="color:#ff79c6">in</span> <span style="color:#ff79c6">set</span> (<span style="color:#bd93f9">0</span>.<span style="color:#bd93f9">00</span> sec)</code></pre></div>
+
+<h3 id="用gorm查询">用gorm查询</h3>
+
+<p>上面用到的只是db.Create创建记录，接着看看怎么查询(按行注释)：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">func main<span style="color:#ff79c6">()</span> <span style="color:#ff79c6">{</span>
+    db, err :<span style="color:#ff79c6">=</span> gorm.Open<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;mysql&#34;</span>, <span style="color:#f1fa8c">&#34;root:@/test?charset=utf8&#34;</span><span style="color:#ff79c6">)</span>
+    defer db.Close<span style="color:#ff79c6">()</span>
+    checkError<span style="color:#ff79c6">(</span>err<span style="color:#ff79c6">)</span>
+
+    var movie Movie
+    var movies <span style="color:#ff79c6">[]</span>Movie
+    db.First<span style="color:#ff79c6">(</span>&amp;movie, <span style="color:#bd93f9">30170448</span><span style="color:#ff79c6">)</span>  // 查询ID为30170448的记录，只支持主键
+    log.Println<span style="color:#ff79c6">(</span>movie<span style="color:#ff79c6">)</span>
+    log.Println<span style="color:#ff79c6">(</span>movie.ID, movie.Title<span style="color:#ff79c6">)</span> // 可以获得对应属性
+
+    db.Order<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;id&#34;</span><span style="color:#ff79c6">)</span>.Limit<span style="color:#ff79c6">(</span><span style="color:#bd93f9">3</span><span style="color:#ff79c6">)</span>.Find<span style="color:#ff79c6">(</span>&amp;movies<span style="color:#ff79c6">)</span> // 按ID升序排，取前三个记录赋值给movies
+    log.Println<span style="color:#ff79c6">(</span>movies<span style="color:#ff79c6">)</span>
+    log.Println<span style="color:#ff79c6">(</span>movies<span style="color:#ff79c6">[</span><span style="color:#bd93f9">0</span><span style="color:#ff79c6">]</span>.ID<span style="color:#ff79c6">)</span>
+
+    db.Order<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;id desc&#34;</span><span style="color:#ff79c6">)</span>.Limit<span style="color:#ff79c6">(</span><span style="color:#bd93f9">3</span><span style="color:#ff79c6">)</span>.Offset<span style="color:#ff79c6">(</span><span style="color:#bd93f9">1</span><span style="color:#ff79c6">)</span>.Find<span style="color:#ff79c6">(</span>&amp;movies<span style="color:#ff79c6">)</span>  // Order也支持desc选择降序, offset表示对结果集从第2个记录开始
+    log.Println<span style="color:#ff79c6">(</span>movies<span style="color:#ff79c6">)</span>
+    db.Select<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;title&#34;</span><span style="color:#ff79c6">)</span>.First<span style="color:#ff79c6">(</span>&amp;movies, <span style="color:#f1fa8c">&#34;title = ?&#34;</span>, <span style="color:#f1fa8c">&#34;四个春天&#34;</span><span style="color:#ff79c6">)</span> // 用Select可以限定只返回那些字段，First也支持条件
+    log.Println<span style="color:#ff79c6">(</span>movie<span style="color:#ff79c6">)</span>
+
+    var count int64
+    db.Where<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;id = ?&#34;</span>, <span style="color:#bd93f9">30170448</span><span style="color:#ff79c6">)</span>.Or<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;title = ?&#34;</span>, <span style="color:#f1fa8c">&#34;四个春天&#34;</span><span style="color:#ff79c6">)</span>.Find<span style="color:#ff79c6">(</span>&amp;movies<span style="color:#ff79c6">)</span>.Count<span style="color:#ff79c6">(</span>&amp;count<span style="color:#ff79c6">)</span>  // Where后加条件，在这里是id为30170448或者title为<span style="color:#f1fa8c">&#34;四个春天&#34;</span>2个条件符合之一即可，最后用Count算一下符合的记录数
+    log.Println<span style="color:#ff79c6">(</span>count<span style="color:#ff79c6">)</span>
+<span style="color:#ff79c6">}</span></code></pre></div>
+
+<p>执行一下：</p>
+
+<p><div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run doubanCrawler2.go
+<span style="color:#bd93f9">2019</span>/07/13 <span style="color:#bd93f9">21</span>:16:24 <span style="color:#ff79c6">{</span><span style="color:#bd93f9">30170448</span> 何以为家<span style="color:#ff79c6">}</span>
+<span style="color:#bd93f9">2019</span>/07/13 <span style="color:#bd93f9">21</span>:16:24 <span style="color:#bd93f9">30170448</span> 何以为家
+<span style="color:#bd93f9">2019</span>/07/13 <span style="color:#bd93f9">21</span>:16:24 <span style="color:#ff79c6">[{</span><span style="color:#bd93f9">1291543</span> 功夫<span style="color:#ff79c6">}</span> <span style="color:#ff79c6">{</span><span style="color:#bd93f9">1291545</span> 大鱼<span style="color:#ff79c6">}</span> <span style="color:#ff79c6">{</span><span style="color:#bd93f9">1291546</span> 霸王别姬<span style="color:#ff79c6">}]</span>
+<span style="color:#bd93f9">2019</span>/07/13 <span style="color:#bd93f9">21</span>:16:24 <span style="color:#bd93f9">1291543</span>
+<span style="color:#bd93f9">2019</span>/07/13 <span style="color:#bd93f9">21</span>:16:24 <span style="color:#ff79c6">[{</span><span style="color:#bd93f9">27191492</span> 四个春天<span style="color:#ff79c6">}</span> <span style="color:#ff79c6">{</span><span style="color:#bd93f9">26799731</span> 请以你的名字呼唤我<span style="color:#ff79c6">}</span> <span style="color:#ff79c6">{</span><span style="color:#bd93f9">26787574</span> 奇迹男孩<span style="color:#ff79c6">}]</span>
+<span style="color:#bd93f9">2019</span>/07/13 <span style="color:#bd93f9">21</span>:16:24 <span style="color:#ff79c6">[{</span><span style="color:#bd93f9">0</span> 何以为家<span style="color:#ff79c6">}]</span>
+<span style="color:#bd93f9">2019</span>/07/13 <span style="color:#bd93f9">21</span>:16:24 <span style="color:#ff79c6">{</span><span style="color:#bd93f9">30170448</span> 何以为家<span style="color:#ff79c6">}</span>
+<span style="color:#bd93f9">2019</span>/07/13 <span style="color:#bd93f9">21</span>:16:24 <span style="color:#bd93f9">2</span></code></pre></div>
+更新和删除用法就不展示了，看文档即可。</p>
+
+<h3 id="后记">后记</h3>
+
+<p>虽然本节只是学习文件的写，没有读的内容。但是也算大体了解了文件操作。</p>
+
+<h3 id="代码地址">代码地址</h3>
+
+<p>完整代码可以在<a href="https://github.com/golang-dev/strconv.code/blob/master/gorm">这个地址</a>找到。</p>
+
+<h3 id="延伸阅读">延伸阅读</h3>
+
+<ol>
+<li><a href="https://gorm.io/docs/">https://gorm.io/docs/</a></li>
+</ol>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://strconv.com/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
+</html>
