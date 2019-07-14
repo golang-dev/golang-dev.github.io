@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="在Golang中实现RPC"/>
+<meta name="twitter:description" content="什么是RPC 远程过程调用（Remote Procedure Call，缩写为 RPC）是一个计算机通信协议。远程调用是因为被调用方法的具体实现不在程序运行本地，而是在远程服务器上。需要将对象名、函数名、参数等传递给远程服务器，服务器将处理结果返回给客户端。RPC 的消息可以通过 TCP、UDP 或者 HTTP等传输。
+在Golang中实现RPC的方式大体有三种，分别来看。
+net/rpc Golang官方的net/rpc包使用encoding/gob进行编解码，支持tcp或http数据传输方式。但是由于gob编码是Golang独有的所以它只支持Golang开发的服务器与客户端之间的交互。
+RPC采用客户机/服务器模式。先看一下server例子：
+package main import ( &#34;fmt&#34; &#34;log&#34; &#34;net&#34; &#34;net/rpc&#34; ) type Listener int type Reply struct { Data string } func (l *Listener) GetLine(line []byte, reply *Reply) error { rv := string(line) fmt.Printf(&#34;Receive: %v\n&#34;, rv) *reply = Reply{rv} return nil } func main() { addy, err := net.ResolveTCPAddr(&#34;tcp&#34;, &#34;0.0.0.0:12345&#34;) if err != nil { log.Fatal(err) } inbound, err := net."/>
+
+    <meta property="og:title" content="在Golang中实现RPC" />
+<meta property="og:description" content="什么是RPC 远程过程调用（Remote Procedure Call，缩写为 RPC）是一个计算机通信协议。远程调用是因为被调用方法的具体实现不在程序运行本地，而是在远程服务器上。需要将对象名、函数名、参数等传递给远程服务器，服务器将处理结果返回给客户端。RPC 的消息可以通过 TCP、UDP 或者 HTTP等传输。
+在Golang中实现RPC的方式大体有三种，分别来看。
+net/rpc Golang官方的net/rpc包使用encoding/gob进行编解码，支持tcp或http数据传输方式。但是由于gob编码是Golang独有的所以它只支持Golang开发的服务器与客户端之间的交互。
+RPC采用客户机/服务器模式。先看一下server例子：
+package main import ( &#34;fmt&#34; &#34;log&#34; &#34;net&#34; &#34;net/rpc&#34; ) type Listener int type Reply struct { Data string } func (l *Listener) GetLine(line []byte, reply *Reply) error { rv := string(line) fmt.Printf(&#34;Receive: %v\n&#34;, rv) *reply = Reply{rv} return nil } func main() { addy, err := net.ResolveTCPAddr(&#34;tcp&#34;, &#34;0.0.0.0:12345&#34;) if err != nil { log.Fatal(err) } inbound, err := net." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/rpc/" />
+<meta property="article:published_time" content="2019-07-14T10:10:10&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-14T10:10:10&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/rpc/">
+    
+    <title>
+  在Golang中实现RPC · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/rpc/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">在Golang中实现RPC</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-07-14T10:10:10Z'>
+                July 14, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              4 minutes read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/rpc/">rpc</a></div>
+
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="https://strconv.com/tags/crawler/">crawler</a>
+      <span class="separator">•</span>
+    <a href="https://strconv.com/tags/rpc/">rpc</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+
+<h3 id="什么是rpc">什么是RPC</h3>
+
+<p>远程过程调用（Remote Procedure Call，缩写为 RPC）是一个计算机通信协议。<code>远程调用</code>是因为被调用方法的具体实现不在程序运行本地，而是在远程服务器上。需要将对象名、函数名、参数等传递给远程服务器，服务器将处理结果返回给客户端。RPC 的消息可以通过  TCP、UDP 或者  HTTP等传输。</p>
+
+<p>在Golang中实现RPC的方式大体有三种，分别来看。</p>
+
+<h3 id="net-rpc">net/rpc</h3>
+
+<p>Golang官方的<code>net/rpc</code>包使用<code>encoding/gob</code>进行编解码，支持tcp或http数据传输方式。但是由于gob编码是Golang独有的所以它只支持Golang开发的服务器与客户端之间的交互。</p>
+
+<p>RPC采用客户机/服务器模式。先看一下server例子：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+	<span style="color:#f1fa8c">&#34;log&#34;</span>
+	<span style="color:#f1fa8c">&#34;net&#34;</span>
+	<span style="color:#f1fa8c">&#34;net/rpc&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">type</span> Listener <span style="color:#8be9fd">int</span>
+
+<span style="color:#8be9fd;font-style:italic">type</span> Reply <span style="color:#8be9fd;font-style:italic">struct</span> {
+	Data <span style="color:#8be9fd">string</span>
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> (l <span style="color:#ff79c6">*</span>Listener) <span style="color:#50fa7b">GetLine</span>(line []<span style="color:#8be9fd">byte</span>, reply <span style="color:#ff79c6">*</span>Reply) <span style="color:#8be9fd">error</span> {
+	rv <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">string</span>(line)
+	fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Receive: %v\n&#34;</span>, rv)
+	<span style="color:#ff79c6">*</span>reply = Reply{rv}
+	<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	addy, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ResolveTCPAddr</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, <span style="color:#f1fa8c">&#34;0.0.0.0:12345&#34;</span>)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Fatal</span>(err)
+	}
+
+	inbound, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ListenTCP</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, addy)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Fatal</span>(err)
+	}
+
+	listener <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">new</span>(Listener)
+	rpc.<span style="color:#50fa7b">Register</span>(listener)
+	rpc.<span style="color:#50fa7b">Accept</span>(inbound)
+}</code></pre></div>
+
+<p>在这里例子中给Listener添加了GetLine方法，这个方法的返回值必须是error类型，第一个参数是客户端传来的内容，第二个参数是响应的内容：需要是一个指针，所以定义了一个叫做Reply的结构体，只有一个Data成员用于存储响应内容。</p>
+
+<p>在main函数中，首先用<code>net.ResolveTCPAddr</code>和<code>net.ListenTCP</code>创建一个TCP连接，监听所有地址的12345端口。最后用<code>rpc.Register</code>注册监听对象，接受上面的tcp连接的请求。</p>
+
+<p>然后是客户端：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;bufio&#34;</span>
+	<span style="color:#f1fa8c">&#34;log&#34;</span>
+	<span style="color:#f1fa8c">&#34;net/rpc&#34;</span>
+	<span style="color:#f1fa8c">&#34;os&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">type</span> Reply <span style="color:#8be9fd;font-style:italic">struct</span> {
+    Data <span style="color:#8be9fd">string</span>
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	client, err <span style="color:#ff79c6">:=</span> rpc.<span style="color:#50fa7b">Dial</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, <span style="color:#f1fa8c">&#34;localhost:12345&#34;</span>)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Fatal</span>(err)
+	}
+
+	in <span style="color:#ff79c6">:=</span> bufio.<span style="color:#50fa7b">NewReader</span>(os.Stdin)
+	<span style="color:#ff79c6">for</span> {
+		line, _, err <span style="color:#ff79c6">:=</span> in.<span style="color:#50fa7b">ReadLine</span>()
+		<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+			log.<span style="color:#50fa7b">Fatal</span>(err)
+		}
+		<span style="color:#8be9fd;font-style:italic">var</span> reply Reply
+		err = client.<span style="color:#50fa7b">Call</span>(<span style="color:#f1fa8c">&#34;Listener.GetLine&#34;</span>, line, <span style="color:#ff79c6">&amp;</span>reply)
+		<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+			log.<span style="color:#50fa7b">Fatal</span>(err)
+		}
+		log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Reply: %v, Data: %v&#34;</span>, reply, reply.Data)
+	}
+}</code></pre></div>
+
+<p>客户端用<code>rpc.Dial</code>创建连接到服务端的主机和端口，然后是一个永久的for循环，ReadLine方法会接收终端输入，如果写了一些内容回车，就会执行<code>client.Call</code>，开始过程调用，调用成功后，reply就被写入数据，可以拿到reply.Data了（其实就是输入什么，收到什么）。体验一下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run simple_server.go
+Receive: hi
+Receive: haha
+
+❯ go run simple_client.go
+hi
+<span style="color:#bd93f9">2019</span>/07/14 <span style="color:#bd93f9">18</span>:19:14 Reply: <span style="color:#ff79c6">{</span>hi<span style="color:#ff79c6">}</span>, Data: hi
+haha
+<span style="color:#bd93f9">2019</span>/07/14 <span style="color:#bd93f9">18</span>:19:15 Reply: <span style="color:#ff79c6">{</span>haha<span style="color:#ff79c6">}</span>, Data: haha</code></pre></div>
+
+<h3 id="net-rpc-jsonrpc">net/rpc/jsonrpc</h3>
+
+<p>使用<code>net/rpc</code>实现的RPC只能使用Golang语言编写的服务端/客户端之间交互，所以Go语言标准库通过<code>net/rpc/jsonrpc</code>这个包支持跨语言的RPC。要实现上面一样的效果，代码主要是改了main的rpc.Accept部分就可以了：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#ff79c6">import</span> <span style="color:#f1fa8c">&#34;net/rpc/jsonrpc&#34;</span>
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+    addy, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ResolveTCPAddr</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, <span style="color:#f1fa8c">&#34;0.0.0.0:12345&#34;</span>)
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        log.<span style="color:#50fa7b">Fatal</span>(err)
+    }
+
+    inbound, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ListenTCP</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, addy)
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        log.<span style="color:#50fa7b">Fatal</span>(err)
+    }
+
+    listener <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">new</span>(Listener)
+    rpc.<span style="color:#50fa7b">Register</span>(listener)
+    <span style="color:#ff79c6">for</span> {
+        conn, err <span style="color:#ff79c6">:=</span> inbound.<span style="color:#50fa7b">Accept</span>()
+        <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+            <span style="color:#ff79c6">continue</span>
+        }
+        jsonrpc.<span style="color:#50fa7b">ServeConn</span>(conn)
+    }
+}</code></pre></div>
+
+<p>客户端部分也只是改动rpc.Dial部分：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+    client, err <span style="color:#ff79c6">:=</span> jsonrpc.<span style="color:#50fa7b">Dial</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, <span style="color:#f1fa8c">&#34;localhost:12345&#34;</span>) <span style="color:#6272a4">// 只改动这一行
+</span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        log.<span style="color:#50fa7b">Fatal</span>(err)
+    }
+
+    in <span style="color:#ff79c6">:=</span> bufio.<span style="color:#50fa7b">NewReader</span>(os.Stdin)
+    <span style="color:#ff79c6">for</span> {
+        line, _, err <span style="color:#ff79c6">:=</span> in.<span style="color:#50fa7b">ReadLine</span>()
+        <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+            log.<span style="color:#50fa7b">Fatal</span>(err)
+        }
+        <span style="color:#8be9fd;font-style:italic">var</span> reply Reply
+        err = client.<span style="color:#50fa7b">Call</span>(<span style="color:#f1fa8c">&#34;Listener.GetLine&#34;</span>, line, <span style="color:#ff79c6">&amp;</span>reply)
+        <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+            log.<span style="color:#50fa7b">Fatal</span>(err)
+        }
+        log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Reply: %v, Data: %v&#34;</span>, reply, reply.Data)
+    }
+}</code></pre></div>
+
+<p>json-rpc是基于TCP协议实现的，目前它还不支持HTTP方式。运行效果和上面的一样：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run simple_jsonrpc_server.go
+Receive: hi
+Receive: haha
+
+❯ go run simple_jsonrpc_client.go
+hi
+<span style="color:#bd93f9">2019</span>/07/14 <span style="color:#bd93f9">20</span>:22:02 Reply: <span style="color:#ff79c6">{</span>hi<span style="color:#ff79c6">}</span>, Data: hi
+haha
+<span style="color:#bd93f9">2019</span>/07/14 <span style="color:#bd93f9">20</span>:22:03 Reply: <span style="color:#ff79c6">{</span>haha<span style="color:#ff79c6">}</span>, Data: haha</code></pre></div>
+
+<p>请求的json数据对象在内部对应两个结构体：客户端是clientRequest，服务端是serverRequest。大抵是这样</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#8be9fd;font-style:italic">type</span> serverRequest <span style="color:#8be9fd;font-style:italic">struct</span> {
+	Method <span style="color:#8be9fd">string</span>           <span style="color:#f1fa8c">`json:&#34;method&#34;`</span>
+	Params <span style="color:#ff79c6">*</span>json.RawMessage <span style="color:#f1fa8c">`json:&#34;params&#34;`</span>
+	Id     <span style="color:#ff79c6">*</span>json.RawMessage <span style="color:#f1fa8c">`json:&#34;id&#34;`</span>
+}
+
+<span style="color:#8be9fd;font-style:italic">type</span> clientRequest <span style="color:#8be9fd;font-style:italic">struct</span> {
+	Method <span style="color:#8be9fd">string</span>         <span style="color:#f1fa8c">`json:&#34;method&#34;`</span>
+	Params [<span style="color:#bd93f9">1</span>]<span style="color:#8be9fd;font-style:italic">interface</span>{} <span style="color:#f1fa8c">`json:&#34;params&#34;`</span>
+	Id     <span style="color:#8be9fd">uint64</span>         <span style="color:#f1fa8c">`json:&#34;id&#34;`</span>
+}</code></pre></div>
+
+<p>所以我们可以基于这个格式用其他语言拼消息。简单一点，在命令行试试：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ <span style="color:#8be9fd;font-style:italic">echo</span> -n <span style="color:#f1fa8c">&#34;hihi&#34;</span> |base64  <span style="color:#6272a4"># 参数需要用base64编码</span>
+<span style="color:#8be9fd;font-style:italic">aGloaQ</span><span style="color:#ff79c6">==</span>
+
+~/strconv.code/rpc master*
+❯ <span style="color:#8be9fd;font-style:italic">echo</span> -e <span style="color:#f1fa8c">&#39;{&#34;method&#34;: &#34;Listener.GetLine&#34;,&#34;params&#34;: [&#34;aGloaQ==&#34;], &#34;id&#34;: 0}&#39;</span> | nc localhost <span style="color:#bd93f9">12345</span>
+<span style="color:#ff79c6">{</span><span style="color:#f1fa8c">&#34;id&#34;</span>:0,<span style="color:#f1fa8c">&#34;result&#34;</span>:<span style="color:#ff79c6">{</span><span style="color:#f1fa8c">&#34;Data&#34;</span>:<span style="color:#f1fa8c">&#34;hihi&#34;</span><span style="color:#ff79c6">}</span>,<span style="color:#f1fa8c">&#34;error&#34;</span>:null<span style="color:#ff79c6">}</span></code></pre></div>
+
+<p>看到了吧，可以拿到对应的结果。其中id不是必须的，但是可以基于id在并发高或者异步调用中对应某一次调用。</p>
+
+<h3 id="grpc">gRPC</h3>
+
+<p>jsonrpc虽然可以支持跨语言但是不支持HTTP传输，而且性能不高，所以在实际生产环境中都不会用标准库里面的方式，而是选择Thrift、gRPC等方案。</p>
+
+<p>gRPC是Google开源的高性能、通用的开源RPC框架，其主要面向移动应用开发并基于HTTP/2协议标准而设计，基于ProtoBuf序列化协议开发，支持Python、Golang、Java等众多开发语言。</p>
+
+<h4 id="protobuf协议">ProtoBuf协议</h4>
+
+<p>Protobuf是Protocol Buffers的简称，它是Google公司开发的一种数据描述语言，类似于XML、JSON等数据描述语言，它非常轻便高效，很适合做数据存储或 RPC 数据交换格式。由于它一次定义，可生成多种语言的代码，非常适合用于通讯协议、数据存储等领域的语言无关、平台无关、可扩展的序列化结构数据格式。首先安装它和Go语言的生成工具：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ brew install protobuf
+❯ protoc --version
+libprotoc <span style="color:#bd93f9">3</span>.7.1
+go get -u github.com/golang/protobuf/<span style="color:#ff79c6">{</span>proto,protoc-gen-go<span style="color:#ff79c6">}</span></code></pre></div>
+
+<p>然后按照最新的proto3协议写一个描述文件</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang">syntax = <span style="color:#f1fa8c">&#34;proto3&#34;</span>;
+
+<span style="color:#ff79c6">package</span> simple;
+
+<span style="color:#6272a4">// 请求
+</span><span style="color:#6272a4"></span>message SimpleRequest {
+    <span style="color:#8be9fd">string</span> data = <span style="color:#bd93f9">1</span>;
+}
+
+<span style="color:#6272a4">// 响应
+</span><span style="color:#6272a4"></span>message SimpleResponse {
+    <span style="color:#8be9fd">string</span> data = <span style="color:#bd93f9">1</span>;
+}
+
+<span style="color:#6272a4">// rpc方法
+</span><span style="color:#6272a4"></span>service Simple {
+    rpc  <span style="color:#50fa7b">GetLine</span> (SimpleRequest) <span style="color:#50fa7b">returns</span> (SimpleResponse);
+}</code></pre></div>
+
+<p>其中描述了请求SimpleRequest（只有一个字符串参数data）、响应SimpleResponse（只有一个字符串参数data）和rpc方法。Simple服务只有一个GetLine方法，请求是SimpleRequest，响应SimpleResponse。然后基于.proto文件生成数据操作代码：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ mkdir src/simple
+❯ protoc --go_out<span style="color:#ff79c6">=</span><span style="color:#8be9fd;font-style:italic">plugins</span><span style="color:#ff79c6">=</span>grpc:src/simple simple.proto
+❯ ll src/simple
+total <span style="color:#bd93f9">8</span>.0K
+-rw-r--r-- <span style="color:#bd93f9">1</span> dongwm staff <span style="color:#bd93f9">7</span>.0K Jul <span style="color:#bd93f9">14</span> <span style="color:#bd93f9">21</span>:43 simple.pb.go</code></pre></div>
+
+<p>执行命令完成，就在<code>src/simple</code>下生成了一个叫做<code>simple.pb.go</code>的文件，它支持gRPC。放在src/simple目录下是为了让它作为一个包（package）。</p>
+
+<h3 id="体验-grpc">体验 gRPC</h3>
+
+<p>首先需要安装 gRPC</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go get -u google.golang.org/grpc</code></pre></div>
+
+<p>然后就可以基于<code>src/simple</code>这个包写代码了</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+	<span style="color:#f1fa8c">&#34;log&#34;</span>
+	<span style="color:#f1fa8c">&#34;net&#34;</span>
+
+	pb <span style="color:#f1fa8c">&#34;./src/simple&#34;</span>
+	<span style="color:#f1fa8c">&#34;golang.org/x/net/context&#34;</span>
+	<span style="color:#f1fa8c">&#34;google.golang.org/grpc&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">type</span> Listener <span style="color:#8be9fd">int</span>
+
+<span style="color:#8be9fd;font-style:italic">func</span> (l <span style="color:#ff79c6">*</span>Listener) <span style="color:#50fa7b">GetLine</span>(ctx context.Context, in <span style="color:#ff79c6">*</span>pb.SimpleRequest) (<span style="color:#ff79c6">*</span>pb.SimpleResponse, <span style="color:#8be9fd">error</span>) {
+	rv <span style="color:#ff79c6">:=</span> in.Data
+	fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Receive: %v\n&#34;</span>, rv)
+	<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">&amp;</span>pb.SimpleResponse{Data: rv}, <span style="color:#ff79c6">nil</span>
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	addy, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ResolveTCPAddr</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, <span style="color:#f1fa8c">&#34;0.0.0.0:12345&#34;</span>)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Fatal</span>(err)
+	}
+
+	inbound, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ListenTCP</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, addy)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Fatal</span>(err)
+	}
+
+	s <span style="color:#ff79c6">:=</span> grpc.<span style="color:#50fa7b">NewServer</span>()
+	listener <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">new</span>(Listener)
+    pb.<span style="color:#50fa7b">RegisterSimpleServer</span>(s, listener)
+    s.<span style="color:#50fa7b">Serve</span>(inbound)
+}</code></pre></div>
+
+<p>其中<code>pb &quot;./src/simple&quot;</code>表示把当前目录下的src/simple作为一个包，给它取了个别名pb，内容就来自前面创建的simple.pb.go。</p>
+
+<p>GetLine方法要重新定义，它的第一个参数是context.Context，第二个是<code>*pb.SimpleRequest</code>（在proto文件中定义的请求），返回的结果是(*pb.SimpleResponse, error)，<code>pb.SimpleResponse</code>在proto文件中定义的响应。另外要注意，虽然在proto文件中SimpleRequest和SimpleResponse的成员data是小写开头的，但是使用时要首字母大写（Data）。</p>
+
+<p>再看客户端：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;bufio&#34;</span>
+	<span style="color:#f1fa8c">&#34;log&#34;</span>
+	<span style="color:#f1fa8c">&#34;os&#34;</span>
+
+	pb <span style="color:#f1fa8c">&#34;./src/simple&#34;</span>
+    <span style="color:#f1fa8c">&#34;golang.org/x/net/context&#34;</span>
+    <span style="color:#f1fa8c">&#34;google.golang.org/grpc&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	conn, err <span style="color:#ff79c6">:=</span> grpc.<span style="color:#50fa7b">Dial</span>(<span style="color:#f1fa8c">&#34;localhost:12345&#34;</span>, grpc.<span style="color:#50fa7b">WithInsecure</span>())
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Fatal</span>(err)
+	}
+
+	c <span style="color:#ff79c6">:=</span> pb.<span style="color:#50fa7b">NewSimpleClient</span>(conn)
+
+	in <span style="color:#ff79c6">:=</span> bufio.<span style="color:#50fa7b">NewReader</span>(os.Stdin)
+	<span style="color:#ff79c6">for</span> {
+		line, _, err <span style="color:#ff79c6">:=</span> in.<span style="color:#50fa7b">ReadLine</span>()
+		<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+			log.<span style="color:#50fa7b">Fatal</span>(err)
+		}
+		reply, err <span style="color:#ff79c6">:=</span> c.<span style="color:#50fa7b">GetLine</span>(context.<span style="color:#50fa7b">Background</span>(), <span style="color:#ff79c6">&amp;</span>pb.SimpleRequest{Data: <span style="color:#8be9fd;font-style:italic">string</span>(line)})
+		<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+			log.<span style="color:#50fa7b">Fatal</span>(err)
+		}
+		log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Reply: %v, Data: %v&#34;</span>, reply, reply.Data)
+	}
+}</code></pre></div>
+
+<p>首先用<code>grpc.Dial(&quot;localhost:12345&quot;, grpc.WithInsecure())</code>创建连接，然后用<code>pb.NewSimpleClient</code>创建<code>simpleClient</code>对象。为什么叫<code>SimpleClient</code>呢？其实格式是<code>XXXClient</code>, XXX是前面在proto文件中定义的<code>service Simple</code>中的<code>Simple</code>。</p>
+
+<p>rpc调用时要这样写：<code>reply, err := c.GetLine(context.Background(), &amp;pb.SimpleRequest{Data: string(line)})</code>，GetLine就是proto文件中定义的方法（<code>rpc  GetLine (SimpleRequest) returns (SimpleResponse)</code>），第一个参数<code>context.Background()</code>，第二个参数是请求，由于line是[]byte类型的，所以需要用string转换成字符串。响应reply是SimpleResponse对象，可以从reply.Data中获得返回的实际结果:</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run grpc_server.go
+Receive: hi
+Receive: Haha
+Receive: vvv
+
+❯ go run grpc_client.go
+hi
+<span style="color:#bd93f9">2019</span>/07/15 <span style="color:#bd93f9">07</span>:57:48 Reply: data:<span style="color:#f1fa8c">&#34;hi&#34;</span> , Data: hi
+Haha
+<span style="color:#bd93f9">2019</span>/07/15 <span style="color:#bd93f9">07</span>:57:51 Reply: data:<span style="color:#f1fa8c">&#34;Haha&#34;</span> , Data: Haha
+vvv
+<span style="color:#bd93f9">2019</span>/07/15 <span style="color:#bd93f9">07</span>:57:53 Reply: data:<span style="color:#f1fa8c">&#34;vvv&#34;</span> , Data: vvv</code></pre></div>
+
+<h3 id="代码地址">代码地址</h3>
+
+<p>完整代码可以在<a href="https://github.com/golang-dev/strconv.code/blob/master/rpc">这个地址</a>找到。</p>
+
+<h3 id="延伸阅读">延伸阅读</h3>
+
+<ol>
+<li><a href="https://books.studygolang.com/NPWG_zh/Text/chapter-rpc.html">https://books.studygolang.com/NPWG_zh/Text/chapter-rpc.html</a></li>
+<li><a href="https://golang.org/pkg/net/rpc/">https://golang.org/pkg/net/rpc/</a></li>
+<li><a href="https://developers.google.com/protocol-buffers/docs/proto3">https://developers.google.com/protocol-buffers/docs/proto3</a></li>
+<li><a href="https://github.com/grpc/grpc-go">https://github.com/grpc/grpc-go</a></li>
+</ol>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://strconv.com/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
+</html>
