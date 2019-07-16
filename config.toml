@@ -33,6 +33,8 @@ pygmentsStyle = "dracula"
     # Custom JS
     custom_js = []
 
+    commentoUrl = "https://cdn.commento.io"
+
 [menu]
 
   [[menu.main]]
