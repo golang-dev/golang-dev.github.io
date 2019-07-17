@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="消息队列、消息代理和消息中间件的区别和联系"/>
+<meta name="twitter:description" content="如果你经常看技术文章应该听过「消息队列」、「消息代理」和「消息中间件」这三个词，它们有什么区别和联系呢？希望这篇文章能告诉你答案。
+中间件(Middleware) 首先就要说什么是中间件？我的理解是：
+ 中间件是帮助应用程序与其他应用程序、网络、硬件、操作系统交互或通信的软件。
+ 换句更简洁的话：「将具体业务和底层逻辑解耦的软件」。其实符合中间件的软件范畴非常宽，日常用的Redis、Nginx、Zookeeper、Memcached等等都是「中间件」。所谓的「中间」是相对于架构体系内的，它不涉及具体的业务逻辑也不涉及底层的硬件逻辑，用于用户数据交换和管理，能够起到「中介」的作用，这就是中间件。
+那么问题来了：为什么需要中间件的帮助（代理），直接去和对应的应用程序、硬件、操作系统等交互/通信不好嘛？
+回答问题前，我们要明确一点：
+ 任何中间件必然是为了解决特定领域的某个(些)问题而出现的。
+ 我举2个例子来帮助大家理解。
+数据库中间件 当项目很小的时候，直接使用编程语言下的数据库驱动操作数据库就可以了，有些开发会用ORM的方式操作数据库：这是够用的。
+但随着业务发展，数据量和读写QPS越来越高，主从模式的MySQL实例压力越来越大，单纯的对服务器硬件升级已经无法满足生产环境的需要。在我司不成文的习惯是单表不要超过5千万条记录，数据库量大的时候就设计分库分表，也就是「分而治之」，把QPS和数据量分片限定在一个范围内。
+当然还有很多其他相关的功能，如读写分离、路由策略、统计、管理、鉴权等等。这些是在业务逻辑之上的，不应该在业务代码中把这部分堆进去，应该抽象它们出来作为一个独立的组件，这就是数据库中间件。
+现在主流的开源数据库中间件有Mycat、MySQL-proxy、Atlas等等，不过现在都不怎么维护了，另外还有Cetus，作者是tcpcopy的作者，这个项目还在不断维护，有同学有兴趣的可以试试。当然其实各大公司内部都有自己的数据库中间件产品，更多的贴近公司的业务产品和基础设施。
+Web框架中间件 一般Web框架都支持中间件，Web框架中间件的本质是插件系统，是一系列的框架钩子，在收到请求和返回响应这个过程里面去做一些额外的事情。中间件种类很多，举例一些：
+ 响应压缩 记录日志 支持会话Session CSRF保护 验证/身份鉴别 访问控制 资源使用检查(如内存占用) 请求指标 健康检查 静态资源管理 &hellip;  这些中间件将业务和非业务代码功能进行解耦：
+ 框架里面可能内置了一些常用的中间件，也可能只是内置中间件支持。你可以配置使用某个(些)，也能方便的自定义中间件 Web视图中不需要手写中间件逻辑，按约定好的用法框架会在对应的生命周期中按照约定的顺序去执行这些中间件逻辑  PS: Golang语言中最知名的Web框架Gin支持中间件，而且还官网搞了个叫gin-gonic/contrib的项目搜集社区里面的中间件。
+消息队列(Message Queue) 消息队列就是Message&#43;Queue。其实消息可以说是一个数据传输单位，它包含了创建时间、通道/主题信息、输入参数等全部数据；队列(Queue)是一种FIFO(先进先出)的数据结构，编程语言一般都内置（内存中的）队列实现，可以作为进程间通讯（IPC）的方法。使用队列最常见的场景就是生产者/消费者模式：生产者生产消息放到队列中，消费者从队列里面获取消息消费。
+准确的说，消息队列(以下简称MQ**是一种能实现生产者到消费者单向通信的通信模型，而一般大家说MQ是指实现了这个模型的中间件，比如RabbitMQ、RocketMQ、Kafka等。
+设想一个订单场景，当你付款成功之后要做什么：
+ 通知/提醒系统。通知商家有人买了Ta的商品，通知买家你购买成功（相当于确认订单）。通知/提醒的方式很多，如邮件、短信、App内消息等等 会员系统。更新用户的积分、等级等 日志系统。订单这么重要的服务需要有日志可以用于未来回溯问题 推荐系统。更新用户画像，重新给用户推荐他可能感兴趣的商品 ..  这就出现了一些问题：
+ 响应耗时。事实上做的比这要多得多，每一项都需要有开销，增加响应时间。如果这些逻辑是同步执行的，用户要等多久？这种体验是完全不可以接受的！所以呢，需要一种异步消费的机制 过度耦合。本来仅仅是一个订单系统，结果上述的那些东西都要堆进来，这就成了一个巨无霸应用，未来开发、维护都是问题 错误丢失。假如这些后续的行为中某个(些)服务正好出现了故障执行失败或者验证超时，但是付款成功的确认是必须完成的，那么需要有个地方存这些还没有被正确消费的部分 需要组(广)播。就像上面的订单场景，付款成功这个消息被发送给多个子系统，相当于组播。未来如果要新增删减订阅源，怎么便捷的实现呢？  当然还有其他的问题：
+ 秒杀场景下并发可能会很高的，非常有可能出现出现远超现有服务器处理能力的情况，这就容易把系统搞崩了，如果出现这种问题时把未处理的放进消息队列，这就达到了「削峰」和「限流」的作用。 某些场景下需要有消息的优先级 &hellip;  而消息中间件就是解决上述问题的，虽然不同的中间件的实现方案不同，但都具备以下特点：
+ 分布式。其实消息中间件解决的就是分布式系统之间消息传递的问题，消费者可以分布在多台服务器上，一方面降低了由于单点故障引起的消息队列阻塞的风险，另外一方面也非常容易横向扩展。 持久可靠。消息队列一般会把接收到的消息存储到本地硬盘上，保证消息不会在未消息前莫名丢失。 高性能和高吞吐量。例如RocketMQ有亿级消息堆积能力，广泛应用在阿里系的各种高并发场景下；而Kafka在实时计算、日志采集等场景下算是业界的标准。  可以说，消息中间件是现在企业架构中不可或缺的组合部分，用了都说好。"/>
+
+    <meta property="og:title" content="消息队列、消息代理和消息中间件的区别和联系" />
+<meta property="og:description" content="如果你经常看技术文章应该听过「消息队列」、「消息代理」和「消息中间件」这三个词，它们有什么区别和联系呢？希望这篇文章能告诉你答案。
+中间件(Middleware) 首先就要说什么是中间件？我的理解是：
+ 中间件是帮助应用程序与其他应用程序、网络、硬件、操作系统交互或通信的软件。
+ 换句更简洁的话：「将具体业务和底层逻辑解耦的软件」。其实符合中间件的软件范畴非常宽，日常用的Redis、Nginx、Zookeeper、Memcached等等都是「中间件」。所谓的「中间」是相对于架构体系内的，它不涉及具体的业务逻辑也不涉及底层的硬件逻辑，用于用户数据交换和管理，能够起到「中介」的作用，这就是中间件。
+那么问题来了：为什么需要中间件的帮助（代理），直接去和对应的应用程序、硬件、操作系统等交互/通信不好嘛？
+回答问题前，我们要明确一点：
+ 任何中间件必然是为了解决特定领域的某个(些)问题而出现的。
+ 我举2个例子来帮助大家理解。
+数据库中间件 当项目很小的时候，直接使用编程语言下的数据库驱动操作数据库就可以了，有些开发会用ORM的方式操作数据库：这是够用的。
+但随着业务发展，数据量和读写QPS越来越高，主从模式的MySQL实例压力越来越大，单纯的对服务器硬件升级已经无法满足生产环境的需要。在我司不成文的习惯是单表不要超过5千万条记录，数据库量大的时候就设计分库分表，也就是「分而治之」，把QPS和数据量分片限定在一个范围内。
+当然还有很多其他相关的功能，如读写分离、路由策略、统计、管理、鉴权等等。这些是在业务逻辑之上的，不应该在业务代码中把这部分堆进去，应该抽象它们出来作为一个独立的组件，这就是数据库中间件。
+现在主流的开源数据库中间件有Mycat、MySQL-proxy、Atlas等等，不过现在都不怎么维护了，另外还有Cetus，作者是tcpcopy的作者，这个项目还在不断维护，有同学有兴趣的可以试试。当然其实各大公司内部都有自己的数据库中间件产品，更多的贴近公司的业务产品和基础设施。
+Web框架中间件 一般Web框架都支持中间件，Web框架中间件的本质是插件系统，是一系列的框架钩子，在收到请求和返回响应这个过程里面去做一些额外的事情。中间件种类很多，举例一些：
+ 响应压缩 记录日志 支持会话Session CSRF保护 验证/身份鉴别 访问控制 资源使用检查(如内存占用) 请求指标 健康检查 静态资源管理 &hellip;  这些中间件将业务和非业务代码功能进行解耦：
+ 框架里面可能内置了一些常用的中间件，也可能只是内置中间件支持。你可以配置使用某个(些)，也能方便的自定义中间件 Web视图中不需要手写中间件逻辑，按约定好的用法框架会在对应的生命周期中按照约定的顺序去执行这些中间件逻辑  PS: Golang语言中最知名的Web框架Gin支持中间件，而且还官网搞了个叫gin-gonic/contrib的项目搜集社区里面的中间件。
+消息队列(Message Queue) 消息队列就是Message&#43;Queue。其实消息可以说是一个数据传输单位，它包含了创建时间、通道/主题信息、输入参数等全部数据；队列(Queue)是一种FIFO(先进先出)的数据结构，编程语言一般都内置（内存中的）队列实现，可以作为进程间通讯（IPC）的方法。使用队列最常见的场景就是生产者/消费者模式：生产者生产消息放到队列中，消费者从队列里面获取消息消费。
+准确的说，消息队列(以下简称MQ**是一种能实现生产者到消费者单向通信的通信模型，而一般大家说MQ是指实现了这个模型的中间件，比如RabbitMQ、RocketMQ、Kafka等。
+设想一个订单场景，当你付款成功之后要做什么：
+ 通知/提醒系统。通知商家有人买了Ta的商品，通知买家你购买成功（相当于确认订单）。通知/提醒的方式很多，如邮件、短信、App内消息等等 会员系统。更新用户的积分、等级等 日志系统。订单这么重要的服务需要有日志可以用于未来回溯问题 推荐系统。更新用户画像，重新给用户推荐他可能感兴趣的商品 ..  这就出现了一些问题：
+ 响应耗时。事实上做的比这要多得多，每一项都需要有开销，增加响应时间。如果这些逻辑是同步执行的，用户要等多久？这种体验是完全不可以接受的！所以呢，需要一种异步消费的机制 过度耦合。本来仅仅是一个订单系统，结果上述的那些东西都要堆进来，这就成了一个巨无霸应用，未来开发、维护都是问题 错误丢失。假如这些后续的行为中某个(些)服务正好出现了故障执行失败或者验证超时，但是付款成功的确认是必须完成的，那么需要有个地方存这些还没有被正确消费的部分 需要组(广)播。就像上面的订单场景，付款成功这个消息被发送给多个子系统，相当于组播。未来如果要新增删减订阅源，怎么便捷的实现呢？  当然还有其他的问题：
+ 秒杀场景下并发可能会很高的，非常有可能出现出现远超现有服务器处理能力的情况，这就容易把系统搞崩了，如果出现这种问题时把未处理的放进消息队列，这就达到了「削峰」和「限流」的作用。 某些场景下需要有消息的优先级 &hellip;  而消息中间件就是解决上述问题的，虽然不同的中间件的实现方案不同，但都具备以下特点：
+ 分布式。其实消息中间件解决的就是分布式系统之间消息传递的问题，消费者可以分布在多台服务器上，一方面降低了由于单点故障引起的消息队列阻塞的风险，另外一方面也非常容易横向扩展。 持久可靠。消息队列一般会把接收到的消息存储到本地硬盘上，保证消息不会在未消息前莫名丢失。 高性能和高吞吐量。例如RocketMQ有亿级消息堆积能力，广泛应用在阿里系的各种高并发场景下；而Kafka在实时计算、日志采集等场景下算是业界的标准。  可以说，消息中间件是现在企业架构中不可或缺的组合部分，用了都说好。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/message-queue/" />
+<meta property="article:published_time" content="2019-07-17T10:10:10&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-17T10:10:10&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/message-queue/">
+    
+    <title>
+  消息队列、消息代理和消息中间件的区别和联系 · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/message-queue/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">消息队列、消息代理和消息中间件的区别和联系</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-07-17T10:10:10Z'>
+                July 17, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              One minute read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/mq/">mq</a></div>
+
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="https://strconv.com/tags/mq/">mq</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+
+<p>如果你经常看技术文章应该听过「消息队列」、「消息代理」和「消息中间件」这三个词，它们有什么区别和联系呢？希望这篇文章能告诉你答案。</p>
+
+<h3 id="中间件-middleware">中间件(Middleware)</h3>
+
+<p>首先就要说什么是中间件？我的理解是：</p>
+
+<blockquote>
+<p>中间件是帮助应用程序与其他应用程序、网络、硬件、操作系统交互或通信的软件。</p>
+</blockquote>
+
+<p>换句更简洁的话：「将具体业务和底层逻辑解耦的软件」。其实符合中间件的软件范畴非常宽，日常用的Redis、Nginx、Zookeeper、Memcached等等都是「中间件」。所谓的「中间」是相对于架构体系内的，它不涉及具体的业务逻辑也不涉及底层的硬件逻辑，用于用户数据交换和管理，能够起到「中介」的作用，这就是中间件。</p>
+
+<p>那么问题来了：为什么需要中间件的帮助（代理），直接去和对应的应用程序、硬件、操作系统等交互/通信不好嘛？</p>
+
+<p>回答问题前，我们要明确一点：</p>
+
+<blockquote>
+<p>任何中间件必然是为了解决特定领域的某个(些)问题而出现的。</p>
+</blockquote>
+
+<p>我举2个例子来帮助大家理解。</p>
+
+<h4 id="数据库中间件">数据库中间件</h4>
+
+<p>当项目很小的时候，直接使用编程语言下的数据库驱动操作数据库就可以了，有些开发会用ORM的方式操作数据库：这是够用的。</p>
+
+<p>但随着业务发展，数据量和读写QPS越来越高，主从模式的MySQL实例压力越来越大，单纯的对服务器硬件升级已经无法满足生产环境的需要。在我司不成文的习惯是单表不要超过5千万条记录，数据库量大的时候就设计分库分表，也就是「分而治之」，把QPS和数据量分片限定在一个范围内。</p>
+
+<p>当然还有很多其他相关的功能，如读写分离、路由策略、统计、管理、鉴权等等。这些是在业务逻辑之上的，不应该在业务代码中把这部分堆进去，应该抽象它们出来作为一个独立的组件，这就是数据库中间件。</p>
+
+<p>现在主流的开源数据库中间件有Mycat、MySQL-proxy、Atlas等等，不过现在都不怎么维护了，另外还有<a href="https://github.com/cetus-tools/cetus">Cetus</a>，作者是tcpcopy的作者，这个项目还在不断维护，有同学有兴趣的可以试试。当然其实各大公司内部都有自己的数据库中间件产品，更多的贴近公司的业务产品和基础设施。</p>
+
+<h4 id="web框架中间件">Web框架中间件</h4>
+
+<p>一般Web框架都支持中间件，Web框架中间件的本质是插件系统，是一系列的框架钩子，在收到请求和返回响应这个过程里面去做一些额外的事情。中间件种类很多，举例一些：</p>
+
+<ol>
+<li>响应压缩</li>
+<li>记录日志</li>
+<li>支持会话Session</li>
+<li>CSRF保护</li>
+<li>验证/身份鉴别</li>
+<li>访问控制</li>
+<li>资源使用检查(如内存占用)</li>
+<li>请求指标</li>
+<li>健康检查</li>
+<li>静态资源管理
+&hellip;</li>
+</ol>
+
+<p>这些中间件将业务和非业务代码功能进行解耦：</p>
+
+<ol>
+<li>框架里面可能内置了一些常用的中间件，也可能只是内置中间件支持。你可以配置使用某个(些)，也能方便的自定义中间件</li>
+<li>Web视图中不需要手写中间件逻辑，按约定好的用法框架会在对应的生命周期中按照约定的顺序去执行这些中间件逻辑</li>
+</ol>
+
+<p>PS: Golang语言中最知名的Web框架Gin支持中间件，而且还官网搞了个叫<a href="https://github.com/gin-gonic/contrib">gin-gonic/contrib</a>的项目搜集社区里面的中间件。</p>
+
+<h3 id="消息队列-message-queue">消息队列(Message Queue)</h3>
+
+<p>消息队列就是Message+Queue。其实消息可以说是一个数据传输单位，它包含了创建时间、通道/主题信息、输入参数等全部数据；队列(Queue)是一种FIFO(先进先出)的数据结构，编程语言一般都内置（内存中的）队列实现，可以作为进程间通讯（IPC）的方法。使用队列最常见的场景就是生产者/消费者模式：生产者生产消息放到队列中，消费者从队列里面获取消息消费。</p>
+
+<p>准确的说，消息队列(以下简称MQ**是一种能实现生产者到消费者单向通信的通信模型，而一般大家说MQ是指实现了这个模型的中间件，比如RabbitMQ、RocketMQ、Kafka等。</p>
+
+<p>设想一个订单场景，当你付款成功之后要做什么：</p>
+
+<ol>
+<li>通知/提醒系统。通知商家有人买了Ta的商品，通知买家你购买成功（相当于确认订单）。通知/提醒的方式很多，如邮件、短信、App内消息等等</li>
+<li>会员系统。更新用户的积分、等级等</li>
+<li>日志系统。订单这么重要的服务需要有日志可以用于未来回溯问题</li>
+<li>推荐系统。更新用户画像，重新给用户推荐他可能感兴趣的商品
+..</li>
+</ol>
+
+<p>这就出现了一些问题：</p>
+
+<ol>
+<li>响应耗时。事实上做的比这要多得多，每一项都需要有开销，增加响应时间。如果这些逻辑是同步执行的，用户要等多久？这种体验是完全不可以接受的！<strong>所以呢，需要一种异步消费的机制</strong></li>
+<li>过度耦合。本来仅仅是一个订单系统，结果上述的那些东西都要堆进来，这就成了一个巨无霸应用，未来开发、维护都是问题</li>
+<li>错误丢失。假如这些后续的行为中某个(些)服务正好出现了故障执行失败或者验证超时，但是付款成功的确认是必须完成的，那么需要有个地方存这些还没有被正确消费的部分</li>
+<li>需要组(广)播。就像上面的订单场景，付款成功这个消息被发送给多个子系统，相当于组播。未来如果要新增删减订阅源，怎么便捷的实现呢？</li>
+</ol>
+
+<p>当然还有其他的问题：</p>
+
+<ol>
+<li>秒杀场景下并发可能会很高的，非常有可能出现出现远超现有服务器处理能力的情况，这就容易把系统搞崩了，如果出现这种问题时把未处理的放进消息队列，这就达到了「削峰」和「限流」的作用。</li>
+<li>某些场景下需要有消息的优先级
+&hellip;</li>
+</ol>
+
+<p>而消息中间件就是解决上述问题的，虽然不同的中间件的实现方案不同，但都具备以下特点：</p>
+
+<ol>
+<li>分布式。其实消息中间件解决的就是分布式系统之间消息传递的问题，消费者可以分布在多台服务器上，一方面降低了由于单点故障引起的消息队列阻塞的风险，另外一方面也非常容易横向扩展。</li>
+<li>持久可靠。消息队列一般会把接收到的消息存储到本地硬盘上，保证消息不会在未消息前莫名丢失。</li>
+<li>高性能和高吞吐量。例如RocketMQ有亿级消息堆积能力，广泛应用在阿里系的各种高并发场景下；而Kafka在实时计算、日志采集等场景下算是业界的标准。</li>
+</ol>
+
+<p>可以说，消息中间件是现在企业架构中不可或缺的组合部分，用了都说好。</p>
+
+<h3 id="消息代理-message-broker">消息代理(Message Broker)</h3>
+
+<p>消息代理是一种架构模式，用于消息验证、变换、路由。虽然不同的消息中间件架构和实现各不相同，但是大部分都实现了Broker：其实就是消息中间件服务器，它是中间件的核心。</p>
+
+<p>注意:RabbitMQ、Kafka、RocketMQ等都有消息代理，但是注意，不是所有中间件都这么选，例如ZeroMQ，它用了套接字风格的API。</p>
+
+<p>在一些地方其实说消息代理就是指消息中间件，如Python语言知名的分布式任务队列框架Celery中就这么称呼的（所谓的「任务」其实就是一个包含了任务全部数据的消息）。当然，Celery中使用的消息代理比知名的消息中间件范围广得多，其他的如Redis、MongoDB、Zookeeper等都可以作为消息代理，因为对于Celery来说，它要的只是一个消息存储的「代理」，类似数据库这种具备存储特性的软件都可以作为消息代理。</p>
+
+<h3 id="延伸阅读">延伸阅读</h3>
+
+<ol>
+<li><a href="https://github.com/Meituan-Dianping/Zebra/wiki/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B8%BB%E6%B5%81%E8%AE%BE%E8%AE%A1">https://github.com/Meituan-Dianping/Zebra/wiki/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B8%BB%E6%B5%81%E8%AE%BE%E8%AE%A1</a></li>
+<li><a href="https://docs.djangoproject.com/en/2.2/ref/middleware/">https://docs.djangoproject.com/en/2.2/ref/middleware/</a></li>
+<li><a href="https://dbaplus.cn/news-159-991-1.html">https://dbaplus.cn/news-159-991-1.html</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Message_broker">https://en.wikipedia.org/wiki/Message_broker</a></li>
+</ol>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://cdn.commento.io/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
+</html>
