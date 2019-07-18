@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="使用NSQ(附Golang代码)"/>
+<meta name="twitter:description" content="上篇文章已经了解了消息中间件相关的知识，这篇文章学习一下Golang语言编写的知名消息中间件NSQ。
+nsq最初是由bitly公司开源出来的一款简单易用的消息中间件，它可用于大规模系统中的实时消息服务，并且每天能够处理数亿级别的消息。它有以下特性：
+ 分布式。它提供了分布式的、去中心化且没有单点故障的拓扑结构，稳定的消息传输发布保障，能够具有高容错和高可用特性。 易于扩展。它支持水平扩展，没有中心化的消息代理(Broker)，内置的发现服务让集群中增加节点非常容易。 运维方便。它非常容易配置和部署，灵活性高。 高度集成。现在已经有官方的Golang、Python和JavaScript客户端，社区也有了其他各个语言的客户端库方便接入，自定义客户端也非常容易。  现在开始体验它~
+安装 首先安装它，我在Mac上用Homebrew安装：
+❯ brew install nsq 组件 nsq一共有四种组件
+nsqlookupd nsqlookupd是负责管理拓扑信息并提供最终一致性的发现服务的守护进程(daemon)。在终端1启动它：
+❯ nsqlookupd [nsqlookupd] 2019/07/18 11:42:16.876296 INFO: nsqlookupd v1.1.0 (built w/go1.11) [nsqlookupd] 2019/07/18 11:42:16.876864 INFO: HTTP: listening on [::]:4161 [nsqlookupd] 2019/07/18 11:42:16.876868 INFO: TCP: listening on [::]:4160 默认HTTP接口监听4161，TCP接口监听4160。
+nsqd nsqd是一个负责接收、排队、投递消息给客户端的守护进程。客户端通过查询 nsqlookupd 来发现指定话题（topic）的nsqd生产者，nsqd节点会广播话题（topic）和通道（channel）信息。数据流模型如下：
+单个nsqd可以有多个topic，每个topic可以有多个channel。channel接收这个topic所有消息的副本，从而实现多播分发，而channel上的每个消息被分发给它的订阅者，从而实现负载均衡。
+在终端2启动nsqd：
+❯ nsqd --lookupd-tcp-address=127.0.0.1:4160 ... [nsqd] 2019/07/18 11:47:46.427184 INFO: HTTP: listening on [::]:4151 [nsqd] 2019/07/18 11:47:46.427195 INFO: TCP: listening on [::]:4150 [nsqd] 2019/07/18 11:47:46."/>
+
+    <meta property="og:title" content="使用NSQ(附Golang代码)" />
+<meta property="og:description" content="上篇文章已经了解了消息中间件相关的知识，这篇文章学习一下Golang语言编写的知名消息中间件NSQ。
+nsq最初是由bitly公司开源出来的一款简单易用的消息中间件，它可用于大规模系统中的实时消息服务，并且每天能够处理数亿级别的消息。它有以下特性：
+ 分布式。它提供了分布式的、去中心化且没有单点故障的拓扑结构，稳定的消息传输发布保障，能够具有高容错和高可用特性。 易于扩展。它支持水平扩展，没有中心化的消息代理(Broker)，内置的发现服务让集群中增加节点非常容易。 运维方便。它非常容易配置和部署，灵活性高。 高度集成。现在已经有官方的Golang、Python和JavaScript客户端，社区也有了其他各个语言的客户端库方便接入，自定义客户端也非常容易。  现在开始体验它~
+安装 首先安装它，我在Mac上用Homebrew安装：
+❯ brew install nsq 组件 nsq一共有四种组件
+nsqlookupd nsqlookupd是负责管理拓扑信息并提供最终一致性的发现服务的守护进程(daemon)。在终端1启动它：
+❯ nsqlookupd [nsqlookupd] 2019/07/18 11:42:16.876296 INFO: nsqlookupd v1.1.0 (built w/go1.11) [nsqlookupd] 2019/07/18 11:42:16.876864 INFO: HTTP: listening on [::]:4161 [nsqlookupd] 2019/07/18 11:42:16.876868 INFO: TCP: listening on [::]:4160 默认HTTP接口监听4161，TCP接口监听4160。
+nsqd nsqd是一个负责接收、排队、投递消息给客户端的守护进程。客户端通过查询 nsqlookupd 来发现指定话题（topic）的nsqd生产者，nsqd节点会广播话题（topic）和通道（channel）信息。数据流模型如下：
+单个nsqd可以有多个topic，每个topic可以有多个channel。channel接收这个topic所有消息的副本，从而实现多播分发，而channel上的每个消息被分发给它的订阅者，从而实现负载均衡。
+在终端2启动nsqd：
+❯ nsqd --lookupd-tcp-address=127.0.0.1:4160 ... [nsqd] 2019/07/18 11:47:46.427184 INFO: HTTP: listening on [::]:4151 [nsqd] 2019/07/18 11:47:46.427195 INFO: TCP: listening on [::]:4150 [nsqd] 2019/07/18 11:47:46." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/use-nsq/" />
+<meta property="article:published_time" content="2019-07-18T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-18T00:00:00&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/use-nsq/">
+    
+    <title>
+  使用NSQ(附Golang代码) · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/use-nsq/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">使用NSQ(附Golang代码)</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-07-18T00:00:00Z'>
+                July 18, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              2 minutes read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/mq/">mq</a></div>
+
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="https://strconv.com/tags/mq/">mq</a>
+      <span class="separator">•</span>
+    <a href="https://strconv.com/tags/nsq/">nsq</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+
+<p>上篇文章已经了解了<a href="https://strconv.com/posts/message-queue/">消息中间件相关的知识</a>，这篇文章学习一下Golang语言编写的知名消息中间件<a href="https://github.com/nsqio/nsq">NSQ</a>。</p>
+
+<p>nsq最初是由bitly公司开源出来的一款简单易用的消息中间件，它可用于大规模系统中的实时消息服务，并且每天能够处理数亿级别的消息。它有以下特性：</p>
+
+<ol>
+<li>分布式。它提供了分布式的、去中心化且没有单点故障的拓扑结构，稳定的消息传输发布保障，能够具有高容错和高可用特性。</li>
+<li>易于扩展。它支持水平扩展，没有中心化的消息代理(Broker)，内置的发现服务让集群中增加节点非常容易。</li>
+<li>运维方便。它非常容易配置和部署，灵活性高。</li>
+<li>高度集成。现在已经有官方的Golang、Python和JavaScript客户端，社区也有了其他各个语言的客户端库方便接入，自定义客户端也非常容易。</li>
+</ol>
+
+<p>现在开始体验它~</p>
+
+<h3 id="安装">安装</h3>
+
+<p>首先安装它，我在Mac上用Homebrew安装：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ brew install nsq</code></pre></div>
+
+<h3 id="组件">组件</h3>
+
+<p>nsq一共有四种组件</p>
+
+<h4 id="nsqlookupd">nsqlookupd</h4>
+
+<p>nsqlookupd是负责管理拓扑信息并提供最终一致性的发现服务的守护进程(daemon)。在终端1启动它：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ nsqlookupd
+<span style="color:#ff79c6">[</span>nsqlookupd<span style="color:#ff79c6">]</span> <span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">11</span>:42:16.876296 INFO: nsqlookupd v1.1.0 <span style="color:#ff79c6">(</span>built w/go1.11<span style="color:#ff79c6">)</span>
+<span style="color:#ff79c6">[</span>nsqlookupd<span style="color:#ff79c6">]</span> <span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">11</span>:42:16.876864 INFO: HTTP: listening on <span style="color:#ff79c6">[</span>::<span style="color:#ff79c6">]</span>:4161
+<span style="color:#ff79c6">[</span>nsqlookupd<span style="color:#ff79c6">]</span> <span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">11</span>:42:16.876868 INFO: TCP: listening on <span style="color:#ff79c6">[</span>::<span style="color:#ff79c6">]</span>:4160</code></pre></div>
+
+<p>默认HTTP接口监听4161，TCP接口监听4160。</p>
+
+<h4 id="nsqd">nsqd</h4>
+
+<p>nsqd是一个负责接收、排队、投递消息给客户端的守护进程。客户端通过查询 nsqlookupd 来发现指定话题（topic）的nsqd生产者，nsqd节点会广播话题（topic）和通道（channel）信息。数据流模型如下：</p>
+
+<p><img src="https://f.cloud.github.com/assets/187441/1700696/f1434dc8-6029-11e3-8a66-18ca4ea10aca.gif" alt="" /></p>
+
+<p>单个nsqd可以有多个topic，每个topic可以有多个channel。channel接收这个topic所有消息的副本，从而实现多播分发，而channel上的每个消息被分发给它的订阅者，从而实现负载均衡。</p>
+
+<p>在终端2启动nsqd：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ nsqd --lookupd-tcp-address<span style="color:#ff79c6">=</span><span style="color:#bd93f9">127</span>.0.0.1:4160
+...
+<span style="color:#ff79c6">[</span>nsqd<span style="color:#ff79c6">]</span> <span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">11</span>:47:46.427184 INFO: HTTP: listening on <span style="color:#ff79c6">[</span>::<span style="color:#ff79c6">]</span>:4151
+<span style="color:#ff79c6">[</span>nsqd<span style="color:#ff79c6">]</span> <span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">11</span>:47:46.427195 INFO: TCP: listening on <span style="color:#ff79c6">[</span>::<span style="color:#ff79c6">]</span>:4150
+<span style="color:#ff79c6">[</span>nsqd<span style="color:#ff79c6">]</span> <span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">11</span>:47:46.427203 INFO: LOOKUP<span style="color:#ff79c6">(</span><span style="color:#bd93f9">127</span>.0.0.1:4160<span style="color:#ff79c6">)</span>: adding peer
+<span style="color:#ff79c6">[</span>nsqd<span style="color:#ff79c6">]</span> <span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">11</span>:47:46.427355 INFO: LOOKUP connecting to <span style="color:#bd93f9">127</span>.0.0.1:4160
+...</code></pre></div>
+
+<p>nsqd通过tcp端口连接到了nsqlookupd，它自己在4151接受HTTP请求，在4150接受TCP请求。</p>
+
+<h4 id="nsqadmin">nsqadmin</h4>
+
+<p>nsqadmin 是一套WEB管理UI，用来汇集集群的实时统计，并执行不同的管理任务。在终端3启动它：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ nsqadmin --lookupd-http-address<span style="color:#ff79c6">=</span><span style="color:#bd93f9">127</span>.0.0.1:4161
+<span style="color:#ff79c6">[</span>nsqadmin<span style="color:#ff79c6">]</span> <span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">11</span>:54:23.125392 INFO: nsqadmin v1.1.0 <span style="color:#ff79c6">(</span>built w/go1.11<span style="color:#ff79c6">)</span>
+<span style="color:#ff79c6">[</span>nsqadmin<span style="color:#ff79c6">]</span> <span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">11</span>:54:23.128755 INFO: HTTP: listening on <span style="color:#ff79c6">[</span>::<span style="color:#ff79c6">]</span>:4171</code></pre></div>
+
+<p>浏览器打开<code>http://localhost:4171</code>就能访问了，需要注意，管理UI可以按需启动。</p>
+
+<h4 id="功能工具">功能工具</h4>
+
+<p>安装nsq后会增加nsq_stat/nsq_tail/nsq_to_file等功能工具，这些实用程序以数据流的形式提供了通用功能和内部检查，稍后能体验到。</p>
+
+<h3 id="命令行体验">命令行体验</h3>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ curl -d <span style="color:#f1fa8c">&#39;hello world 1&#39;</span> <span style="color:#f1fa8c">&#39;http://127.0.0.1:4151/pub?topic=test&#39;</span>  <span style="color:#6272a4"># 在终端4执行</span>
+OK  <span style="color:#6272a4"># 发布消息到nsqd，用Rest API完成，看参数表示话题是test。由于还没有test这个话题，会先创建话题再接收消息。</span>
+❯ nsq_tail --lookupd-http-address<span style="color:#ff79c6">=</span><span style="color:#bd93f9">127</span>.0.0.1:4161 --topic<span style="color:#ff79c6">=</span><span style="color:#8be9fd;font-style:italic">test</span>  <span style="color:#6272a4"># 在终端5执行，一会再来看</span>
+<span style="color:#6272a4"># 回到终端4</span>
+❯ curl -d <span style="color:#f1fa8c">&#39;hello world 2&#39;</span> <span style="color:#f1fa8c">&#39;http://127.0.0.1:4151/pub?topic=test&#39;</span>
+OK
+~
+❯ curl -d <span style="color:#f1fa8c">&#39;hello world 3&#39;</span> <span style="color:#f1fa8c">&#39;http://127.0.0.1:4151/pub?topic=test&#39;</span>
+OK
+~
+<span style="color:#6272a4"># 回到终端5</span>
+❯ nsq_tail --lookupd-http-address<span style="color:#ff79c6">=</span><span style="color:#bd93f9">127</span>.0.0.1:4161 --topic<span style="color:#ff79c6">=</span><span style="color:#8be9fd;font-style:italic">test</span>
+<span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">12</span>:06:24 Adding consumer <span style="color:#ff79c6">for</span> topic: <span style="color:#8be9fd;font-style:italic">test</span>
+...
+hello world <span style="color:#bd93f9">2</span>
+hello world <span style="color:#bd93f9">3</span></code></pre></div>
+
+<p>回到终端5，可以看到接受(消费)了启动nsq_tail后发布的2个消息，这就是功能工具的作用，另外如<code>nsq_to_file</code>是把消息发到文件。</p>
+
+<h3 id="nsq的go客户端使用">nsq的Go客户端使用</h3>
+
+<p>首先安装go-nsq:</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go get github.com/nsqio/go-nsq</code></pre></div>
+
+<p>先看生产者:</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;github.com/nsqio/go-nsq&#34;</span>
+	<span style="color:#f1fa8c">&#34;log&#34;</span>
+	<span style="color:#f1fa8c">&#34;math/rand&#34;</span>
+	<span style="color:#f1fa8c">&#34;time&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	config <span style="color:#ff79c6">:=</span> nsq.<span style="color:#50fa7b">NewConfig</span>()
+	w, err <span style="color:#ff79c6">:=</span> nsq.<span style="color:#50fa7b">NewProducer</span>(<span style="color:#f1fa8c">&#34;127.0.0.1:4150&#34;</span>, config)
+
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Panic</span>(err)
+	}
+
+	chars <span style="color:#ff79c6">:=</span> []<span style="color:#8be9fd;font-style:italic">byte</span>(<span style="color:#f1fa8c">&#34;ABCDEFGHIJKLMNOPQRSTUVWXYZ&#34;</span>)
+
+	<span style="color:#ff79c6">for</span> {
+		buf <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">make</span>([]<span style="color:#8be9fd">byte</span>, <span style="color:#bd93f9">4</span>)
+		<span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">0</span>; i &lt; <span style="color:#bd93f9">4</span>; i<span style="color:#ff79c6">++</span> {
+			buf[i] = chars[rand.<span style="color:#50fa7b">Intn</span>(<span style="color:#8be9fd;font-style:italic">len</span>(chars))]
+		}
+		log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Pub: %s&#34;</span>, buf)
+		err = w.<span style="color:#50fa7b">Publish</span>(<span style="color:#f1fa8c">&#34;test&#34;</span>, buf)
+		<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+			log.<span style="color:#50fa7b">Panic</span>(err)
+		}
+		time.<span style="color:#50fa7b">Sleep</span>(time.Second <span style="color:#ff79c6">*</span> <span style="color:#bd93f9">1</span>)
+	}
+
+	w.<span style="color:#50fa7b">Stop</span>()
+}</code></pre></div>
+
+<p>NewProducer的第一个参数就是nsqd的地址，在这里做了个无限for循环，每次随机4个byte发布到test话题里面。</p>
+
+<p>接着看消费者代码：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;log&#34;</span>
+	<span style="color:#f1fa8c">&#34;sync&#34;</span>
+
+	<span style="color:#f1fa8c">&#34;github.com/nsqio/go-nsq&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+
+	wg <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">&amp;</span>sync.WaitGroup{}
+	wg.<span style="color:#50fa7b">Add</span>(<span style="color:#bd93f9">1000</span>)
+
+	config <span style="color:#ff79c6">:=</span> nsq.<span style="color:#50fa7b">NewConfig</span>()
+	q, _ <span style="color:#ff79c6">:=</span> nsq.<span style="color:#50fa7b">NewConsumer</span>(<span style="color:#f1fa8c">&#34;test&#34;</span>, <span style="color:#f1fa8c">&#34;ch&#34;</span>, config)
+	q.<span style="color:#50fa7b">AddHandler</span>(nsq.<span style="color:#50fa7b">HandlerFunc</span>(<span style="color:#8be9fd;font-style:italic">func</span>(message <span style="color:#ff79c6">*</span>nsq.Message) <span style="color:#8be9fd">error</span> {
+		log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Got a message: %s&#34;</span>, message.Body)
+		wg.<span style="color:#50fa7b">Done</span>()
+		<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+	}))
+	err <span style="color:#ff79c6">:=</span> q.<span style="color:#50fa7b">ConnectToNSQD</span>(<span style="color:#f1fa8c">&#34;127.0.0.1:4150&#34;</span>)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Panic</span>(err)
+	}
+	wg.<span style="color:#50fa7b">Wait</span>()
+
+}</code></pre></div>
+
+<p>一开始通过sync.WaitGroup安排了1000个待执行的等待组，NewConsumer的第一个参数是话题test，第二是通道名字，然后用AddHandler添加一个消费处理函数，在处理函数中会打印这个消息。</p>
+
+<p>现在就可以体验了，首先启动消费者，再启动发布者。</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run consumer.go
+<span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">15</span>:29:29 INF    <span style="color:#bd93f9">1</span> <span style="color:#ff79c6">[</span>test/ch<span style="color:#ff79c6">]</span> <span style="color:#ff79c6">(</span><span style="color:#bd93f9">127</span>.0.0.1:4150<span style="color:#ff79c6">)</span> connecting to nsqd
+<span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">15</span>:29:37 Got a message: ZGBA
+<span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">15</span>:29:38 Got a message: ICMR
+<span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">15</span>:29:39 Got a message: AJWW
+<span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">15</span>:29:40 Got a message: HTHC
+<span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">15</span>:29:41 Got a message: TCUA
+...
+❯ go run producer.go
+<span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">15</span>:29:36 INF    <span style="color:#bd93f9">1</span> <span style="color:#ff79c6">(</span><span style="color:#bd93f9">127</span>.0.0.1:4150<span style="color:#ff79c6">)</span> connecting to nsqd
+<span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">15</span>:29:37 Pub: ZGBA
+<span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">15</span>:29:38 Pub: ICMR
+<span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">15</span>:29:39 Pub: AJWW
+<span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">15</span>:29:40 Pub: HTHC
+<span style="color:#bd93f9">2019</span>/07/18 <span style="color:#bd93f9">15</span>:29:41 Pub: TCUA
+...</code></pre></div>
+
+<h3 id="代码地址">代码地址</h3>
+
+<p>完整代码可以在<a href="https://github.com/golang-dev/strconv.code/blob/master/nsq">这个地址</a>找到。</p>
+
+<h3 id="延伸阅读">延伸阅读</h3>
+
+<ol>
+<li><a href="https://nsq.io/overview/quick_start.html">https://nsq.io/overview/quick_start.html</a></li>
+</ol>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://cdn.commento.io/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
+</html>
