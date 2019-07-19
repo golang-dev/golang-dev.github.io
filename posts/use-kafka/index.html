@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="使用Kafka(附Golang代码)"/>
+<meta name="twitter:description" content="Kafka是由LinkedIn开发的一个分布式的消息中间件。
+安装 首先到官网下载页面下载最新的发布版本，目前最新版是2.3.0(发布于2019年6月25日)。 ❯ wget http://mirrors.tuna.tsinghua.edu.cn/apache/kafka/2.3.0/kafka_2.12-2.3.0.tgz ❯ tar -xzf kafka_2.12-2.3.0.tgz ❯ cd kafka_2.12-2.3.0
+Kafka需要配置Zookeeper使用，Zookeeper是Hadoop和Hbase的重要组件，可以为分布式应用程序协调服务。所以需要先启动一个ZooKeeper服务器，kafka源码中自带了便捷脚本来快速简单地创建一个单节点ZooKeeper实例：
+❯ bin/zookeeper-server-start.sh config/zookeeper.properties # 放在终端1或者tmux里面 然后启动Kafka服务器（启动前应该已经安装Openjdk了）：
+❯ bin/kafka-server-start.sh config/server.properties 这样Kafka服务器就启动了，首先体验下在终端用源码自带的脚本创建Topic，发布和消费消息等：
+# 创建叫做“strconv” 的topic， 它有一个分区和一个副本 ❯ bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic strconv # 列出全部topic ❯ bin/kafka-topics.sh --list --zookeeper localhost:2181 __consumer_offsets strconv test # 启动生产者，在交互模式下输入2条消息 ❯ bin/kafka-console-producer.sh --broker-list localhost:9092 --topic strconv &gt;Message 1 &gt;Message 2 # 启动消费者，从开始部分消费，会将消息转储到标准输出 ❯ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic strconv --from-beginning Message 1 Message 2 我就不继续演示多代理集群等用法了，可以看官方文档了解。"/>
+
+    <meta property="og:title" content="使用Kafka(附Golang代码)" />
+<meta property="og:description" content="Kafka是由LinkedIn开发的一个分布式的消息中间件。
+安装 首先到官网下载页面下载最新的发布版本，目前最新版是2.3.0(发布于2019年6月25日)。 ❯ wget http://mirrors.tuna.tsinghua.edu.cn/apache/kafka/2.3.0/kafka_2.12-2.3.0.tgz ❯ tar -xzf kafka_2.12-2.3.0.tgz ❯ cd kafka_2.12-2.3.0
+Kafka需要配置Zookeeper使用，Zookeeper是Hadoop和Hbase的重要组件，可以为分布式应用程序协调服务。所以需要先启动一个ZooKeeper服务器，kafka源码中自带了便捷脚本来快速简单地创建一个单节点ZooKeeper实例：
+❯ bin/zookeeper-server-start.sh config/zookeeper.properties # 放在终端1或者tmux里面 然后启动Kafka服务器（启动前应该已经安装Openjdk了）：
+❯ bin/kafka-server-start.sh config/server.properties 这样Kafka服务器就启动了，首先体验下在终端用源码自带的脚本创建Topic，发布和消费消息等：
+# 创建叫做“strconv” 的topic， 它有一个分区和一个副本 ❯ bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic strconv # 列出全部topic ❯ bin/kafka-topics.sh --list --zookeeper localhost:2181 __consumer_offsets strconv test # 启动生产者，在交互模式下输入2条消息 ❯ bin/kafka-console-producer.sh --broker-list localhost:9092 --topic strconv &gt;Message 1 &gt;Message 2 # 启动消费者，从开始部分消费，会将消息转储到标准输出 ❯ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic strconv --from-beginning Message 1 Message 2 我就不继续演示多代理集群等用法了，可以看官方文档了解。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/use-kafka/" />
+<meta property="article:published_time" content="2019-07-19T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-19T00:00:00&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/use-kafka/">
+    
+    <title>
+  使用Kafka(附Golang代码) · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/use-kafka/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">使用Kafka(附Golang代码)</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-07-19T00:00:00Z'>
+                July 19, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              6 minutes read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/mq/">mq</a></div>
+
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="https://strconv.com/tags/mq/">mq</a>
+      <span class="separator">•</span>
+    <a href="https://strconv.com/tags/kafka/">kafka</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+
+<p>Kafka是由LinkedIn开发的一个分布式的消息中间件。</p>
+
+<h3 id="安装">安装</h3>
+
+<p>首先到<a href="https://kafka.apache.org/downloads">官网下载页面</a>下载最新的发布版本，目前最新版是2.3.0(发布于2019年6月25日)。
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ wget http://mirrors.tuna.tsinghua.edu.cn/apache/kafka/2.3.0/kafka_2.12-2.3.0.tgz
+❯ tar -xzf kafka_2.12-2.3.0.tgz
+❯ <span style="color:#8be9fd;font-style:italic">cd</span> kafka_2.12-2.3.0</code></pre></div></p>
+
+<p>Kafka需要配置Zookeeper使用，Zookeeper是Hadoop和Hbase的重要组件，可以为分布式应用程序协调服务。所以需要先启动一个ZooKeeper服务器，kafka源码中自带了便捷脚本来快速简单地创建一个单节点ZooKeeper实例：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ bin/zookeeper-server-start.sh config/zookeeper.properties  <span style="color:#6272a4"># 放在终端1或者tmux里面</span></code></pre></div>
+
+<p>然后启动Kafka服务器（启动前应该已经安装Openjdk了）：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ bin/kafka-server-start.sh config/server.properties</code></pre></div>
+
+<p>这样Kafka服务器就启动了，首先体验下在终端用源码自带的脚本创建Topic，发布和消费消息等：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#6272a4"># 创建叫做“strconv” 的topic， 它有一个分区和一个副本</span>
+❯ bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor <span style="color:#bd93f9">1</span> --partitions <span style="color:#bd93f9">1</span> --topic strconv
+<span style="color:#6272a4"># 列出全部topic</span>
+❯ bin/kafka-topics.sh --list --zookeeper localhost:2181
+__consumer_offsets
+strconv
+<span style="color:#8be9fd;font-style:italic">test</span>
+<span style="color:#6272a4"># 启动生产者，在交互模式下输入2条消息</span>
+❯ bin/kafka-console-producer.sh --broker-list localhost:9092 --topic strconv
+&gt;Message <span style="color:#bd93f9">1</span>
+&gt;Message <span style="color:#bd93f9">2</span>
+<span style="color:#6272a4"># 启动消费者，从开始部分消费，会将消息转储到标准输出</span>
+❯ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic strconv --from-beginning
+Message <span style="color:#bd93f9">1</span>
+Message <span style="color:#bd93f9">2</span></code></pre></div>
+
+<p>我就不继续演示多代理集群等用法了，可以看官方文档了解。</p>
+
+<p>接着用Golang编写生产者和消费者，目前有2个主流的Golang客户端，我们挨个体验下。</p>
+
+<p>顺便解释下，虽然 LinkedIn 开源了 Kafka，但是这个公司的核心语言用的是 Java，而且鲜少 Golang 应用，所以自己并没有 Golang 客户端。</p>
+
+<h3 id="confluent-kafka-go">confluent-kafka-go</h3>
+
+<p><a href="https://github.com/confluentinc/confluent-kafka-go">confluent-kafka-go</a>是Confluent公司的开源的Golang客户端。它其
+实是C/C++客户端librdkafka的Golang封装。先安装它：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ brew install librdkafka pkg-config
+❯ go get -u gopkg.in/confluentinc/confluent-kafka-go.v1/kafka</code></pre></div>
+
+<p>项目下的examples 目录下有很多例子供参考。我就仿着写一个例子，首先看生产者：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+	<span style="color:#f1fa8c">&#34;gopkg.in/confluentinc/confluent-kafka-go.v1/kafka&#34;</span>
+	<span style="color:#f1fa8c">&#34;os&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+
+	<span style="color:#ff79c6">if</span> <span style="color:#8be9fd;font-style:italic">len</span>(os.Args) <span style="color:#ff79c6">!=</span> <span style="color:#bd93f9">3</span> {
+		fmt.<span style="color:#50fa7b">Fprintf</span>(os.Stderr, <span style="color:#f1fa8c">&#34;Usage: %s &lt;broker&gt; &lt;topic&gt;\n&#34;</span>,
+			os.Args[<span style="color:#bd93f9">0</span>])
+		os.<span style="color:#50fa7b">Exit</span>(<span style="color:#bd93f9">1</span>)
+	}
+
+	broker <span style="color:#ff79c6">:=</span> os.Args[<span style="color:#bd93f9">1</span>]
+	topic <span style="color:#ff79c6">:=</span> os.Args[<span style="color:#bd93f9">2</span>]
+
+	p, err <span style="color:#ff79c6">:=</span> kafka.<span style="color:#50fa7b">NewProducer</span>(<span style="color:#ff79c6">&amp;</span>kafka.ConfigMap{<span style="color:#f1fa8c">&#34;bootstrap.servers&#34;</span>: broker})
+
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Failed to create producer: %s\n&#34;</span>, err)
+		os.<span style="color:#50fa7b">Exit</span>(<span style="color:#bd93f9">1</span>)
+	}
+
+	fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Created Producer %v\n&#34;</span>, p)
+	deliveryChan <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">make</span>(<span style="color:#8be9fd;font-style:italic">chan</span> kafka.Event)
+
+	value <span style="color:#ff79c6">:=</span> <span style="color:#f1fa8c">&#34;Hello Go!&#34;</span>
+	err = p.<span style="color:#50fa7b">Produce</span>(<span style="color:#ff79c6">&amp;</span>kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: <span style="color:#ff79c6">&amp;</span>topic, Partition: kafka.PartitionAny},
+		Value:          []<span style="color:#8be9fd;font-style:italic">byte</span>(value),
+		Headers:        []kafka.Header{{Key: <span style="color:#f1fa8c">&#34;myTestHeader&#34;</span>, Value: []<span style="color:#8be9fd;font-style:italic">byte</span>(<span style="color:#f1fa8c">&#34;header values are binary&#34;</span>)}},
+	}, deliveryChan)
+
+	e <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">&lt;-</span>deliveryChan
+	m <span style="color:#ff79c6">:=</span> e.(<span style="color:#ff79c6">*</span>kafka.Message)
+
+	<span style="color:#ff79c6">if</span> m.TopicPartition.Error <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Delivery failed: %v\n&#34;</span>, m.TopicPartition.Error)
+	} <span style="color:#ff79c6">else</span> {
+		fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Delivered message to topic %s [%d] at offset %v\n&#34;</span>,
+			<span style="color:#ff79c6">*</span>m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
+	}
+
+	<span style="color:#8be9fd;font-style:italic">close</span>(deliveryChan)
+}</code></pre></div>
+
+<p>例子里面用了os.Args，可以获得终端位置参数的结果，<code>confluent_producer.go</code>需要传递2个参数：broker和topic。用Produce方法就发布一条消息，内容是&rdquo;Hello Go!&ldquo;，另外消息中有个键为myTestHeader值为&rdquo;header values are binary&rdquo;的头信息&rdquo; 。最后看Message的结果判断是不是交付成功了，成功后会打印分区和消费进度offset。然后是消费者：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+	<span style="color:#f1fa8c">&#34;gopkg.in/confluentinc/confluent-kafka-go.v1/kafka&#34;</span>
+	<span style="color:#f1fa8c">&#34;os&#34;</span>
+	<span style="color:#f1fa8c">&#34;os/signal&#34;</span>
+	<span style="color:#f1fa8c">&#34;syscall&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+
+	<span style="color:#ff79c6">if</span> <span style="color:#8be9fd;font-style:italic">len</span>(os.Args) &lt; <span style="color:#bd93f9">4</span> {
+		fmt.<span style="color:#50fa7b">Fprintf</span>(os.Stderr, <span style="color:#f1fa8c">&#34;Usage: %s &lt;broker&gt; &lt;group&gt; &lt;topics..&gt;\n&#34;</span>,
+			os.Args[<span style="color:#bd93f9">0</span>])
+		os.<span style="color:#50fa7b">Exit</span>(<span style="color:#bd93f9">1</span>)
+	}
+
+	broker <span style="color:#ff79c6">:=</span> os.Args[<span style="color:#bd93f9">1</span>]
+	group <span style="color:#ff79c6">:=</span> os.Args[<span style="color:#bd93f9">2</span>]
+	topics <span style="color:#ff79c6">:=</span> os.Args[<span style="color:#bd93f9">3</span>:]
+	sigchan <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">make</span>(<span style="color:#8be9fd;font-style:italic">chan</span> os.Signal, <span style="color:#bd93f9">1</span>)
+	signal.<span style="color:#50fa7b">Notify</span>(sigchan, syscall.SIGINT, syscall.SIGTERM)
+
+	c, err <span style="color:#ff79c6">:=</span> kafka.<span style="color:#50fa7b">NewConsumer</span>(<span style="color:#ff79c6">&amp;</span>kafka.ConfigMap{
+		<span style="color:#f1fa8c">&#34;bootstrap.servers&#34;</span>: broker,
+		<span style="color:#f1fa8c">&#34;broker.address.family&#34;</span>: <span style="color:#f1fa8c">&#34;v4&#34;</span>,
+		<span style="color:#f1fa8c">&#34;group.id&#34;</span>:              group,
+		<span style="color:#f1fa8c">&#34;session.timeout.ms&#34;</span>:    <span style="color:#bd93f9">6000</span>,
+		<span style="color:#f1fa8c">&#34;auto.offset.reset&#34;</span>:     <span style="color:#f1fa8c">&#34;earliest&#34;</span>})
+
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		fmt.<span style="color:#50fa7b">Fprintf</span>(os.Stderr, <span style="color:#f1fa8c">&#34;Failed to create consumer: %s\n&#34;</span>, err)
+		os.<span style="color:#50fa7b">Exit</span>(<span style="color:#bd93f9">1</span>)
+	}
+
+	fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Created Consumer %v\n&#34;</span>, c)
+
+	err = c.<span style="color:#50fa7b">SubscribeTopics</span>(topics, <span style="color:#ff79c6">nil</span>)
+
+	run <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">true</span>
+
+	<span style="color:#ff79c6">for</span> run <span style="color:#ff79c6">==</span> <span style="color:#ff79c6">true</span> {
+		<span style="color:#ff79c6">select</span> {
+		<span style="color:#ff79c6">case</span> sig <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">&lt;-</span>sigchan:
+			fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Caught signal %v: terminating\n&#34;</span>, sig)
+			run = <span style="color:#ff79c6">false</span>
+		<span style="color:#ff79c6">default</span>:
+			ev <span style="color:#ff79c6">:=</span> c.<span style="color:#50fa7b">Poll</span>(<span style="color:#bd93f9">100</span>)
+			<span style="color:#ff79c6">if</span> ev <span style="color:#ff79c6">==</span> <span style="color:#ff79c6">nil</span> {
+				<span style="color:#ff79c6">continue</span>
+			}
+
+			<span style="color:#ff79c6">switch</span> e <span style="color:#ff79c6">:=</span> ev.(<span style="color:#8be9fd;font-style:italic">type</span>) {
+			<span style="color:#ff79c6">case</span> <span style="color:#ff79c6">*</span>kafka.Message:
+				fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;%% Message on %s:\n%s\n&#34;</span>,
+					e.TopicPartition, <span style="color:#8be9fd;font-style:italic">string</span>(e.Value))
+				<span style="color:#ff79c6">if</span> e.Headers <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+					fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;%% Headers: %v\n&#34;</span>, e.Headers)
+				}
+			<span style="color:#ff79c6">case</span> kafka.Error:
+				fmt.<span style="color:#50fa7b">Fprintf</span>(os.Stderr, <span style="color:#f1fa8c">&#34;%% Error: %v: %v\n&#34;</span>, e.<span style="color:#50fa7b">Code</span>(), e)
+				<span style="color:#ff79c6">if</span> e.<span style="color:#50fa7b">Code</span>() <span style="color:#ff79c6">==</span> kafka.ErrAllBrokersDown {
+					run = <span style="color:#ff79c6">false</span>
+				}
+			<span style="color:#ff79c6">default</span>:
+				fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Ignored %v\n&#34;</span>, e)
+			}
+		}
+	}
+
+	fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Closing consumer\n&#34;</span>)
+	c.<span style="color:#50fa7b">Close</span>()
+}</code></pre></div>
+
+<p>消费者接受三个参数：broker地址、GroupID和Topic名字。GroupID作用于消费者组，相同的GroupID标识消费者在一个组内，这些消费者协调在一起来消费订阅主题的所有分区，所以用一个新的GroupID可以再订阅主题的所有分区的消息一次。先生产2个消息：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run confluent_producer.go localhost:9092 strconv
+Created Producer rdkafka#producer-1
+Delivered message to topic strconv <span style="color:#ff79c6">[</span><span style="color:#bd93f9">0</span><span style="color:#ff79c6">]</span> at offset <span style="color:#bd93f9">0</span>
+❯ go run confluent_producer.go localhost:9092 strconv
+Created Producer rdkafka#producer-1
+Delivered message to topic strconv <span style="color:#ff79c6">[</span><span style="color:#bd93f9">0</span><span style="color:#ff79c6">]</span> at offset <span style="color:#bd93f9">1</span></code></pre></div>
+
+<p>可以看到执行一次就会发布一个消息，由于strconv只有一个分区，所以输出都是<code>[0]</code>，而offset会从0开始递增。接着启动消费者：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#6272a4"># 终端1</span>
+❯ go run confluent_consumer.go localhost:9092 <span style="color:#bd93f9">1</span> strconv
+Created Consumer rdkafka#consumer-1
+% Message on strconv<span style="color:#ff79c6">[</span><span style="color:#bd93f9">0</span><span style="color:#ff79c6">]</span>@0:
+Hello Go!
+% Headers: <span style="color:#ff79c6">[</span><span style="color:#8be9fd;font-style:italic">myTestHeader</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;header values are binary&#34;</span><span style="color:#ff79c6">]</span>
+% Message on strconv<span style="color:#ff79c6">[</span><span style="color:#bd93f9">0</span><span style="color:#ff79c6">]</span>@1:
+Hello Go!
+% Headers: <span style="color:#ff79c6">[</span><span style="color:#8be9fd;font-style:italic">myTestHeader</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;header values are binary&#34;</span><span style="color:#ff79c6">]</span>
+Ignored OffsetsCommitted <span style="color:#ff79c6">(</span>&lt;nil&gt;, <span style="color:#ff79c6">[</span>strconv<span style="color:#ff79c6">[</span><span style="color:#bd93f9">0</span><span style="color:#ff79c6">]</span>@2<span style="color:#ff79c6">])</span>
+<span style="color:#6272a4"># 终端2</span>
+❯ go run confluent_consumer.go localhost:9092 <span style="color:#bd93f9">2</span> strconv
+Created Consumer rdkafka#consumer-1
+% Message on strconv<span style="color:#ff79c6">[</span><span style="color:#bd93f9">0</span><span style="color:#ff79c6">]</span>@0:
+Hello Go!
+% Headers: <span style="color:#ff79c6">[</span><span style="color:#8be9fd;font-style:italic">myTestHeader</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;header values are binary&#34;</span><span style="color:#ff79c6">]</span>
+% Message on strconv<span style="color:#ff79c6">[</span><span style="color:#bd93f9">0</span><span style="color:#ff79c6">]</span>@1:
+Hello Go!
+% Headers: <span style="color:#ff79c6">[</span><span style="color:#8be9fd;font-style:italic">myTestHeader</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;header values are binary&#34;</span><span style="color:#ff79c6">]</span>
+Ignored OffsetsCommitted <span style="color:#ff79c6">(</span>&lt;nil&gt;, <span style="color:#ff79c6">[</span>strconv<span style="color:#ff79c6">[</span><span style="color:#bd93f9">0</span><span style="color:#ff79c6">]</span>@2<span style="color:#ff79c6">])</span></code></pre></div>
+
+<p>2个终端下，GroupID不同，所以他们各自消费了全部消息(2个)。</p>
+
+<p>另外说明一下，这篇文章里所有代码部分，生产者都接收2个参数：消息代理服务器地址、Topic名字，消费者都接收三个参数：消息代理服务器地址、GroupID、Topic名字。</p>
+
+<h3 id="sarama">Sarama</h3>
+
+<p><a href="https://github.com/Shopify/sarama">sarama</a>是Shopify开源的Golang客户端。第一步还是先安装它：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go get -u github.com/Shopify/sarama</code></pre></div>
+
+<p>为了演示多分区消息，这次重新创建一个Topic(叫做sarama)，建2个分区：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor <span style="color:#bd93f9">1</span> --partitions <span style="color:#bd93f9">2</span> --topic sarama</code></pre></div>
+
+<p>然后看生产者：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+	<span style="color:#f1fa8c">&#34;log&#34;</span>
+	<span style="color:#f1fa8c">&#34;math/rand&#34;</span>
+	<span style="color:#f1fa8c">&#34;os&#34;</span>
+	<span style="color:#f1fa8c">&#34;os/signal&#34;</span>
+	<span style="color:#f1fa8c">&#34;strconv&#34;</span>
+	<span style="color:#f1fa8c">&#34;time&#34;</span>
+
+	<span style="color:#f1fa8c">&#34;github.com/Shopify/sarama&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	<span style="color:#ff79c6">if</span> <span style="color:#8be9fd;font-style:italic">len</span>(os.Args) <span style="color:#ff79c6">!=</span> <span style="color:#bd93f9">3</span> {
+		fmt.<span style="color:#50fa7b">Fprintf</span>(os.Stderr, <span style="color:#f1fa8c">&#34;Usage: %s &lt;broker&gt; &lt;topic&gt;\n&#34;</span>,
+			os.Args[<span style="color:#bd93f9">0</span>])
+		os.<span style="color:#50fa7b">Exit</span>(<span style="color:#bd93f9">1</span>)
+	}
+
+	broker <span style="color:#ff79c6">:=</span> os.Args[<span style="color:#bd93f9">1</span>]
+	topic <span style="color:#ff79c6">:=</span> os.Args[<span style="color:#bd93f9">2</span>]
+
+	config <span style="color:#ff79c6">:=</span> sarama.<span style="color:#50fa7b">NewConfig</span>()
+	config.Producer.Retry.Max = <span style="color:#bd93f9">5</span>
+	config.Producer.RequiredAcks = sarama.WaitForAll
+	producer, err <span style="color:#ff79c6">:=</span> sarama.<span style="color:#50fa7b">NewAsyncProducer</span>([]<span style="color:#8be9fd">string</span>{broker}, config)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		<span style="color:#8be9fd;font-style:italic">panic</span>(err)
+	}
+
+	<span style="color:#ff79c6">defer</span> <span style="color:#8be9fd;font-style:italic">func</span>() {
+		<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">:=</span> producer.<span style="color:#50fa7b">Close</span>(); err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+			<span style="color:#8be9fd;font-style:italic">panic</span>(err)
+		}
+	}()
+
+	signals <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">make</span>(<span style="color:#8be9fd;font-style:italic">chan</span> os.Signal, <span style="color:#bd93f9">1</span>)
+	signal.<span style="color:#50fa7b">Notify</span>(signals, os.Interrupt)
+
+	chars <span style="color:#ff79c6">:=</span> []<span style="color:#8be9fd;font-style:italic">byte</span>(<span style="color:#f1fa8c">&#34;ABCDEFGHIJKLMNOPQRSTUVWXYZ&#34;</span>)
+
+	<span style="color:#8be9fd;font-style:italic">var</span> enqueued, errors <span style="color:#8be9fd">int</span>
+	doneCh <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">make</span>(<span style="color:#8be9fd;font-style:italic">chan</span> <span style="color:#8be9fd;font-style:italic">struct</span>{})
+	<span style="color:#ff79c6">go</span> <span style="color:#8be9fd;font-style:italic">func</span>() {
+		<span style="color:#ff79c6">for</span> {
+
+			time.<span style="color:#50fa7b">Sleep</span>(<span style="color:#bd93f9">1</span> <span style="color:#ff79c6">*</span> time.Second)
+
+			buf <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">make</span>([]<span style="color:#8be9fd">byte</span>, <span style="color:#bd93f9">4</span>)
+			<span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">0</span>; i &lt; <span style="color:#bd93f9">4</span>; i<span style="color:#ff79c6">++</span> {
+				buf[i] = chars[rand.<span style="color:#50fa7b">Intn</span>(<span style="color:#8be9fd;font-style:italic">len</span>(chars))]
+			}
+
+			strTime <span style="color:#ff79c6">:=</span> strconv.<span style="color:#50fa7b">Itoa</span>(<span style="color:#8be9fd;font-style:italic">int</span>(time.<span style="color:#50fa7b">Now</span>().<span style="color:#50fa7b">Unix</span>()))
+			msg <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">&amp;</span>sarama.ProducerMessage{
+				Topic: topic,
+				Key:   sarama.<span style="color:#50fa7b">StringEncoder</span>(strTime),
+				Value: sarama.<span style="color:#50fa7b">StringEncoder</span>(buf),
+			}
+			<span style="color:#ff79c6">select</span> {
+			<span style="color:#ff79c6">case</span> producer.<span style="color:#50fa7b">Input</span>() <span style="color:#ff79c6">&lt;-</span> msg:
+				enqueued<span style="color:#ff79c6">++</span>
+				fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Produce message: %s\n&#34;</span>, buf)
+			<span style="color:#ff79c6">case</span> err <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">&lt;-</span>producer.<span style="color:#50fa7b">Errors</span>():
+				errors<span style="color:#ff79c6">++</span>
+				fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Failed to produce message:&#34;</span>, err)
+			<span style="color:#ff79c6">case</span> <span style="color:#ff79c6">&lt;-</span>signals:
+				doneCh <span style="color:#ff79c6">&lt;-</span> <span style="color:#8be9fd;font-style:italic">struct</span>{}{}
+			}
+		}
+	}()
+
+	<span style="color:#ff79c6">&lt;-</span>doneCh
+	log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Enqueued: %d; errors: %d\n&#34;</span>, enqueued, errors)
+}</code></pre></div>
+
+<p>sarama有AsyncProducer和SyncProducer2中，这里是异步的。每次把键位当时时间戳，值为随机4个字符串的消息通过<code>producer.Input()</code>通道发布。</p>
+
+<p>消费程序也是用消费组：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;context&#34;</span>
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+	<span style="color:#f1fa8c">&#34;log&#34;</span>
+	<span style="color:#f1fa8c">&#34;os&#34;</span>
+	<span style="color:#f1fa8c">&#34;os/signal&#34;</span>
+	<span style="color:#f1fa8c">&#34;sync&#34;</span>
+	<span style="color:#f1fa8c">&#34;syscall&#34;</span>
+
+	<span style="color:#f1fa8c">&#34;github.com/Shopify/sarama&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">type</span> Consumer <span style="color:#8be9fd;font-style:italic">struct</span> {
+	ready <span style="color:#8be9fd;font-style:italic">chan</span> <span style="color:#8be9fd">bool</span>
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> (consumer <span style="color:#ff79c6">*</span>Consumer) <span style="color:#50fa7b">Setup</span>(sarama.ConsumerGroupSession) <span style="color:#8be9fd">error</span> {
+	<span style="color:#8be9fd;font-style:italic">close</span>(consumer.ready)
+	<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> (consumer <span style="color:#ff79c6">*</span>Consumer) <span style="color:#50fa7b">Cleanup</span>(sarama.ConsumerGroupSession) <span style="color:#8be9fd">error</span> {
+	<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> (consumer <span style="color:#ff79c6">*</span>Consumer) <span style="color:#50fa7b">ConsumeClaim</span>(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) <span style="color:#8be9fd">error</span> {
+	<span style="color:#ff79c6">for</span> message <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">range</span> claim.<span style="color:#50fa7b">Messages</span>() {
+		log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Message claimed: key = %s, value = %v, topic = %s, partition = %v, offset = %v&#34;</span>, <span style="color:#8be9fd;font-style:italic">string</span>(message.Key), <span style="color:#8be9fd;font-style:italic">string</span>(message.Value), message.Topic, message.Partition, message.Offset)
+		session.<span style="color:#50fa7b">MarkMessage</span>(message, <span style="color:#f1fa8c">&#34;&#34;</span>)
+	}
+
+	<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	<span style="color:#ff79c6">if</span> <span style="color:#8be9fd;font-style:italic">len</span>(os.Args) &lt; <span style="color:#bd93f9">4</span> {
+		fmt.<span style="color:#50fa7b">Fprintf</span>(os.Stderr, <span style="color:#f1fa8c">&#34;Usage: %s &lt;broker&gt; &lt;group&gt; &lt;topics..&gt;\n&#34;</span>,
+			os.Args[<span style="color:#bd93f9">0</span>])
+		os.<span style="color:#50fa7b">Exit</span>(<span style="color:#bd93f9">1</span>)
+	}
+
+	broker <span style="color:#ff79c6">:=</span> os.Args[<span style="color:#bd93f9">1</span>]
+	group <span style="color:#ff79c6">:=</span> os.Args[<span style="color:#bd93f9">2</span>]
+	topics <span style="color:#ff79c6">:=</span> os.Args[<span style="color:#bd93f9">3</span>:]
+
+	version, err <span style="color:#ff79c6">:=</span> sarama.<span style="color:#50fa7b">ParseKafkaVersion</span>(<span style="color:#f1fa8c">&#34;2.3.0&#34;</span>)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Panicf</span>(<span style="color:#f1fa8c">&#34;Error parsing Kafka version: %v&#34;</span>, err)
+	}
+
+	config <span style="color:#ff79c6">:=</span> sarama.<span style="color:#50fa7b">NewConfig</span>()
+	config.Version = version
+	consumer <span style="color:#ff79c6">:=</span> Consumer{
+		ready: <span style="color:#8be9fd;font-style:italic">make</span>(<span style="color:#8be9fd;font-style:italic">chan</span> <span style="color:#8be9fd">bool</span>, <span style="color:#bd93f9">0</span>),
+	}
+
+	ctx, cancel <span style="color:#ff79c6">:=</span> context.<span style="color:#50fa7b">WithCancel</span>(context.<span style="color:#50fa7b">Background</span>())
+	client, err <span style="color:#ff79c6">:=</span> sarama.<span style="color:#50fa7b">NewConsumerGroup</span>([]<span style="color:#8be9fd">string</span>{broker}, group, config)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Panicf</span>(<span style="color:#f1fa8c">&#34;Error creating consumer group client: %v&#34;</span>, err)
+	}
+
+	wg <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">&amp;</span>sync.WaitGroup{}
+	<span style="color:#ff79c6">go</span> <span style="color:#8be9fd;font-style:italic">func</span>() {
+		wg.<span style="color:#50fa7b">Add</span>(<span style="color:#bd93f9">1</span>)
+		<span style="color:#ff79c6">defer</span> wg.<span style="color:#50fa7b">Done</span>()
+		<span style="color:#ff79c6">for</span> {
+			<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">:=</span> client.<span style="color:#50fa7b">Consume</span>(ctx, topics, <span style="color:#ff79c6">&amp;</span>consumer); err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+				log.<span style="color:#50fa7b">Panicf</span>(<span style="color:#f1fa8c">&#34;Error from consumer: %v&#34;</span>, err)
+			}
+			<span style="color:#ff79c6">if</span> ctx.<span style="color:#50fa7b">Err</span>() <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+				<span style="color:#ff79c6">return</span>
+			}
+			consumer.ready = <span style="color:#8be9fd;font-style:italic">make</span>(<span style="color:#8be9fd;font-style:italic">chan</span> <span style="color:#8be9fd">bool</span>, <span style="color:#bd93f9">0</span>)
+		}
+	}()
+
+	<span style="color:#ff79c6">&lt;-</span>consumer.ready
+
+	sigterm <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">make</span>(<span style="color:#8be9fd;font-style:italic">chan</span> os.Signal, <span style="color:#bd93f9">1</span>)
+	signal.<span style="color:#50fa7b">Notify</span>(sigterm, syscall.SIGINT, syscall.SIGTERM)
+	<span style="color:#ff79c6">select</span> {
+	<span style="color:#ff79c6">case</span> <span style="color:#ff79c6">&lt;-</span>ctx.<span style="color:#50fa7b">Done</span>():
+		log.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;terminating: context cancelled&#34;</span>)
+	<span style="color:#ff79c6">case</span> <span style="color:#ff79c6">&lt;-</span>sigterm:
+		log.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;terminating: via signal&#34;</span>)
+	}
+	<span style="color:#50fa7b">cancel</span>()
+	wg.<span style="color:#50fa7b">Wait</span>()
+	<span style="color:#ff79c6">if</span> err = client.<span style="color:#50fa7b">Close</span>(); err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Panicf</span>(<span style="color:#f1fa8c">&#34;Error closing client: %v&#34;</span>, err)
+	}
+}</code></pre></div>
+
+<p>消费者要这个要复杂一些，一开始声明了Consumer结构体，包含Setup/Cleanup/ConsumeClaim方法，这个都是处理时需要的方法。另外在消费组用法下需要<code>sarama.ParseKafkaVersion(&quot;2.3.0&quot;)</code>指定Kafka版本,另外这里面也添加了信号Signal，当终端程序时会判断终止原因，如果是Ctrl+c之类的信号引起的会打印<code>terminating: via signal</code>。</p>
+
+<p>另外用了消费逻辑是放在协程中运行的，用了sync.WaitGroup保证协程运行结束再关闭。还要要注意用<code>context.WithCancel</code>创建的上下文也也返回了取消函数，需要在最后取消上下文，要不然信号无法终止程序。</p>
+
+<p>运行一下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run sarama_producer.go localhost:9092 sarama
+Produce message: BZGB
+Produce message: CTCU
+Produce message: SJFB
+Produce message: DNJO
+Produce message: EZQL
+Produce message: JZPF
+Produce message: SBZR
+Produce message: FDZD
+
+❯ go run sarama_consumer.go localhost:9092 <span style="color:#bd93f9">1</span> sarama
+<span style="color:#bd93f9">2019</span>/07/19 <span style="color:#bd93f9">13</span>:01:07 Message claimed: <span style="color:#8be9fd;font-style:italic">key</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1563512466</span>, <span style="color:#8be9fd;font-style:italic">value</span> <span style="color:#ff79c6">=</span> BZGB, <span style="color:#8be9fd;font-style:italic">topic</span> <span style="color:#ff79c6">=</span> sarama, <span style="color:#8be9fd;font-style:italic">partition</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>, <span style="color:#8be9fd;font-style:italic">offset</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>
+<span style="color:#bd93f9">2019</span>/07/19 <span style="color:#bd93f9">13</span>:01:07 Message claimed: <span style="color:#8be9fd;font-style:italic">key</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1563512467</span>, <span style="color:#8be9fd;font-style:italic">value</span> <span style="color:#ff79c6">=</span> CTCU, <span style="color:#8be9fd;font-style:italic">topic</span> <span style="color:#ff79c6">=</span> sarama, <span style="color:#8be9fd;font-style:italic">partition</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>, <span style="color:#8be9fd;font-style:italic">offset</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>
+<span style="color:#bd93f9">2019</span>/07/19 <span style="color:#bd93f9">13</span>:01:08 Message claimed: <span style="color:#8be9fd;font-style:italic">key</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1563512468</span>, <span style="color:#8be9fd;font-style:italic">value</span> <span style="color:#ff79c6">=</span> SJFB, <span style="color:#8be9fd;font-style:italic">topic</span> <span style="color:#ff79c6">=</span> sarama, <span style="color:#8be9fd;font-style:italic">partition</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>, <span style="color:#8be9fd;font-style:italic">offset</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>
+<span style="color:#bd93f9">2019</span>/07/19 <span style="color:#bd93f9">13</span>:01:09 Message claimed: <span style="color:#8be9fd;font-style:italic">key</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1563512469</span>, <span style="color:#8be9fd;font-style:italic">value</span> <span style="color:#ff79c6">=</span> DNJO, <span style="color:#8be9fd;font-style:italic">topic</span> <span style="color:#ff79c6">=</span> sarama, <span style="color:#8be9fd;font-style:italic">partition</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>, <span style="color:#8be9fd;font-style:italic">offset</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>
+<span style="color:#bd93f9">2019</span>/07/19 <span style="color:#bd93f9">13</span>:01:10 Message claimed: <span style="color:#8be9fd;font-style:italic">key</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1563512470</span>, <span style="color:#8be9fd;font-style:italic">value</span> <span style="color:#ff79c6">=</span> EZQL, <span style="color:#8be9fd;font-style:italic">topic</span> <span style="color:#ff79c6">=</span> sarama, <span style="color:#8be9fd;font-style:italic">partition</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>, <span style="color:#8be9fd;font-style:italic">offset</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">2</span>
+<span style="color:#bd93f9">2019</span>/07/19 <span style="color:#bd93f9">13</span>:01:11 Message claimed: <span style="color:#8be9fd;font-style:italic">key</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1563512471</span>, <span style="color:#8be9fd;font-style:italic">value</span> <span style="color:#ff79c6">=</span> JZPF, <span style="color:#8be9fd;font-style:italic">topic</span> <span style="color:#ff79c6">=</span> sarama, <span style="color:#8be9fd;font-style:italic">partition</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>, <span style="color:#8be9fd;font-style:italic">offset</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">2</span>
+<span style="color:#bd93f9">2019</span>/07/19 <span style="color:#bd93f9">13</span>:01:12 Message claimed: <span style="color:#8be9fd;font-style:italic">key</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1563512472</span>, <span style="color:#8be9fd;font-style:italic">value</span> <span style="color:#ff79c6">=</span> SBZR, <span style="color:#8be9fd;font-style:italic">topic</span> <span style="color:#ff79c6">=</span> sarama, <span style="color:#8be9fd;font-style:italic">partition</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>, <span style="color:#8be9fd;font-style:italic">offset</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">3</span>
+<span style="color:#bd93f9">2019</span>/07/19 <span style="color:#bd93f9">13</span>:01:13 Message claimed: <span style="color:#8be9fd;font-style:italic">key</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1563512473</span>, <span style="color:#8be9fd;font-style:italic">value</span> <span style="color:#ff79c6">=</span> FDZD, <span style="color:#8be9fd;font-style:italic">topic</span> <span style="color:#ff79c6">=</span> sarama, <span style="color:#8be9fd;font-style:italic">partition</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>, <span style="color:#8be9fd;font-style:italic">offset</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">3</span></code></pre></div>
+
+<p>可以看到这些消息被相对均匀的分布到0和1这2个分区里面。另外可以在其他终端上用别的GroupID订阅消息如<code>go run sarama_consumer.go localhost:9092 2 sarama</code>(GroupID为2)。</p>
+
+<p>如果多个终端的GroupID一样，不同的进程会消费绑定的对应分区里面的消息，不会重复消费。举个例子：有2个终端执行<code>go run sarama_consumer.go localhost:9092 1 sarama</code>，那么终端A会消费0分区的，终端B会消费1分区的消息。但有3个终端执行的话，由于目前只有2个分区，终端C由于没有绑定到分区，什么都不会消费</p>
+
+<h3 id="后记">后记</h3>
+
+<p>Sarama无论是文档还是API都差很多，至于Star会比confluent-kafka-go高很多我不太理解，可能是Sarama创建时间比较早。</p>
+
+<p>我决定在以后的项目中使用confluent-kafka-go，如果你有对应的在生产环境中使用的经验，欢迎留言告诉我~</p>
+
+<h3 id="代码地址">代码地址</h3>
+
+<p>完整代码可以在<a href="https://github.com/golang-dev/strconv.code/blob/master/kafka">这个地址</a>找到。</p>
+
+<h3 id="延伸阅读">延伸阅读</h3>
+
+<ol>
+<li><a href="https://kafka.apache.org/quickstart">https://kafka.apache.org/quickstart</a></li>
+</ol>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://cdn.commento.io/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
+</html>
