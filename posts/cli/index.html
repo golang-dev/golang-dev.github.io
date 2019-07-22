@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Golang第三方命令行工具 - spf13/cobra和urfave/cli"/>
+<meta name="twitter:description" content="虽然Go语言标准库里面有flag包可以作为命令行解析工具，但是flag包的用法有限，举例几个场景：
+ 子命令。flag虽然也可以支持子命令，如hugo server，但是写起来非常麻烦。对于三级甚至更多级别的子命令更不支持。 &ndash;开头参数。flag只支持带一个减号的参数，例如hugo --debug这种支持很有限。 同时支持1/2个开头的参数。例如hugo，支持-h和--help，都是显示帮助信息。  所以在实际项目中可以引入第三方命令行工具更好的支持这些场景。目前Go语言世界中最流行的工具库包含spf13/cobra和urfave/cli。
+spf13/cobra spf13/cobra既是一个用来创建强大的现代CLI命令行的golang库，也是一个生成程序应用和命令行文件的工具。Docker、Kubernetes、Hugo、 Etcd等程序都使用了它构建命令。
+首先安装它：
+❯ go get -u github.com/spf13/cobra/cobra 先感受下生成程序应用和命令行的用法，也就是直接生成个命令行架子：
+❯ mkdir -p ~/strconv.code/cli/src/cobraDemo ❯ cd ~/strconv.code/cli/src/cobraDemo ❯ cobra init --pkg-name cobraDemo # 创建一个叫做cobraDemo的应用，目前官网文档该没有更新，旧的`cobra init cobraDemo`已经不能用了 ❯ tree . # 在当前目录下会创建一个cmd(里面只包含root.go)和一个main.go . ├── LICENSE ├── cmd │ └── root.go └── main.go 1 directory, 3 file # 由于指定了包名cobraDemo，且其不在默认的GOROOT或者GOPATH目录下，所以需要让GOPATH加上当前项目的源代码目录 ❯ export GOPATH=$GOPATH:/Users/dongwm/strconv.code/cli ❯ go run main.go A longer description that spans multiple lines and likely contains examples and usage of using your application."/>
+
+    <meta property="og:title" content="Golang第三方命令行工具 - spf13/cobra和urfave/cli" />
+<meta property="og:description" content="虽然Go语言标准库里面有flag包可以作为命令行解析工具，但是flag包的用法有限，举例几个场景：
+ 子命令。flag虽然也可以支持子命令，如hugo server，但是写起来非常麻烦。对于三级甚至更多级别的子命令更不支持。 &ndash;开头参数。flag只支持带一个减号的参数，例如hugo --debug这种支持很有限。 同时支持1/2个开头的参数。例如hugo，支持-h和--help，都是显示帮助信息。  所以在实际项目中可以引入第三方命令行工具更好的支持这些场景。目前Go语言世界中最流行的工具库包含spf13/cobra和urfave/cli。
+spf13/cobra spf13/cobra既是一个用来创建强大的现代CLI命令行的golang库，也是一个生成程序应用和命令行文件的工具。Docker、Kubernetes、Hugo、 Etcd等程序都使用了它构建命令。
+首先安装它：
+❯ go get -u github.com/spf13/cobra/cobra 先感受下生成程序应用和命令行的用法，也就是直接生成个命令行架子：
+❯ mkdir -p ~/strconv.code/cli/src/cobraDemo ❯ cd ~/strconv.code/cli/src/cobraDemo ❯ cobra init --pkg-name cobraDemo # 创建一个叫做cobraDemo的应用，目前官网文档该没有更新，旧的`cobra init cobraDemo`已经不能用了 ❯ tree . # 在当前目录下会创建一个cmd(里面只包含root.go)和一个main.go . ├── LICENSE ├── cmd │ └── root.go └── main.go 1 directory, 3 file # 由于指定了包名cobraDemo，且其不在默认的GOROOT或者GOPATH目录下，所以需要让GOPATH加上当前项目的源代码目录 ❯ export GOPATH=$GOPATH:/Users/dongwm/strconv.code/cli ❯ go run main.go A longer description that spans multiple lines and likely contains examples and usage of using your application." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/cli/" />
+<meta property="article:published_time" content="2019-07-22T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-22T00:00:00&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/cli/">
+    
+    <title>
+  Golang第三方命令行工具 - spf13/cobra和urfave/cli · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/cli/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Golang第三方命令行工具 - spf13/cobra和urfave/cli</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-07-22T00:00:00Z'>
+                July 22, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              6 minutes read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/cli/">cli</a></div>
+
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="https://strconv.com/tags/cli/">cli</a>
+      <span class="separator">•</span>
+    <a href="https://strconv.com/tags/cobra/">cobra</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+
+<p>虽然Go语言标准库里面有<a href="https://strconv.com/posts/flag/">flag包</a>可以作为命令行解析工具，但是flag包的用法有限，举例几个场景：</p>
+
+<ol>
+<li>子命令。flag虽然也可以支持子命令，如<code>hugo server</code>，但是写起来非常麻烦。对于三级甚至更多级别的子命令更不支持。</li>
+<li>&ndash;开头参数。flag只支持带一个减号的参数，例如<code>hugo --debug</code>这种支持很有限。</li>
+<li>同时支持1/2个开头的参数。例如hugo，支持<code>-h</code>和<code>--help</code>，都是显示帮助信息。</li>
+</ol>
+
+<p>所以在实际项目中可以引入第三方命令行工具更好的支持这些场景。目前Go语言世界中最流行的工具库包含<code>spf13/cobra</code>和<code>urfave/cli</code>。</p>
+
+<h3 id="spf13-cobra">spf13/cobra</h3>
+
+<p><a href="https://github.com/spf13/cobra">spf13/cobra</a>既是一个用来创建强大的现代CLI命令行的golang库，也是一个生成程序应用和命令行文件的工具。Docker、Kubernetes、Hugo、 Etcd等程序都使用了它构建命令。</p>
+
+<p>首先安装它：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go get -u github.com/spf13/cobra/cobra</code></pre></div>
+
+<p>先感受下生成程序应用和命令行的用法，也就是直接生成个命令行架子：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ mkdir -p ~/strconv.code/cli/src/cobraDemo
+❯ <span style="color:#8be9fd;font-style:italic">cd</span> ~/strconv.code/cli/src/cobraDemo
+❯ cobra init --pkg-name cobraDemo  <span style="color:#6272a4"># 创建一个叫做cobraDemo的应用，目前官网文档该没有更新，旧的`cobra init cobraDemo`已经不能用了</span>
+❯ tree .  <span style="color:#6272a4"># 在当前目录下会创建一个cmd(里面只包含root.go)和一个main.go</span>
+.
+├── LICENSE
+├── cmd
+│   └── root.go
+└── main.go
+
+<span style="color:#bd93f9">1</span> directory, <span style="color:#bd93f9">3</span> file
+<span style="color:#6272a4"># 由于指定了包名cobraDemo，且其不在默认的GOROOT或者GOPATH目录下，所以需要让GOPATH加上当前项目的源代码目录</span>
+❯ <span style="color:#8be9fd;font-style:italic">export</span> <span style="color:#8be9fd;font-style:italic">GOPATH</span><span style="color:#ff79c6">=</span><span style="color:#8be9fd;font-style:italic">$GOPATH</span>:/Users/dongwm/strconv.code/cli
+❯ go run main.go
+A longer description that spans multiple lines and likely contains
+examples and usage of using your application. For example:
+
+Cobra is a CLI library <span style="color:#ff79c6">for</span> Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.</code></pre></div>
+
+<p>这样可以看到默认的输出了，不过目前还没有子命令。代码架构是这样的(为了让结构清晰，去掉了一部分代码)：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#6272a4">// main.go
+</span><span style="color:#6272a4"></span><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> <span style="color:#f1fa8c">&#34;cobraDemo/cmd&#34;</span>
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+  cmd.<span style="color:#50fa7b">Execute</span>()
+}
+<span style="color:#6272a4">// cmd/root.go
+</span><span style="color:#6272a4"></span><span style="color:#ff79c6">package</span> cmd
+
+<span style="color:#ff79c6">import</span> (
+  <span style="color:#f1fa8c">&#34;fmt&#34;</span>
+  <span style="color:#f1fa8c">&#34;os&#34;</span>
+  <span style="color:#f1fa8c">&#34;github.com/spf13/cobra&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">var</span> rootCmd = <span style="color:#ff79c6">&amp;</span>cobra.Command{
+  Use:   <span style="color:#f1fa8c">&#34;cobraDemo&#34;</span>,
+  Short: <span style="color:#f1fa8c">&#34;A brief description of your application&#34;</span>,
+  Long: <span style="color:#f1fa8c">`A longer description...`</span>
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">init</span>() {
+  cobra.<span style="color:#50fa7b">OnInitialize</span>(initConfig)  <span style="color:#6272a4">// viper是cobra集成的配置文件读取的库，以后我们会专门说
+</span><span style="color:#6272a4"></span>
+  rootCmd.<span style="color:#50fa7b">PersistentFlags</span>().<span style="color:#50fa7b">StringVar</span>(<span style="color:#ff79c6">&amp;</span>cfgFile, <span style="color:#f1fa8c">&#34;config&#34;</span>, <span style="color:#f1fa8c">&#34;&#34;</span>, <span style="color:#f1fa8c">&#34;config file (default is $HOME/.cobraDemo.yaml)&#34;</span>) <span style="color:#6272a4">// 添加`--config`参数。它是全局的~
+</span><span style="color:#6272a4"></span>
+
+  <span style="color:#6272a4">// Cobra also supports local flags, which will only run
+</span><span style="color:#6272a4"></span>  <span style="color:#6272a4">// when this action is called directly.
+</span><span style="color:#6272a4"></span>  rootCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">BoolP</span>(<span style="color:#f1fa8c">&#34;toggle&#34;</span>, <span style="color:#f1fa8c">&#34;t&#34;</span>, <span style="color:#ff79c6">false</span>, <span style="color:#f1fa8c">&#34;Help message for toggle&#34;</span>) <span style="color:#6272a4">// 添加一个布尔值的参数toggle, 在命令行可以用`-t`或者`--toggle`指定
+</span><span style="color:#6272a4"></span>}
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Execute</span>() {
+  <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">:=</span> rootCmd.<span style="color:#50fa7b">Execute</span>(); err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+    fmt.<span style="color:#50fa7b">Println</span>(err)
+    os.<span style="color:#50fa7b">Exit</span>(<span style="color:#bd93f9">1</span>)
+  }
+}</code></pre></div>
+
+<p>接着我们添加一个子命令new:</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ cobra add new
+new created at /Users/dongwm/strconv.code/cli/src/cobraDemo
+❯ tree .
+.
+├── LICENSE
+├── cmd
+│   ├── new.go
+│   └── root.go
+└── main.go
+
+<span style="color:#bd93f9">1</span> directory, <span style="color:#bd93f9">4</span> files</code></pre></div>
+
+<p>可以看到这样就多了<code>cmd/new.go</code>文件，去掉注释和空行如下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> cmd
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+
+	<span style="color:#f1fa8c">&#34;github.com/spf13/cobra&#34;</span>
+)
+<span style="color:#8be9fd;font-style:italic">var</span> newCmd = <span style="color:#ff79c6">&amp;</span>cobra.Command{
+	Use:   <span style="color:#f1fa8c">&#34;new&#34;</span>,
+	Short: <span style="color:#f1fa8c">&#34;A brief description of your command&#34;</span>,
+	Long: <span style="color:#f1fa8c">`A longer description...`</span>,
+    Run: <span style="color:#8be9fd;font-style:italic">func</span>(cmd <span style="color:#ff79c6">*</span>cobra.Command, args []<span style="color:#8be9fd">string</span>) {
+           fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;new called&#34;</span>)
+    },
+}
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">init</span>() {
+	rootCmd.<span style="color:#50fa7b">AddCommand</span>(newCmd)
+}</code></pre></div>
+
+<p>添加命令就是在init函数中执行<code>rootCmd.AddCommand</code>，而newCmd中比之前看的rootCmd多了一个Run成员，指定执行子命令时要做什么，这样整个命令应用就可以用了。为了让输出更简洁我把Command里面的Long部分改短一些，效果是这样的：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run main.go --help
+A longer description...
+
+Usage:
+  cobraDemo <span style="color:#ff79c6">[</span>command<span style="color:#ff79c6">]</span>
+
+Available Commands:
+  <span style="color:#8be9fd;font-style:italic">help</span>        Help about any <span style="color:#8be9fd;font-style:italic">command</span>
+  new         A brief description of your <span style="color:#8be9fd;font-style:italic">command</span>
+
+Flags:
+      --config string   config file <span style="color:#ff79c6">(</span>default is <span style="color:#8be9fd;font-style:italic">$HOME</span>/.cobraDemo.yaml<span style="color:#ff79c6">)</span>
+  -h, --help            <span style="color:#8be9fd;font-style:italic">help</span> <span style="color:#ff79c6">for</span> cobraDemo
+  -t, --toggle          Help message <span style="color:#ff79c6">for</span> toggle
+
+Use <span style="color:#f1fa8c">&#34;cobraDemo [command] --help&#34;</span> <span style="color:#ff79c6">for</span> more information about a command.
+❯ go run main.go new --help
+A longer description...
+
+Usage:
+  cobraDemo new <span style="color:#ff79c6">[</span>flags<span style="color:#ff79c6">]</span>
+
+Flags:
+  -h, --help   <span style="color:#8be9fd;font-style:italic">help</span> <span style="color:#ff79c6">for</span> new
+
+Global Flags:
+      --config string   config file <span style="color:#ff79c6">(</span>default is <span style="color:#8be9fd;font-style:italic">$HOME</span>/.cobraDemo.yaml<span style="color:#ff79c6">)</span>
+❯ go run main.go new
+new called</code></pre></div>
+
+<p>可以感受到：</p>
+
+<ol>
+<li><code>--config</code>是全局的，根命令和子命令下都包含了这个参数项</li>
+<li><code>-h</code>(&ndash;help)是默认参数项</li>
+<li>根命令和子命令可以配置需要的参数项</li>
+</ol>
+
+<p>当然我们可以直接在程序里面集成cobra，就像上面做的代码解析，无非就是用<code>cobra.Command</code>创建一个rootCmd，用<code>rootCmd.AddCommand</code>添加子命令，在对应代码文件的init函数中定义flag。cobra支持2种定义参数的方法：</p>
+
+<ol>
+<li>newCmd.PersistentFlags。全局参数，根命令和子命令下都包含了这个参数项」。可以说定义一次，全局可用。</li>
+<li>newCmd.Flags。本地参数，只对当前命令下生效，其他子命令下不会继承。</li>
+</ol>
+
+<p>在new子命令下体验定义flag的方法(都用<code>newCmd.Flags</code>)：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> cmd
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+
+	<span style="color:#f1fa8c">&#34;github.com/spf13/cobra&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">var</span> (
+	n, a <span style="color:#8be9fd">int</span>
+	s <span style="color:#8be9fd">string</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">var</span> newCmd = <span style="color:#ff79c6">&amp;</span>cobra.Command{
+	Use:   <span style="color:#f1fa8c">&#34;new&#34;</span>,
+	Short: <span style="color:#f1fa8c">&#34;A brief description of your command&#34;</span>,
+	Long: <span style="color:#f1fa8c">`A longer description...`</span>,
+	Run: <span style="color:#8be9fd;font-style:italic">func</span>(cmd <span style="color:#ff79c6">*</span>cobra.Command, args []<span style="color:#8be9fd">string</span>) {
+		fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;n is %v\n&#34;</span>, n)
+		fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;a is %v\n&#34;</span>, a)
+		fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;s is %v\n&#34;</span>, s)
+		q, _ <span style="color:#ff79c6">:=</span> cmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">GetBool</span>(<span style="color:#f1fa8c">&#34;q&#34;</span>)
+		fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;q is %v\n&#34;</span>, q)
+		bbb, _ <span style="color:#ff79c6">:=</span> cmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">GetInt</span>(<span style="color:#f1fa8c">&#34;bbb&#34;</span>)
+		fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;bbb is %v\n&#34;</span>, bbb)
+	},
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">init</span>() {
+	rootCmd.<span style="color:#50fa7b">AddCommand</span>(newCmd)
+
+	newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">IntVar</span>(<span style="color:#ff79c6">&amp;</span>n, <span style="color:#f1fa8c">&#34;intf&#34;</span>, <span style="color:#bd93f9">0</span>, <span style="color:#f1fa8c">&#34;Set Int&#34;</span>)
+	newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">StringVar</span>(<span style="color:#ff79c6">&amp;</span>s, <span style="color:#f1fa8c">&#34;stringf&#34;</span>, <span style="color:#f1fa8c">&#34;sss&#34;</span>, <span style="color:#f1fa8c">&#34;Set String&#34;</span>)
+	newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">Bool</span>(<span style="color:#f1fa8c">&#34;q&#34;</span>, <span style="color:#ff79c6">false</span>, <span style="color:#f1fa8c">&#34;Set Bool&#34;</span>)
+
+	newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">IntVarP</span>(<span style="color:#ff79c6">&amp;</span>a, <span style="color:#f1fa8c">&#34;aaa&#34;</span>, <span style="color:#f1fa8c">&#34;a&#34;</span>, <span style="color:#bd93f9">1</span>, <span style="color:#f1fa8c">&#34;Set A&#34;</span>)
+	newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">IntP</span>(<span style="color:#f1fa8c">&#34;bbb&#34;</span>, <span style="color:#f1fa8c">&#34;b&#34;</span>, <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>, <span style="color:#f1fa8c">&#34;Set B&#34;</span>)
+}</code></pre></div>
+
+<p>和Golang语言内置的flag库用法很像，cobra也支持XXVar这样的方法(XX可以使String、Int、Bool等)，第一个参数用的都是变量内存地址，这样在命令行下传递对应的参数就会改变量的值。另外也支持XXP和XXVarP这样的写法：XXP/XXVarP这样的不仅支持短参数也支持长参数，而XXVar只支持长参数；XXP和XXVarP这2种写法的区别主要是看第一个参数，XXP这样的方式中不需要预先定义变量，把内存地址传进来。</p>
+
+<p>怎么获得解析后的参数项和值呢？就看newCmd的Run，用<code>fmt.Printf</code>分别打印了n、a、s(因为定义变量，可以直接找到)，而q和bbb这2个参数是隐式的，需要用<code>cmd.Flags().GetXX</code>，关键看参数的值的类型，如q是一个布尔值，所以用<code>cmd.Flags().GetBool(&quot;q&quot;)</code>就能获取对应参数的值了，我们体验下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run main.go new -h
+A longer description...
+
+Usage:
+  cobraDemo new <span style="color:#ff79c6">[</span>flags<span style="color:#ff79c6">]</span>
+
+Flags:
+  -a, --aaa int          Set A <span style="color:#ff79c6">(</span>default <span style="color:#bd93f9">1</span><span style="color:#ff79c6">)</span>
+  -b, --bbb int          Set B <span style="color:#ff79c6">(</span>default -1<span style="color:#ff79c6">)</span>
+  -h, --help             <span style="color:#8be9fd;font-style:italic">help</span> <span style="color:#ff79c6">for</span> new
+      --intf int         Set Int
+      --q                Set Bool
+      --stringf string   Set String <span style="color:#ff79c6">(</span>default <span style="color:#f1fa8c">&#34;sss&#34;</span><span style="color:#ff79c6">)</span>
+
+Global Flags:
+      --config string   config file <span style="color:#ff79c6">(</span>default is <span style="color:#8be9fd;font-style:italic">$HOME</span>/.cobraDemo.yaml<span style="color:#ff79c6">)</span>
+❯ go run main.go new
+n is <span style="color:#bd93f9">0</span>
+a is <span style="color:#bd93f9">1</span>
+s is sss
+q is <span style="color:#8be9fd;font-style:italic">false</span>
+bbb is -1
+❯ go run main.go new -a <span style="color:#bd93f9">1</span> --bbb<span style="color:#ff79c6">=</span><span style="color:#bd93f9">2</span> --intf <span style="color:#bd93f9">3</span> --stringf<span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;abc&#34;</span> --q
+n is <span style="color:#bd93f9">3</span>
+a is <span style="color:#bd93f9">1</span>
+s is abc
+q is <span style="color:#8be9fd;font-style:italic">true</span>
+bbb is <span style="color:#bd93f9">2</span></code></pre></div>
+
+<p>这个库的体验就先到这里了，更多的功能和用法请看官方文档。</p>
+
+<h3 id="urfave-cli">urfave/cli</h3>
+
+<p><a href="https://github.com/urfave/cli">urfave/cli</a>是一个简单、快速的命令行程序开发框架，使用它的知名项目包含Gogs、Drone、Gitea等。</p>
+
+<p>首先安装它：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go get github.com/urfave/cli</code></pre></div>
+
+<p>先了解下<code>urfave/cli</code>中怎么定义Flag</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+	<span style="color:#f1fa8c">&#34;github.com/urfave/cli&#34;</span>
+	<span style="color:#f1fa8c">&#34;log&#34;</span>
+	<span style="color:#f1fa8c">&#34;os&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">var</span> (
+	flags []cli.Flag
+	host  <span style="color:#8be9fd">string</span>
+	port  <span style="color:#8be9fd">int</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">init</span>() {
+	flags = []cli.Flag{
+		cli.StringFlag{
+			Name:        <span style="color:#f1fa8c">&#34;t, host, ip-address&#34;</span>,
+			Value:       <span style="color:#f1fa8c">&#34;127.0.0.1&#34;</span>,
+			Usage:       <span style="color:#f1fa8c">&#34;Server host&#34;</span>,
+			Destination: <span style="color:#ff79c6">&amp;</span>host,
+		},
+		cli.IntFlag{
+			Name:        <span style="color:#f1fa8c">&#34;p, port&#34;</span>,
+			Value:       <span style="color:#bd93f9">8000</span>,
+			Usage:       <span style="color:#f1fa8c">&#34;Server port&#34;</span>,
+			Destination: <span style="color:#ff79c6">&amp;</span>port,
+		},
+	}
+}
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	app <span style="color:#ff79c6">:=</span> cli.<span style="color:#50fa7b">NewApp</span>()
+	app.Name = <span style="color:#f1fa8c">&#34;AppName&#34;</span>
+	app.Usage = <span style="color:#f1fa8c">&#34;Application Usage&#34;</span>
+	app.HideVersion = <span style="color:#ff79c6">true</span>
+	app.Flags = flags
+	app.Action = Action
+
+	err <span style="color:#ff79c6">:=</span> app.<span style="color:#50fa7b">Run</span>(os.Args)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Fatal</span>(err)
+	}
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Action</span>(c <span style="color:#ff79c6">*</span>cli.Context) <span style="color:#8be9fd">error</span> {
+	<span style="color:#ff79c6">if</span> c.<span style="color:#50fa7b">Int</span>(<span style="color:#f1fa8c">&#34;port&#34;</span>) &lt; <span style="color:#bd93f9">1024</span> {
+		cli.<span style="color:#50fa7b">ShowAppHelp</span>(c)
+		<span style="color:#ff79c6">return</span> cli.<span style="color:#50fa7b">NewExitError</span>(<span style="color:#f1fa8c">&#34;Ports below 1024 is not available&#34;</span>, <span style="color:#bd93f9">2</span>)
+	}
+
+    fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Listening at: http://%s:%d&#34;</span>, host, c.<span style="color:#50fa7b">Int</span>(<span style="color:#f1fa8c">&#34;port&#34;</span>))
+	<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+}</code></pre></div>
+
+<p>flags是cli.Flag结构列表，包含主机名和端口2项Flag，每项都指定了Name(可以有多个，用逗号隔开)、Value(默认值)、Usage(帮助信息)、Destination(对应变量的内存地址，因为在命令行内会修改变量)。要注意Flag需要使用对应类型XXFlag（如cli.StringFlag、cli.IntFlag)</p>
+
+<p>在main函数中首先用<code>cli.NewApp()</code>创建一个新的app，Name、Usage等项的值在帮助输出中都有体现，HideVersion是用于隐藏版本号，而Action表示「行为」，相当于Parse参数后的最终输出，在这里我把Action独立成了一个函数，里面的逻辑：</p>
+
+<ol>
+<li>如果端口号的值小于1024会先当因帮助信息，再抛错</li>
+<li>打印主机和端口的值，这里用了2种方法：hots直接用的是变量；而port用了<code>c.Int(&quot;port&quot;)</code>的方式获取，要注意对应参数项的类型，如果获得host的值需要用<code>c.String(&quot;host&quot;)</code></li>
+</ol>
+
+<p>我们试一下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run use_flags.go
+Listening at: http://127.0.0.1:8000
+❯ go run use_flags.go -h
+NAME:
+   AppName - Application Usage
+
+USAGE:
+   use_flags <span style="color:#ff79c6">[</span>global options<span style="color:#ff79c6">]</span> <span style="color:#8be9fd;font-style:italic">command</span> <span style="color:#ff79c6">[</span><span style="color:#8be9fd;font-style:italic">command</span> options<span style="color:#ff79c6">]</span> <span style="color:#ff79c6">[</span>arguments...<span style="color:#ff79c6">]</span>
+
+COMMANDS:
+     help, h  Shows a list of commands or <span style="color:#8be9fd;font-style:italic">help</span> <span style="color:#ff79c6">for</span> one <span style="color:#8be9fd;font-style:italic">command</span>
+
+GLOBAL OPTIONS:
+   -t value, --host value, --ip-address value  Server host <span style="color:#ff79c6">(</span>default: <span style="color:#f1fa8c">&#34;127.0.0.1&#34;</span><span style="color:#ff79c6">)</span>
+   -p value, --port value                      Server port <span style="color:#ff79c6">(</span>default: <span style="color:#bd93f9">8000</span><span style="color:#ff79c6">)</span>
+   --help, -h                                  show <span style="color:#8be9fd;font-style:italic">help</span>
+
+❯ go run use_flags.go -t <span style="color:#bd93f9">172</span>.16.0.1 --port <span style="color:#bd93f9">8080</span>
+Listening at: http://172.16.0.1:8080
+
+❯ go run use_flags.go -t <span style="color:#bd93f9">172</span>.16.0.1 --port <span style="color:#bd93f9">21</span>
+NAME:
+   AppName - Application Usage
+
+USAGE:
+   use_flags <span style="color:#ff79c6">[</span>global options<span style="color:#ff79c6">]</span> <span style="color:#8be9fd;font-style:italic">command</span> <span style="color:#ff79c6">[</span><span style="color:#8be9fd;font-style:italic">command</span> options<span style="color:#ff79c6">]</span> <span style="color:#ff79c6">[</span>arguments...<span style="color:#ff79c6">]</span>
+
+COMMANDS:
+     help, h  Shows a list of commands or <span style="color:#8be9fd;font-style:italic">help</span> <span style="color:#ff79c6">for</span> one <span style="color:#8be9fd;font-style:italic">command</span>
+
+GLOBAL OPTIONS:
+   -t value, --host value, --ip-address value  Server host <span style="color:#ff79c6">(</span>default: <span style="color:#f1fa8c">&#34;127.0.0.1&#34;</span><span style="color:#ff79c6">)</span>
+   -p value, --port value                      Server port <span style="color:#ff79c6">(</span>default: <span style="color:#bd93f9">8000</span><span style="color:#ff79c6">)</span>
+   --help, -h                                  show <span style="color:#8be9fd;font-style:italic">help</span>
+Ports below <span style="color:#bd93f9">1024</span> is not available
+<span style="color:#8be9fd;font-style:italic">exit</span> status <span style="color:#bd93f9">2</span></code></pre></div>
+
+<p>可以看到不同参数下执行效果和输出是不一样的。</p>
+
+<p>命令行参数另外一个重要场景是子命令(Subcommand)，基于官网文档看一下例子：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+	<span style="color:#f1fa8c">&#34;log&#34;</span>
+	<span style="color:#f1fa8c">&#34;os&#34;</span>
+
+	<span style="color:#f1fa8c">&#34;github.com/urfave/cli&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	app <span style="color:#ff79c6">:=</span> cli.<span style="color:#50fa7b">NewApp</span>()
+
+	app.Commands = []cli.Command{
+		{
+			Name:     <span style="color:#f1fa8c">&#34;add&#34;</span>,
+			Aliases:  []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;a&#34;</span>},
+			Usage:    <span style="color:#f1fa8c">&#34;add a task to the list&#34;</span>,
+			Category: <span style="color:#f1fa8c">&#34;Add&#34;</span>,
+			Action: <span style="color:#8be9fd;font-style:italic">func</span>(c <span style="color:#ff79c6">*</span>cli.Context) <span style="color:#8be9fd">error</span> {
+				fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;added task: &#34;</span>, c.<span style="color:#50fa7b">Args</span>().<span style="color:#50fa7b">First</span>())
+				<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+			},
+		},
+		{
+			Name:     <span style="color:#f1fa8c">&#34;template&#34;</span>,
+			Aliases:  []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;t&#34;</span>, <span style="color:#f1fa8c">&#34;tmpl&#34;</span>},
+			Usage:    <span style="color:#f1fa8c">&#34;options for task templates&#34;</span>,
+			Category: <span style="color:#f1fa8c">&#34;Template&#34;</span>,
+			Subcommands: []cli.Command{
+				{
+					Name:  <span style="color:#f1fa8c">&#34;add&#34;</span>,
+					Usage: <span style="color:#f1fa8c">&#34;add a new template&#34;</span>,
+					Action: <span style="color:#8be9fd;font-style:italic">func</span>(c <span style="color:#ff79c6">*</span>cli.Context) <span style="color:#8be9fd">error</span> {
+						fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;new task template: &#34;</span>, c.<span style="color:#50fa7b">Args</span>().<span style="color:#50fa7b">First</span>())
+						<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+					},
+				},
+				{
+					Name:  <span style="color:#f1fa8c">&#34;remove&#34;</span>,
+					Usage: <span style="color:#f1fa8c">&#34;remove an existing template&#34;</span>,
+					Action: <span style="color:#8be9fd;font-style:italic">func</span>(c <span style="color:#ff79c6">*</span>cli.Context) <span style="color:#8be9fd">error</span> {
+						fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;removed task template: &#34;</span>, c.<span style="color:#50fa7b">Args</span>().<span style="color:#50fa7b">First</span>())
+						<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+					},
+				},
+			},
+		},
+	}
+
+	app.Name = <span style="color:#f1fa8c">&#34;AppName&#34;</span>
+	app.Usage = <span style="color:#f1fa8c">&#34;application usage&#34;</span>
+	app.Description = <span style="color:#f1fa8c">&#34;application description&#34;</span>  <span style="color:#6272a4">// 描述
+</span><span style="color:#6272a4"></span>	app.Version = <span style="color:#f1fa8c">&#34;1.0.1&#34;</span> <span style="color:#6272a4">// 版本
+</span><span style="color:#6272a4"></span>
+	err <span style="color:#ff79c6">:=</span> app.<span style="color:#50fa7b">Run</span>(os.Args)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Fatal</span>(err)
+	}
+}</code></pre></div>
+
+<p><code>urfave/cli</code>支持分组子命令，这个例子中包含2个子命令，分别是add(在Add组)和template(在Template组)，其中template子命令下也有2个子命令add/remove。子命令支持别名，需要放在Aliases里面，分组需要放在Category里面。</p>
+
+<p>另外这次设置了描述和版本号，会在帮助信息中展示出来，而前一个例子隐藏版本部分信息了。</p>
+
+<p>子命令的行为由Action决定，它的值是一个函数，可以看代码了解。</p>
+
+<p>那么感受一下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run use_subcommand.go
+NAME:
+   AppName - application usage
+
+USAGE:
+   use_subcommand <span style="color:#ff79c6">[</span>global options<span style="color:#ff79c6">]</span> <span style="color:#8be9fd;font-style:italic">command</span> <span style="color:#ff79c6">[</span><span style="color:#8be9fd;font-style:italic">command</span> options<span style="color:#ff79c6">]</span> <span style="color:#ff79c6">[</span>arguments...<span style="color:#ff79c6">]</span>
+
+VERSION:
+   <span style="color:#bd93f9">1</span>.0.1
+
+DESCRIPTION:
+   application description
+
+COMMANDS:
+     help, h  Shows a list of commands or <span style="color:#8be9fd;font-style:italic">help</span> <span style="color:#ff79c6">for</span> one <span style="color:#8be9fd;font-style:italic">command</span>
+
+   Add:
+     add, a  add a task to the list
+
+   Template:
+     template, t, tmpl  options <span style="color:#ff79c6">for</span> task templates
+
+GLOBAL OPTIONS:
+   --help, -h     show <span style="color:#8be9fd;font-style:italic">help</span>
+   --version, -v  print the version
+
+❯ go run use_subcommand.go add abc
+added task:  abc
+
+❯ go run use_subcommand.go template --help
+NAME:
+   AppName template - options <span style="color:#ff79c6">for</span> task templates
+
+USAGE:
+   AppName template <span style="color:#8be9fd;font-style:italic">command</span> <span style="color:#ff79c6">[</span><span style="color:#8be9fd;font-style:italic">command</span> options<span style="color:#ff79c6">]</span> <span style="color:#ff79c6">[</span>arguments...<span style="color:#ff79c6">]</span>
+
+COMMANDS:
+     add     add a new template
+     remove  remove an existing template
+
+OPTIONS:
+   --help, -h  show <span style="color:#8be9fd;font-style:italic">help</span>
+
+❯ go run use_subcommand.go template add bcd
+new task template:  bcd
+
+❯ go run use_subcommand.go template remove cde
+removed task template:  cde
+
+❯ go run use_subcommand.go --version
+AppName version <span style="color:#bd93f9">1</span>.0.1</code></pre></div>
+
+<h3 id="代码地址">代码地址</h3>
+
+<p>完整代码可以在<a href="https://github.com/golang-dev/strconv.code/blob/master/cli">这个地址</a>找到。</p>
+
+<h3 id="延伸阅读">延伸阅读</h3>
+
+<ol>
+<li><a href="https://github.com/spf13/cobra">https://github.com/spf13/cobra</a></li>
+<li><a href="https://github.com/urfave/cli">https://github.com/urfave/cli</a></li>
+</ol>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://cdn.commento.io/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
+</html>

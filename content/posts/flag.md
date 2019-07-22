@@ -2,8 +2,8 @@
 date = "2019-07-20T10:10:10"
 title = "Go语言标准库 - flag(命令行参数解析)"
 slug = "flag"
-tags = ["stdlib", "flag"]
-categories = ["stdlib"]
+tags = ["stdlib", "flag", "cli"]
+categories = ["stdlib", "cli"]
 +++
 
 Go语言内置了非常多具有常用功能的内置包，它们被称为标准库。我会在博客中以每篇文章一个标准库的方式记录我对标准库的理解和学习笔记。
