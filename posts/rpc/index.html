@@ -149,39 +149,39 @@ package main import ( &#34;fmt&#34; &#34;log&#34; &#34;net&#34; &#34;net/rpc&#34
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#ff79c6">package</span> main
 
 <span style="color:#ff79c6">import</span> (
-	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
-	<span style="color:#f1fa8c">&#34;log&#34;</span>
-	<span style="color:#f1fa8c">&#34;net&#34;</span>
-	<span style="color:#f1fa8c">&#34;net/rpc&#34;</span>
+    <span style="color:#f1fa8c">&#34;fmt&#34;</span>
+    <span style="color:#f1fa8c">&#34;log&#34;</span>
+    <span style="color:#f1fa8c">&#34;net&#34;</span>
+    <span style="color:#f1fa8c">&#34;net/rpc&#34;</span>
 )
 
 <span style="color:#8be9fd;font-style:italic">type</span> Listener <span style="color:#8be9fd">int</span>
 
 <span style="color:#8be9fd;font-style:italic">type</span> Reply <span style="color:#8be9fd;font-style:italic">struct</span> {
-	Data <span style="color:#8be9fd">string</span>
+    Data <span style="color:#8be9fd">string</span>
 }
 
 <span style="color:#8be9fd;font-style:italic">func</span> (l <span style="color:#ff79c6">*</span>Listener) <span style="color:#50fa7b">GetLine</span>(line []<span style="color:#8be9fd">byte</span>, reply <span style="color:#ff79c6">*</span>Reply) <span style="color:#8be9fd">error</span> {
-	rv <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">string</span>(line)
-	fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Receive: %v\n&#34;</span>, rv)
-	<span style="color:#ff79c6">*</span>reply = Reply{rv}
-	<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+    rv <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">string</span>(line)
+    fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Receive: %v\n&#34;</span>, rv)
+    <span style="color:#ff79c6">*</span>reply = Reply{rv}
+    <span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
 }
 
 <span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
-	addy, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ResolveTCPAddr</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, <span style="color:#f1fa8c">&#34;0.0.0.0:12345&#34;</span>)
-	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
-		log.<span style="color:#50fa7b">Fatal</span>(err)
-	}
+    addy, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ResolveTCPAddr</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, <span style="color:#f1fa8c">&#34;0.0.0.0:12345&#34;</span>)
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        log.<span style="color:#50fa7b">Fatal</span>(err)
+    }
 
-	inbound, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ListenTCP</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, addy)
-	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
-		log.<span style="color:#50fa7b">Fatal</span>(err)
-	}
+    inbound, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ListenTCP</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, addy)
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        log.<span style="color:#50fa7b">Fatal</span>(err)
+    }
 
-	listener <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">new</span>(Listener)
-	rpc.<span style="color:#50fa7b">Register</span>(listener)
-	rpc.<span style="color:#50fa7b">Accept</span>(inbound)
+    listener <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">new</span>(Listener)
+    rpc.<span style="color:#50fa7b">Register</span>(listener)
+    rpc.<span style="color:#50fa7b">Accept</span>(inbound)
 }</code></pre></div>
 
 <p>在这里例子中给Listener添加了GetLine方法，这个方法的返回值必须是error类型，第一个参数是客户端传来的内容，第二个参数是响应的内容：需要是一个指针，所以定义了一个叫做Reply的结构体，只有一个Data成员用于存储响应内容。</p>
@@ -193,10 +193,10 @@ package main import ( &#34;fmt&#34; &#34;log&#34; &#34;net&#34; &#34;net/rpc&#34
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#ff79c6">package</span> main
 
 <span style="color:#ff79c6">import</span> (
-	<span style="color:#f1fa8c">&#34;bufio&#34;</span>
-	<span style="color:#f1fa8c">&#34;log&#34;</span>
-	<span style="color:#f1fa8c">&#34;net/rpc&#34;</span>
-	<span style="color:#f1fa8c">&#34;os&#34;</span>
+    <span style="color:#f1fa8c">&#34;bufio&#34;</span>
+    <span style="color:#f1fa8c">&#34;log&#34;</span>
+    <span style="color:#f1fa8c">&#34;net/rpc&#34;</span>
+    <span style="color:#f1fa8c">&#34;os&#34;</span>
 )
 
 <span style="color:#8be9fd;font-style:italic">type</span> Reply <span style="color:#8be9fd;font-style:italic">struct</span> {
@@ -204,24 +204,24 @@ package main import ( &#34;fmt&#34; &#34;log&#34; &#34;net&#34; &#34;net/rpc&#34
 }
 
 <span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
-	client, err <span style="color:#ff79c6">:=</span> rpc.<span style="color:#50fa7b">Dial</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, <span style="color:#f1fa8c">&#34;localhost:12345&#34;</span>)
-	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
-		log.<span style="color:#50fa7b">Fatal</span>(err)
-	}
+    client, err <span style="color:#ff79c6">:=</span> rpc.<span style="color:#50fa7b">Dial</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, <span style="color:#f1fa8c">&#34;localhost:12345&#34;</span>)
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        log.<span style="color:#50fa7b">Fatal</span>(err)
+    }
 
-	in <span style="color:#ff79c6">:=</span> bufio.<span style="color:#50fa7b">NewReader</span>(os.Stdin)
-	<span style="color:#ff79c6">for</span> {
-		line, _, err <span style="color:#ff79c6">:=</span> in.<span style="color:#50fa7b">ReadLine</span>()
-		<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
-			log.<span style="color:#50fa7b">Fatal</span>(err)
-		}
-		<span style="color:#8be9fd;font-style:italic">var</span> reply Reply
-		err = client.<span style="color:#50fa7b">Call</span>(<span style="color:#f1fa8c">&#34;Listener.GetLine&#34;</span>, line, <span style="color:#ff79c6">&amp;</span>reply)
-		<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
-			log.<span style="color:#50fa7b">Fatal</span>(err)
-		}
-		log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Reply: %v, Data: %v&#34;</span>, reply, reply.Data)
-	}
+    in <span style="color:#ff79c6">:=</span> bufio.<span style="color:#50fa7b">NewReader</span>(os.Stdin)
+    <span style="color:#ff79c6">for</span> {
+        line, _, err <span style="color:#ff79c6">:=</span> in.<span style="color:#50fa7b">ReadLine</span>()
+        <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+            log.<span style="color:#50fa7b">Fatal</span>(err)
+        }
+        <span style="color:#8be9fd;font-style:italic">var</span> reply Reply
+        err = client.<span style="color:#50fa7b">Call</span>(<span style="color:#f1fa8c">&#34;Listener.GetLine&#34;</span>, line, <span style="color:#ff79c6">&amp;</span>reply)
+        <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+            log.<span style="color:#50fa7b">Fatal</span>(err)
+        }
+        log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Reply: %v, Data: %v&#34;</span>, reply, reply.Data)
+    }
 }</code></pre></div>
 
 <p>客户端用<code>rpc.Dial</code>创建连接到服务端的主机和端口，然后是一个永久的for循环，ReadLine方法会接收终端输入，如果写了一些内容回车，就会执行<code>client.Call</code>，开始过程调用，调用成功后，reply就被写入数据，可以拿到reply.Data了（其实就是输入什么，收到什么）。体验一下：</p>
@@ -302,15 +302,15 @@ haha
 <p>请求的json数据对象在内部对应两个结构体：客户端是clientRequest，服务端是serverRequest。大抵是这样</p>
 
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#8be9fd;font-style:italic">type</span> serverRequest <span style="color:#8be9fd;font-style:italic">struct</span> {
-	Method <span style="color:#8be9fd">string</span>           <span style="color:#f1fa8c">`json:&#34;method&#34;`</span>
-	Params <span style="color:#ff79c6">*</span>json.RawMessage <span style="color:#f1fa8c">`json:&#34;params&#34;`</span>
-	Id     <span style="color:#ff79c6">*</span>json.RawMessage <span style="color:#f1fa8c">`json:&#34;id&#34;`</span>
+    Method <span style="color:#8be9fd">string</span>           <span style="color:#f1fa8c">`json:&#34;method&#34;`</span>
+    Params <span style="color:#ff79c6">*</span>json.RawMessage <span style="color:#f1fa8c">`json:&#34;params&#34;`</span>
+    Id     <span style="color:#ff79c6">*</span>json.RawMessage <span style="color:#f1fa8c">`json:&#34;id&#34;`</span>
 }
 
 <span style="color:#8be9fd;font-style:italic">type</span> clientRequest <span style="color:#8be9fd;font-style:italic">struct</span> {
-	Method <span style="color:#8be9fd">string</span>         <span style="color:#f1fa8c">`json:&#34;method&#34;`</span>
-	Params [<span style="color:#bd93f9">1</span>]<span style="color:#8be9fd;font-style:italic">interface</span>{} <span style="color:#f1fa8c">`json:&#34;params&#34;`</span>
-	Id     <span style="color:#8be9fd">uint64</span>         <span style="color:#f1fa8c">`json:&#34;id&#34;`</span>
+    Method <span style="color:#8be9fd">string</span>         <span style="color:#f1fa8c">`json:&#34;method&#34;`</span>
+    Params [<span style="color:#bd93f9">1</span>]<span style="color:#8be9fd;font-style:italic">interface</span>{} <span style="color:#f1fa8c">`json:&#34;params&#34;`</span>
+    Id     <span style="color:#8be9fd">uint64</span>         <span style="color:#f1fa8c">`json:&#34;id&#34;`</span>
 }</code></pre></div>
 
 <p>所以我们可以基于这个格式用其他语言拼消息。简单一点，在命令行试试：</p>
@@ -366,7 +366,7 @@ go get -u github.com/golang/protobuf/<span style="color:#ff79c6">{</span>proto,p
 ❯ protoc --go_out<span style="color:#ff79c6">=</span><span style="color:#8be9fd;font-style:italic">plugins</span><span style="color:#ff79c6">=</span>grpc:src/simple simple.proto
 ❯ ll src/simple
 total <span style="color:#bd93f9">8</span>.0K
--rw-r--r-- <span style="color:#bd93f9">1</span> dongwm staff <span style="color:#bd93f9">7</span>.0K Jul <span style="color:#bd93f9">14</span> <span style="color:#bd93f9">21</span>:43 simple.pb.go</code></pre></div>
+-rw-r--r-- <span style="color:#bd93f9">1</span> xiaoxi staff <span style="color:#bd93f9">7</span>.0K Jul <span style="color:#bd93f9">14</span> <span style="color:#bd93f9">21</span>:43 simple.pb.go</code></pre></div>
 
 <p>执行命令完成，就在<code>src/simple</code>下生成了一个叫做<code>simple.pb.go</code>的文件，它支持gRPC。放在src/simple目录下是为了让它作为一个包（package）。</p>
 
@@ -381,36 +381,36 @@ total <span style="color:#bd93f9">8</span>.0K
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#ff79c6">package</span> main
 
 <span style="color:#ff79c6">import</span> (
-	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
-	<span style="color:#f1fa8c">&#34;log&#34;</span>
-	<span style="color:#f1fa8c">&#34;net&#34;</span>
+    <span style="color:#f1fa8c">&#34;fmt&#34;</span>
+    <span style="color:#f1fa8c">&#34;log&#34;</span>
+    <span style="color:#f1fa8c">&#34;net&#34;</span>
 
-	pb <span style="color:#f1fa8c">&#34;./src/simple&#34;</span>
-	<span style="color:#f1fa8c">&#34;golang.org/x/net/context&#34;</span>
-	<span style="color:#f1fa8c">&#34;google.golang.org/grpc&#34;</span>
+    pb <span style="color:#f1fa8c">&#34;./src/simple&#34;</span>
+    <span style="color:#f1fa8c">&#34;golang.org/x/net/context&#34;</span>
+    <span style="color:#f1fa8c">&#34;google.golang.org/grpc&#34;</span>
 )
 
 <span style="color:#8be9fd;font-style:italic">type</span> Listener <span style="color:#8be9fd">int</span>
 
 <span style="color:#8be9fd;font-style:italic">func</span> (l <span style="color:#ff79c6">*</span>Listener) <span style="color:#50fa7b">GetLine</span>(ctx context.Context, in <span style="color:#ff79c6">*</span>pb.SimpleRequest) (<span style="color:#ff79c6">*</span>pb.SimpleResponse, <span style="color:#8be9fd">error</span>) {
-	rv <span style="color:#ff79c6">:=</span> in.Data
-	fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Receive: %v\n&#34;</span>, rv)
-	<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">&amp;</span>pb.SimpleResponse{Data: rv}, <span style="color:#ff79c6">nil</span>
+    rv <span style="color:#ff79c6">:=</span> in.Data
+    fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Receive: %v\n&#34;</span>, rv)
+    <span style="color:#ff79c6">return</span> <span style="color:#ff79c6">&amp;</span>pb.SimpleResponse{Data: rv}, <span style="color:#ff79c6">nil</span>
 }
 
 <span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
-	addy, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ResolveTCPAddr</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, <span style="color:#f1fa8c">&#34;0.0.0.0:12345&#34;</span>)
-	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
-		log.<span style="color:#50fa7b">Fatal</span>(err)
-	}
+    addy, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ResolveTCPAddr</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, <span style="color:#f1fa8c">&#34;0.0.0.0:12345&#34;</span>)
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        log.<span style="color:#50fa7b">Fatal</span>(err)
+    }
 
-	inbound, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ListenTCP</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, addy)
-	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
-		log.<span style="color:#50fa7b">Fatal</span>(err)
-	}
+    inbound, err <span style="color:#ff79c6">:=</span> net.<span style="color:#50fa7b">ListenTCP</span>(<span style="color:#f1fa8c">&#34;tcp&#34;</span>, addy)
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        log.<span style="color:#50fa7b">Fatal</span>(err)
+    }
 
-	s <span style="color:#ff79c6">:=</span> grpc.<span style="color:#50fa7b">NewServer</span>()
-	listener <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">new</span>(Listener)
+    s <span style="color:#ff79c6">:=</span> grpc.<span style="color:#50fa7b">NewServer</span>()
+    listener <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">new</span>(Listener)
     pb.<span style="color:#50fa7b">RegisterSimpleServer</span>(s, listener)
     s.<span style="color:#50fa7b">Serve</span>(inbound)
 }</code></pre></div>
@@ -424,35 +424,35 @@ total <span style="color:#bd93f9">8</span>.0K
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#ff79c6">package</span> main
 
 <span style="color:#ff79c6">import</span> (
-	<span style="color:#f1fa8c">&#34;bufio&#34;</span>
-	<span style="color:#f1fa8c">&#34;log&#34;</span>
-	<span style="color:#f1fa8c">&#34;os&#34;</span>
+    <span style="color:#f1fa8c">&#34;bufio&#34;</span>
+    <span style="color:#f1fa8c">&#34;log&#34;</span>
+    <span style="color:#f1fa8c">&#34;os&#34;</span>
 
-	pb <span style="color:#f1fa8c">&#34;./src/simple&#34;</span>
+    pb <span style="color:#f1fa8c">&#34;./src/simple&#34;</span>
     <span style="color:#f1fa8c">&#34;golang.org/x/net/context&#34;</span>
     <span style="color:#f1fa8c">&#34;google.golang.org/grpc&#34;</span>
 )
 
 <span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
-	conn, err <span style="color:#ff79c6">:=</span> grpc.<span style="color:#50fa7b">Dial</span>(<span style="color:#f1fa8c">&#34;localhost:12345&#34;</span>, grpc.<span style="color:#50fa7b">WithInsecure</span>())
-	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
-		log.<span style="color:#50fa7b">Fatal</span>(err)
-	}
+    conn, err <span style="color:#ff79c6">:=</span> grpc.<span style="color:#50fa7b">Dial</span>(<span style="color:#f1fa8c">&#34;localhost:12345&#34;</span>, grpc.<span style="color:#50fa7b">WithInsecure</span>())
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        log.<span style="color:#50fa7b">Fatal</span>(err)
+    }
 
-	c <span style="color:#ff79c6">:=</span> pb.<span style="color:#50fa7b">NewSimpleClient</span>(conn)
+    c <span style="color:#ff79c6">:=</span> pb.<span style="color:#50fa7b">NewSimpleClient</span>(conn)
 
-	in <span style="color:#ff79c6">:=</span> bufio.<span style="color:#50fa7b">NewReader</span>(os.Stdin)
-	<span style="color:#ff79c6">for</span> {
-		line, _, err <span style="color:#ff79c6">:=</span> in.<span style="color:#50fa7b">ReadLine</span>()
-		<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
-			log.<span style="color:#50fa7b">Fatal</span>(err)
-		}
-		reply, err <span style="color:#ff79c6">:=</span> c.<span style="color:#50fa7b">GetLine</span>(context.<span style="color:#50fa7b">Background</span>(), <span style="color:#ff79c6">&amp;</span>pb.SimpleRequest{Data: <span style="color:#8be9fd;font-style:italic">string</span>(line)})
-		<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
-			log.<span style="color:#50fa7b">Fatal</span>(err)
-		}
-		log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Reply: %v, Data: %v&#34;</span>, reply, reply.Data)
-	}
+    in <span style="color:#ff79c6">:=</span> bufio.<span style="color:#50fa7b">NewReader</span>(os.Stdin)
+    <span style="color:#ff79c6">for</span> {
+        line, _, err <span style="color:#ff79c6">:=</span> in.<span style="color:#50fa7b">ReadLine</span>()
+        <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+            log.<span style="color:#50fa7b">Fatal</span>(err)
+        }
+        reply, err <span style="color:#ff79c6">:=</span> c.<span style="color:#50fa7b">GetLine</span>(context.<span style="color:#50fa7b">Background</span>(), <span style="color:#ff79c6">&amp;</span>pb.SimpleRequest{Data: <span style="color:#8be9fd;font-style:italic">string</span>(line)})
+        <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+            log.<span style="color:#50fa7b">Fatal</span>(err)
+        }
+        log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Reply: %v, Data: %v&#34;</span>, reply, reply.Data)
+    }
 }</code></pre></div>
 
 <p>首先用<code>grpc.Dial(&quot;localhost:12345&quot;, grpc.WithInsecure())</code>创建连接，然后用<code>pb.NewSimpleClient</code>创建<code>simpleClient</code>对象。为什么叫<code>SimpleClient</code>呢？其实格式是<code>XXXClient</code>, XXX是前面在proto文件中定义的<code>service Simple</code>中的<code>Simple</code>。</p>

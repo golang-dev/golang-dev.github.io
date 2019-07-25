@@ -22,39 +22,39 @@ RPC采用客户机/服务器模式。先看一下server例子：
 package main
 
 import (
-	"fmt"
-	"log"
-	"net"
-	"net/rpc"
+    "fmt"
+    "log"
+    "net"
+    "net/rpc"
 )
 
 type Listener int
 
 type Reply struct {
-	Data string
+    Data string
 }
 
 func (l *Listener) GetLine(line []byte, reply *Reply) error {
-	rv := string(line)
-	fmt.Printf("Receive: %v\n", rv)
-	*reply = Reply{rv}
-	return nil
+    rv := string(line)
+    fmt.Printf("Receive: %v\n", rv)
+    *reply = Reply{rv}
+    return nil
 }
 
 func main() {
-	addy, err := net.ResolveTCPAddr("tcp", "0.0.0.0:12345")
-	if err != nil {
-		log.Fatal(err)
-	}
+    addy, err := net.ResolveTCPAddr("tcp", "0.0.0.0:12345")
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	inbound, err := net.ListenTCP("tcp", addy)
-	if err != nil {
-		log.Fatal(err)
-	}
+    inbound, err := net.ListenTCP("tcp", addy)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	listener := new(Listener)
-	rpc.Register(listener)
-	rpc.Accept(inbound)
+    listener := new(Listener)
+    rpc.Register(listener)
+    rpc.Accept(inbound)
 }
 {{< /highlight >}}
 
@@ -68,10 +68,10 @@ func main() {
 package main
 
 import (
-	"bufio"
-	"log"
-	"net/rpc"
-	"os"
+    "bufio"
+    "log"
+    "net/rpc"
+    "os"
 )
 
 type Reply struct {
@@ -79,24 +79,24 @@ type Reply struct {
 }
 
 func main() {
-	client, err := rpc.Dial("tcp", "localhost:12345")
-	if err != nil {
-		log.Fatal(err)
-	}
+    client, err := rpc.Dial("tcp", "localhost:12345")
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	in := bufio.NewReader(os.Stdin)
-	for {
-		line, _, err := in.ReadLine()
-		if err != nil {
-			log.Fatal(err)
-		}
-		var reply Reply
-		err = client.Call("Listener.GetLine", line, &reply)
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Printf("Reply: %v, Data: %v", reply, reply.Data)
-	}
+    in := bufio.NewReader(os.Stdin)
+    for {
+        line, _, err := in.ReadLine()
+        if err != nil {
+            log.Fatal(err)
+        }
+        var reply Reply
+        err = client.Call("Listener.GetLine", line, &reply)
+        if err != nil {
+            log.Fatal(err)
+        }
+        log.Printf("Reply: %v, Data: %v", reply, reply.Data)
+    }
 }
 {{< /highlight >}}
 
@@ -187,15 +187,15 @@ haha
 
 {{< highlight golang >}}
 type serverRequest struct {
-	Method string           `json:"method"`
-	Params *json.RawMessage `json:"params"`
-	Id     *json.RawMessage `json:"id"`
+    Method string           `json:"method"`
+    Params *json.RawMessage `json:"params"`
+    Id     *json.RawMessage `json:"id"`
 }
 
 type clientRequest struct {
-	Method string         `json:"method"`
-	Params [1]interface{} `json:"params"`
-	Id     uint64         `json:"id"`
+    Method string         `json:"method"`
+    Params [1]interface{} `json:"params"`
+    Id     uint64         `json:"id"`
 }
 {{< /highlight >}}
 
@@ -259,7 +259,7 @@ service Simple {
 ❯ protoc --go_out=plugins=grpc:src/simple simple.proto
 ❯ ll src/simple
 total 8.0K
--rw-r--r-- 1 dongwm staff 7.0K Jul 14 21:43 simple.pb.go
+-rw-r--r-- 1 xiaoxi staff 7.0K Jul 14 21:43 simple.pb.go
 {{< /highlight >}}
 
 执行命令完成，就在`src/simple`下生成了一个叫做`simple.pb.go`的文件，它支持gRPC。放在src/simple目录下是为了让它作为一个包（package）。
@@ -278,36 +278,36 @@ total 8.0K
 package main
 
 import (
-	"fmt"
-	"log"
-	"net"
+    "fmt"
+    "log"
+    "net"
 
-	pb "./src/simple"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
+    pb "./src/simple"
+    "golang.org/x/net/context"
+    "google.golang.org/grpc"
 )
 
 type Listener int
 
 func (l *Listener) GetLine(ctx context.Context, in *pb.SimpleRequest) (*pb.SimpleResponse, error) {
-	rv := in.Data
-	fmt.Printf("Receive: %v\n", rv)
-	return &pb.SimpleResponse{Data: rv}, nil
+    rv := in.Data
+    fmt.Printf("Receive: %v\n", rv)
+    return &pb.SimpleResponse{Data: rv}, nil
 }
 
 func main() {
-	addy, err := net.ResolveTCPAddr("tcp", "0.0.0.0:12345")
-	if err != nil {
-		log.Fatal(err)
-	}
+    addy, err := net.ResolveTCPAddr("tcp", "0.0.0.0:12345")
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	inbound, err := net.ListenTCP("tcp", addy)
-	if err != nil {
-		log.Fatal(err)
-	}
+    inbound, err := net.ListenTCP("tcp", addy)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	s := grpc.NewServer()
-	listener := new(Listener)
+    s := grpc.NewServer()
+    listener := new(Listener)
     pb.RegisterSimpleServer(s, listener)
     s.Serve(inbound)
 }
@@ -323,35 +323,35 @@ GetLine方法要重新定义，它的第一个参数是context.Context，第二�
 package main
 
 import (
-	"bufio"
-	"log"
-	"os"
+    "bufio"
+    "log"
+    "os"
 
-	pb "./src/simple"
+    pb "./src/simple"
     "golang.org/x/net/context"
     "google.golang.org/grpc"
 )
 
 func main() {
-	conn, err := grpc.Dial("localhost:12345", grpc.WithInsecure())
-	if err != nil {
-		log.Fatal(err)
-	}
+    conn, err := grpc.Dial("localhost:12345", grpc.WithInsecure())
+    if err != nil {
+        log.Fatal(err)
+    }
 
-	c := pb.NewSimpleClient(conn)
+    c := pb.NewSimpleClient(conn)
 
-	in := bufio.NewReader(os.Stdin)
-	for {
-		line, _, err := in.ReadLine()
-		if err != nil {
-			log.Fatal(err)
-		}
-		reply, err := c.GetLine(context.Background(), &pb.SimpleRequest{Data: string(line)})
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Printf("Reply: %v, Data: %v", reply, reply.Data)
-	}
+    in := bufio.NewReader(os.Stdin)
+    for {
+        line, _, err := in.ReadLine()
+        if err != nil {
+            log.Fatal(err)
+        }
+        reply, err := c.GetLine(context.Background(), &pb.SimpleRequest{Data: string(line)})
+        if err != nil {
+            log.Fatal(err)
+        }
+        log.Printf("Reply: %v, Data: %v", reply, reply.Data)
+    }
 }
 {{< /highlight >}}
 

@@ -16,7 +16,7 @@
 spf13/cobra spf13/cobra既是一个用来创建强大的现代CLI命令行的golang库，也是一个生成程序应用和命令行文件的工具。Docker、Kubernetes、Hugo、 Etcd等程序都使用了它构建命令。
 首先安装它：
 ❯ go get -u github.com/spf13/cobra/cobra 先感受下生成程序应用和命令行的用法，也就是直接生成个命令行架子：
-❯ mkdir -p ~/strconv.code/cli/src/cobraDemo ❯ cd ~/strconv.code/cli/src/cobraDemo ❯ cobra init --pkg-name cobraDemo # 创建一个叫做cobraDemo的应用，目前官网文档该没有更新，旧的`cobra init cobraDemo`已经不能用了 ❯ tree . # 在当前目录下会创建一个cmd(里面只包含root.go)和一个main.go . ├── LICENSE ├── cmd │ └── root.go └── main.go 1 directory, 3 file # 由于指定了包名cobraDemo，且其不在默认的GOROOT或者GOPATH目录下，所以需要让GOPATH加上当前项目的源代码目录 ❯ export GOPATH=$GOPATH:/Users/dongwm/strconv.code/cli ❯ go run main.go A longer description that spans multiple lines and likely contains examples and usage of using your application."/>
+❯ mkdir -p ~/strconv.code/cli/src/cobraDemo ❯ cd ~/strconv.code/cli/src/cobraDemo ❯ cobra init --pkg-name cobraDemo # 创建一个叫做cobraDemo的应用，目前官网文档该没有更新，旧的`cobra init cobraDemo`已经不能用了 ❯ tree . # 在当前目录下会创建一个cmd(里面只包含root.go)和一个main.go . ├── LICENSE ├── cmd │ └── root.go └── main.go 1 directory, 3 file # 由于指定了包名cobraDemo，且其不在默认的GOROOT或者GOPATH目录下，所以需要让GOPATH加上当前项目的源代码目录 ❯ export GOPATH=$GOPATH:/Users/xiaoxi/strconv.code/cli ❯ go run main.go A longer description that spans multiple lines and likely contains examples and usage of using your application."/>
 
     <meta property="og:title" content="Golang第三方命令行工具 - spf13/cobra和urfave/cli" />
 <meta property="og:description" content="虽然Go语言标准库里面有flag包可以作为命令行解析工具，但是flag包的用法有限，举例几个场景：
@@ -24,7 +24,7 @@ spf13/cobra spf13/cobra既是一个用来创建强大的现代CLI命令行的gol
 spf13/cobra spf13/cobra既是一个用来创建强大的现代CLI命令行的golang库，也是一个生成程序应用和命令行文件的工具。Docker、Kubernetes、Hugo、 Etcd等程序都使用了它构建命令。
 首先安装它：
 ❯ go get -u github.com/spf13/cobra/cobra 先感受下生成程序应用和命令行的用法，也就是直接生成个命令行架子：
-❯ mkdir -p ~/strconv.code/cli/src/cobraDemo ❯ cd ~/strconv.code/cli/src/cobraDemo ❯ cobra init --pkg-name cobraDemo # 创建一个叫做cobraDemo的应用，目前官网文档该没有更新，旧的`cobra init cobraDemo`已经不能用了 ❯ tree . # 在当前目录下会创建一个cmd(里面只包含root.go)和一个main.go . ├── LICENSE ├── cmd │ └── root.go └── main.go 1 directory, 3 file # 由于指定了包名cobraDemo，且其不在默认的GOROOT或者GOPATH目录下，所以需要让GOPATH加上当前项目的源代码目录 ❯ export GOPATH=$GOPATH:/Users/dongwm/strconv.code/cli ❯ go run main.go A longer description that spans multiple lines and likely contains examples and usage of using your application." />
+❯ mkdir -p ~/strconv.code/cli/src/cobraDemo ❯ cd ~/strconv.code/cli/src/cobraDemo ❯ cobra init --pkg-name cobraDemo # 创建一个叫做cobraDemo的应用，目前官网文档该没有更新，旧的`cobra init cobraDemo`已经不能用了 ❯ tree . # 在当前目录下会创建一个cmd(里面只包含root.go)和一个main.go . ├── LICENSE ├── cmd │ └── root.go └── main.go 1 directory, 3 file # 由于指定了包名cobraDemo，且其不在默认的GOROOT或者GOPATH目录下，所以需要让GOPATH加上当前项目的源代码目录 ❯ export GOPATH=$GOPATH:/Users/xiaoxi/strconv.code/cli ❯ go run main.go A longer description that spans multiple lines and likely contains examples and usage of using your application." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://strconv.com/posts/cli/" />
 <meta property="article:published_time" content="2019-07-22T00:00:00&#43;00:00"/>
@@ -168,7 +168,7 @@ spf13/cobra spf13/cobra既是一个用来创建强大的现代CLI命令行的gol
 
 <span style="color:#bd93f9">1</span> directory, <span style="color:#bd93f9">3</span> file
 <span style="color:#6272a4"># 由于指定了包名cobraDemo，且其不在默认的GOROOT或者GOPATH目录下，所以需要让GOPATH加上当前项目的源代码目录</span>
-❯ <span style="color:#8be9fd;font-style:italic">export</span> <span style="color:#8be9fd;font-style:italic">GOPATH</span><span style="color:#ff79c6">=</span><span style="color:#8be9fd;font-style:italic">$GOPATH</span>:/Users/dongwm/strconv.code/cli
+❯ <span style="color:#8be9fd;font-style:italic">export</span> <span style="color:#8be9fd;font-style:italic">GOPATH</span><span style="color:#ff79c6">=</span><span style="color:#8be9fd;font-style:italic">$GOPATH</span>:/Users/xiaoxi/strconv.code/cli
 ❯ go run main.go
 A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
@@ -223,7 +223,7 @@ to quickly create a Cobra application.</code></pre></div>
 <p>接着我们添加一个子命令new:</p>
 
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ cobra add new
-new created at /Users/dongwm/strconv.code/cli/src/cobraDemo
+new created at /Users/xiaoxi/strconv.code/cli/src/cobraDemo
 ❯ tree .
 .
 ├── LICENSE
@@ -239,20 +239,20 @@ new created at /Users/dongwm/strconv.code/cli/src/cobraDemo
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> cmd
 
 <span style="color:#ff79c6">import</span> (
-	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+    <span style="color:#f1fa8c">&#34;fmt&#34;</span>
 
-	<span style="color:#f1fa8c">&#34;github.com/spf13/cobra&#34;</span>
+    <span style="color:#f1fa8c">&#34;github.com/spf13/cobra&#34;</span>
 )
 <span style="color:#8be9fd;font-style:italic">var</span> newCmd = <span style="color:#ff79c6">&amp;</span>cobra.Command{
-	Use:   <span style="color:#f1fa8c">&#34;new&#34;</span>,
-	Short: <span style="color:#f1fa8c">&#34;A brief description of your command&#34;</span>,
-	Long: <span style="color:#f1fa8c">`A longer description...`</span>,
+    Use:   <span style="color:#f1fa8c">&#34;new&#34;</span>,
+    Short: <span style="color:#f1fa8c">&#34;A brief description of your command&#34;</span>,
+    Long: <span style="color:#f1fa8c">`A longer description...`</span>,
     Run: <span style="color:#8be9fd;font-style:italic">func</span>(cmd <span style="color:#ff79c6">*</span>cobra.Command, args []<span style="color:#8be9fd">string</span>) {
            fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;new called&#34;</span>)
     },
 }
 <span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">init</span>() {
-	rootCmd.<span style="color:#50fa7b">AddCommand</span>(newCmd)
+    rootCmd.<span style="color:#50fa7b">AddCommand</span>(newCmd)
 }</code></pre></div>
 
 <p>添加命令就是在init函数中执行<code>rootCmd.AddCommand</code>，而newCmd中比之前看的rootCmd多了一个Run成员，指定执行子命令时要做什么，这样整个命令应用就可以用了。为了让输出更简洁我把Command里面的Long部分改短一些，效果是这样的：</p>
@@ -307,40 +307,40 @@ new called</code></pre></div>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> cmd
 
 <span style="color:#ff79c6">import</span> (
-	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+    <span style="color:#f1fa8c">&#34;fmt&#34;</span>
 
-	<span style="color:#f1fa8c">&#34;github.com/spf13/cobra&#34;</span>
+    <span style="color:#f1fa8c">&#34;github.com/spf13/cobra&#34;</span>
 )
 
 <span style="color:#8be9fd;font-style:italic">var</span> (
-	n, a <span style="color:#8be9fd">int</span>
-	s <span style="color:#8be9fd">string</span>
+    n, a <span style="color:#8be9fd">int</span>
+    s <span style="color:#8be9fd">string</span>
 )
 
 <span style="color:#8be9fd;font-style:italic">var</span> newCmd = <span style="color:#ff79c6">&amp;</span>cobra.Command{
-	Use:   <span style="color:#f1fa8c">&#34;new&#34;</span>,
-	Short: <span style="color:#f1fa8c">&#34;A brief description of your command&#34;</span>,
-	Long: <span style="color:#f1fa8c">`A longer description...`</span>,
-	Run: <span style="color:#8be9fd;font-style:italic">func</span>(cmd <span style="color:#ff79c6">*</span>cobra.Command, args []<span style="color:#8be9fd">string</span>) {
-		fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;n is %v\n&#34;</span>, n)
-		fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;a is %v\n&#34;</span>, a)
-		fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;s is %v\n&#34;</span>, s)
-		q, _ <span style="color:#ff79c6">:=</span> cmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">GetBool</span>(<span style="color:#f1fa8c">&#34;q&#34;</span>)
-		fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;q is %v\n&#34;</span>, q)
-		bbb, _ <span style="color:#ff79c6">:=</span> cmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">GetInt</span>(<span style="color:#f1fa8c">&#34;bbb&#34;</span>)
-		fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;bbb is %v\n&#34;</span>, bbb)
-	},
+    Use:   <span style="color:#f1fa8c">&#34;new&#34;</span>,
+    Short: <span style="color:#f1fa8c">&#34;A brief description of your command&#34;</span>,
+    Long: <span style="color:#f1fa8c">`A longer description...`</span>,
+    Run: <span style="color:#8be9fd;font-style:italic">func</span>(cmd <span style="color:#ff79c6">*</span>cobra.Command, args []<span style="color:#8be9fd">string</span>) {
+        fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;n is %v\n&#34;</span>, n)
+        fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;a is %v\n&#34;</span>, a)
+        fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;s is %v\n&#34;</span>, s)
+        q, _ <span style="color:#ff79c6">:=</span> cmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">GetBool</span>(<span style="color:#f1fa8c">&#34;q&#34;</span>)
+        fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;q is %v\n&#34;</span>, q)
+        bbb, _ <span style="color:#ff79c6">:=</span> cmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">GetInt</span>(<span style="color:#f1fa8c">&#34;bbb&#34;</span>)
+        fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;bbb is %v\n&#34;</span>, bbb)
+    },
 }
 
 <span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">init</span>() {
-	rootCmd.<span style="color:#50fa7b">AddCommand</span>(newCmd)
+    rootCmd.<span style="color:#50fa7b">AddCommand</span>(newCmd)
 
-	newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">IntVar</span>(<span style="color:#ff79c6">&amp;</span>n, <span style="color:#f1fa8c">&#34;intf&#34;</span>, <span style="color:#bd93f9">0</span>, <span style="color:#f1fa8c">&#34;Set Int&#34;</span>)
-	newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">StringVar</span>(<span style="color:#ff79c6">&amp;</span>s, <span style="color:#f1fa8c">&#34;stringf&#34;</span>, <span style="color:#f1fa8c">&#34;sss&#34;</span>, <span style="color:#f1fa8c">&#34;Set String&#34;</span>)
-	newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">Bool</span>(<span style="color:#f1fa8c">&#34;q&#34;</span>, <span style="color:#ff79c6">false</span>, <span style="color:#f1fa8c">&#34;Set Bool&#34;</span>)
+    newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">IntVar</span>(<span style="color:#ff79c6">&amp;</span>n, <span style="color:#f1fa8c">&#34;intf&#34;</span>, <span style="color:#bd93f9">0</span>, <span style="color:#f1fa8c">&#34;Set Int&#34;</span>)
+    newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">StringVar</span>(<span style="color:#ff79c6">&amp;</span>s, <span style="color:#f1fa8c">&#34;stringf&#34;</span>, <span style="color:#f1fa8c">&#34;sss&#34;</span>, <span style="color:#f1fa8c">&#34;Set String&#34;</span>)
+    newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">Bool</span>(<span style="color:#f1fa8c">&#34;q&#34;</span>, <span style="color:#ff79c6">false</span>, <span style="color:#f1fa8c">&#34;Set Bool&#34;</span>)
 
-	newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">IntVarP</span>(<span style="color:#ff79c6">&amp;</span>a, <span style="color:#f1fa8c">&#34;aaa&#34;</span>, <span style="color:#f1fa8c">&#34;a&#34;</span>, <span style="color:#bd93f9">1</span>, <span style="color:#f1fa8c">&#34;Set A&#34;</span>)
-	newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">IntP</span>(<span style="color:#f1fa8c">&#34;bbb&#34;</span>, <span style="color:#f1fa8c">&#34;b&#34;</span>, <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>, <span style="color:#f1fa8c">&#34;Set B&#34;</span>)
+    newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">IntVarP</span>(<span style="color:#ff79c6">&amp;</span>a, <span style="color:#f1fa8c">&#34;aaa&#34;</span>, <span style="color:#f1fa8c">&#34;a&#34;</span>, <span style="color:#bd93f9">1</span>, <span style="color:#f1fa8c">&#34;Set A&#34;</span>)
+    newCmd.<span style="color:#50fa7b">Flags</span>().<span style="color:#50fa7b">IntP</span>(<span style="color:#f1fa8c">&#34;bbb&#34;</span>, <span style="color:#f1fa8c">&#34;b&#34;</span>, <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>, <span style="color:#f1fa8c">&#34;Set B&#34;</span>)
 }</code></pre></div>
 
 <p>和Golang语言内置的flag库用法很像，cobra也支持XXVar这样的方法(XX可以使String、Int、Bool等)，第一个参数用的都是变量内存地址，这样在命令行下传递对应的参数就会改变量的值。另外也支持XXP和XXVarP这样的写法：XXP/XXVarP这样的不仅支持短参数也支持长参数，而XXVar只支持长参数；XXP和XXVarP这2种写法的区别主要是看第一个参数，XXP这样的方式中不需要预先定义变量，把内存地址传进来。</p>
@@ -391,56 +391,56 @@ bbb is <span style="color:#bd93f9">2</span></code></pre></div>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
 
 <span style="color:#ff79c6">import</span> (
-	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
-	<span style="color:#f1fa8c">&#34;github.com/urfave/cli&#34;</span>
-	<span style="color:#f1fa8c">&#34;log&#34;</span>
-	<span style="color:#f1fa8c">&#34;os&#34;</span>
+    <span style="color:#f1fa8c">&#34;fmt&#34;</span>
+    <span style="color:#f1fa8c">&#34;github.com/urfave/cli&#34;</span>
+    <span style="color:#f1fa8c">&#34;log&#34;</span>
+    <span style="color:#f1fa8c">&#34;os&#34;</span>
 )
 
 <span style="color:#8be9fd;font-style:italic">var</span> (
-	flags []cli.Flag
-	host  <span style="color:#8be9fd">string</span>
-	port  <span style="color:#8be9fd">int</span>
+    flags []cli.Flag
+    host  <span style="color:#8be9fd">string</span>
+    port  <span style="color:#8be9fd">int</span>
 )
 
 <span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">init</span>() {
-	flags = []cli.Flag{
-		cli.StringFlag{
-			Name:        <span style="color:#f1fa8c">&#34;t, host, ip-address&#34;</span>,
-			Value:       <span style="color:#f1fa8c">&#34;127.0.0.1&#34;</span>,
-			Usage:       <span style="color:#f1fa8c">&#34;Server host&#34;</span>,
-			Destination: <span style="color:#ff79c6">&amp;</span>host,
-		},
-		cli.IntFlag{
-			Name:        <span style="color:#f1fa8c">&#34;p, port&#34;</span>,
-			Value:       <span style="color:#bd93f9">8000</span>,
-			Usage:       <span style="color:#f1fa8c">&#34;Server port&#34;</span>,
-			Destination: <span style="color:#ff79c6">&amp;</span>port,
-		},
-	}
+    flags = []cli.Flag{
+        cli.StringFlag{
+            Name:        <span style="color:#f1fa8c">&#34;t, host, ip-address&#34;</span>,
+            Value:       <span style="color:#f1fa8c">&#34;127.0.0.1&#34;</span>,
+            Usage:       <span style="color:#f1fa8c">&#34;Server host&#34;</span>,
+            Destination: <span style="color:#ff79c6">&amp;</span>host,
+        },
+        cli.IntFlag{
+            Name:        <span style="color:#f1fa8c">&#34;p, port&#34;</span>,
+            Value:       <span style="color:#bd93f9">8000</span>,
+            Usage:       <span style="color:#f1fa8c">&#34;Server port&#34;</span>,
+            Destination: <span style="color:#ff79c6">&amp;</span>port,
+        },
+    }
 }
 <span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
-	app <span style="color:#ff79c6">:=</span> cli.<span style="color:#50fa7b">NewApp</span>()
-	app.Name = <span style="color:#f1fa8c">&#34;AppName&#34;</span>
-	app.Usage = <span style="color:#f1fa8c">&#34;Application Usage&#34;</span>
-	app.HideVersion = <span style="color:#ff79c6">true</span>
-	app.Flags = flags
-	app.Action = Action
+    app <span style="color:#ff79c6">:=</span> cli.<span style="color:#50fa7b">NewApp</span>()
+    app.Name = <span style="color:#f1fa8c">&#34;AppName&#34;</span>
+    app.Usage = <span style="color:#f1fa8c">&#34;Application Usage&#34;</span>
+    app.HideVersion = <span style="color:#ff79c6">true</span>
+    app.Flags = flags
+    app.Action = Action
 
-	err <span style="color:#ff79c6">:=</span> app.<span style="color:#50fa7b">Run</span>(os.Args)
-	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
-		log.<span style="color:#50fa7b">Fatal</span>(err)
-	}
+    err <span style="color:#ff79c6">:=</span> app.<span style="color:#50fa7b">Run</span>(os.Args)
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        log.<span style="color:#50fa7b">Fatal</span>(err)
+    }
 }
 
 <span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Action</span>(c <span style="color:#ff79c6">*</span>cli.Context) <span style="color:#8be9fd">error</span> {
-	<span style="color:#ff79c6">if</span> c.<span style="color:#50fa7b">Int</span>(<span style="color:#f1fa8c">&#34;port&#34;</span>) &lt; <span style="color:#bd93f9">1024</span> {
-		cli.<span style="color:#50fa7b">ShowAppHelp</span>(c)
-		<span style="color:#ff79c6">return</span> cli.<span style="color:#50fa7b">NewExitError</span>(<span style="color:#f1fa8c">&#34;Ports below 1024 is not available&#34;</span>, <span style="color:#bd93f9">2</span>)
-	}
+    <span style="color:#ff79c6">if</span> c.<span style="color:#50fa7b">Int</span>(<span style="color:#f1fa8c">&#34;port&#34;</span>) &lt; <span style="color:#bd93f9">1024</span> {
+        cli.<span style="color:#50fa7b">ShowAppHelp</span>(c)
+        <span style="color:#ff79c6">return</span> cli.<span style="color:#50fa7b">NewExitError</span>(<span style="color:#f1fa8c">&#34;Ports below 1024 is not available&#34;</span>, <span style="color:#bd93f9">2</span>)
+    }
 
     fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Listening at: http://%s:%d&#34;</span>, host, c.<span style="color:#50fa7b">Int</span>(<span style="color:#f1fa8c">&#34;port&#34;</span>))
-	<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+    <span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
 }</code></pre></div>
 
 <p>flags是cli.Flag结构列表，包含主机名和端口2项Flag，每项都指定了Name(可以有多个，用逗号隔开)、Value(默认值)、Usage(帮助信息)、Destination(对应变量的内存地址，因为在命令行内会修改变量)。要注意Flag需要使用对应类型XXFlag（如cli.StringFlag、cli.IntFlag)</p>
@@ -498,62 +498,62 @@ Ports below <span style="color:#bd93f9">1024</span> is not available
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
 
 <span style="color:#ff79c6">import</span> (
-	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
-	<span style="color:#f1fa8c">&#34;log&#34;</span>
-	<span style="color:#f1fa8c">&#34;os&#34;</span>
+    <span style="color:#f1fa8c">&#34;fmt&#34;</span>
+    <span style="color:#f1fa8c">&#34;log&#34;</span>
+    <span style="color:#f1fa8c">&#34;os&#34;</span>
 
-	<span style="color:#f1fa8c">&#34;github.com/urfave/cli&#34;</span>
+    <span style="color:#f1fa8c">&#34;github.com/urfave/cli&#34;</span>
 )
 
 <span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
-	app <span style="color:#ff79c6">:=</span> cli.<span style="color:#50fa7b">NewApp</span>()
+    app <span style="color:#ff79c6">:=</span> cli.<span style="color:#50fa7b">NewApp</span>()
 
-	app.Commands = []cli.Command{
-		{
-			Name:     <span style="color:#f1fa8c">&#34;add&#34;</span>,
-			Aliases:  []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;a&#34;</span>},
-			Usage:    <span style="color:#f1fa8c">&#34;add a task to the list&#34;</span>,
-			Category: <span style="color:#f1fa8c">&#34;Add&#34;</span>,
-			Action: <span style="color:#8be9fd;font-style:italic">func</span>(c <span style="color:#ff79c6">*</span>cli.Context) <span style="color:#8be9fd">error</span> {
-				fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;added task: &#34;</span>, c.<span style="color:#50fa7b">Args</span>().<span style="color:#50fa7b">First</span>())
-				<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
-			},
-		},
-		{
-			Name:     <span style="color:#f1fa8c">&#34;template&#34;</span>,
-			Aliases:  []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;t&#34;</span>, <span style="color:#f1fa8c">&#34;tmpl&#34;</span>},
-			Usage:    <span style="color:#f1fa8c">&#34;options for task templates&#34;</span>,
-			Category: <span style="color:#f1fa8c">&#34;Template&#34;</span>,
-			Subcommands: []cli.Command{
-				{
-					Name:  <span style="color:#f1fa8c">&#34;add&#34;</span>,
-					Usage: <span style="color:#f1fa8c">&#34;add a new template&#34;</span>,
-					Action: <span style="color:#8be9fd;font-style:italic">func</span>(c <span style="color:#ff79c6">*</span>cli.Context) <span style="color:#8be9fd">error</span> {
-						fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;new task template: &#34;</span>, c.<span style="color:#50fa7b">Args</span>().<span style="color:#50fa7b">First</span>())
-						<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
-					},
-				},
-				{
-					Name:  <span style="color:#f1fa8c">&#34;remove&#34;</span>,
-					Usage: <span style="color:#f1fa8c">&#34;remove an existing template&#34;</span>,
-					Action: <span style="color:#8be9fd;font-style:italic">func</span>(c <span style="color:#ff79c6">*</span>cli.Context) <span style="color:#8be9fd">error</span> {
-						fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;removed task template: &#34;</span>, c.<span style="color:#50fa7b">Args</span>().<span style="color:#50fa7b">First</span>())
-						<span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
-					},
-				},
-			},
-		},
-	}
+    app.Commands = []cli.Command{
+        {
+            Name:     <span style="color:#f1fa8c">&#34;add&#34;</span>,
+            Aliases:  []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;a&#34;</span>},
+            Usage:    <span style="color:#f1fa8c">&#34;add a task to the list&#34;</span>,
+            Category: <span style="color:#f1fa8c">&#34;Add&#34;</span>,
+            Action: <span style="color:#8be9fd;font-style:italic">func</span>(c <span style="color:#ff79c6">*</span>cli.Context) <span style="color:#8be9fd">error</span> {
+                fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;added task: &#34;</span>, c.<span style="color:#50fa7b">Args</span>().<span style="color:#50fa7b">First</span>())
+                <span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+            },
+        },
+        {
+            Name:     <span style="color:#f1fa8c">&#34;template&#34;</span>,
+            Aliases:  []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;t&#34;</span>, <span style="color:#f1fa8c">&#34;tmpl&#34;</span>},
+            Usage:    <span style="color:#f1fa8c">&#34;options for task templates&#34;</span>,
+            Category: <span style="color:#f1fa8c">&#34;Template&#34;</span>,
+            Subcommands: []cli.Command{
+                {
+                    Name:  <span style="color:#f1fa8c">&#34;add&#34;</span>,
+                    Usage: <span style="color:#f1fa8c">&#34;add a new template&#34;</span>,
+                    Action: <span style="color:#8be9fd;font-style:italic">func</span>(c <span style="color:#ff79c6">*</span>cli.Context) <span style="color:#8be9fd">error</span> {
+                        fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;new task template: &#34;</span>, c.<span style="color:#50fa7b">Args</span>().<span style="color:#50fa7b">First</span>())
+                        <span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+                    },
+                },
+                {
+                    Name:  <span style="color:#f1fa8c">&#34;remove&#34;</span>,
+                    Usage: <span style="color:#f1fa8c">&#34;remove an existing template&#34;</span>,
+                    Action: <span style="color:#8be9fd;font-style:italic">func</span>(c <span style="color:#ff79c6">*</span>cli.Context) <span style="color:#8be9fd">error</span> {
+                        fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;removed task template: &#34;</span>, c.<span style="color:#50fa7b">Args</span>().<span style="color:#50fa7b">First</span>())
+                        <span style="color:#ff79c6">return</span> <span style="color:#ff79c6">nil</span>
+                    },
+                },
+            },
+        },
+    }
 
-	app.Name = <span style="color:#f1fa8c">&#34;AppName&#34;</span>
-	app.Usage = <span style="color:#f1fa8c">&#34;application usage&#34;</span>
-	app.Description = <span style="color:#f1fa8c">&#34;application description&#34;</span>  <span style="color:#6272a4">// 描述
-</span><span style="color:#6272a4"></span>	app.Version = <span style="color:#f1fa8c">&#34;1.0.1&#34;</span> <span style="color:#6272a4">// 版本
+    app.Name = <span style="color:#f1fa8c">&#34;AppName&#34;</span>
+    app.Usage = <span style="color:#f1fa8c">&#34;application usage&#34;</span>
+    app.Description = <span style="color:#f1fa8c">&#34;application description&#34;</span>  <span style="color:#6272a4">// 描述
+</span><span style="color:#6272a4"></span>    app.Version = <span style="color:#f1fa8c">&#34;1.0.1&#34;</span> <span style="color:#6272a4">// 版本
 </span><span style="color:#6272a4"></span>
-	err <span style="color:#ff79c6">:=</span> app.<span style="color:#50fa7b">Run</span>(os.Args)
-	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
-		log.<span style="color:#50fa7b">Fatal</span>(err)
-	}
+    err <span style="color:#ff79c6">:=</span> app.<span style="color:#50fa7b">Run</span>(os.Args)
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        log.<span style="color:#50fa7b">Fatal</span>(err)
+    }
 }</code></pre></div>
 
 <p><code>urfave/cli</code>支持分组子命令，这个例子中包含2个子命令，分别是add(在Add组)和template(在Template组)，其中template子命令下也有2个子命令add/remove。子命令支持别名，需要放在Aliases里面，分组需要放在Category里面。</p>

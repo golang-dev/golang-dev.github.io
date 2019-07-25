@@ -39,7 +39,7 @@ categories = ["cli"]
 
 1 directory, 3 file
 # 由于指定了包名cobraDemo，且其不在默认的GOROOT或者GOPATH目录下，所以需要让GOPATH加上当前项目的源代码目录
-❯ export GOPATH=$GOPATH:/Users/dongwm/strconv.code/cli
+❯ export GOPATH=$GOPATH:/Users/xiaoxi/strconv.code/cli
 ❯ go run main.go
 A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
@@ -98,7 +98,7 @@ func Execute() {
 
 {{< highlight bash >}}
 ❯ cobra add new
-new created at /Users/dongwm/strconv.code/cli/src/cobraDemo
+new created at /Users/xiaoxi/strconv.code/cli/src/cobraDemo
 ❯ tree .
 .
 ├── LICENSE
@@ -116,20 +116,20 @@ new created at /Users/dongwm/strconv.code/cli/src/cobraDemo
 package cmd
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/spf13/cobra"
+    "github.com/spf13/cobra"
 )
 var newCmd = &cobra.Command{
-	Use:   "new",
-	Short: "A brief description of your command",
-	Long: `A longer description...`,
+    Use:   "new",
+    Short: "A brief description of your command",
+    Long: `A longer description...`,
     Run: func(cmd *cobra.Command, args []string) {
            fmt.Println("new called")
     },
 }
 func init() {
-	rootCmd.AddCommand(newCmd)
+    rootCmd.AddCommand(newCmd)
 }
 {{< /highlight >}}
 
@@ -184,40 +184,40 @@ new called
 package cmd
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/spf13/cobra"
+    "github.com/spf13/cobra"
 )
 
 var (
-	n, a int
-	s string
+    n, a int
+    s string
 )
 
 var newCmd = &cobra.Command{
-	Use:   "new",
-	Short: "A brief description of your command",
-	Long: `A longer description...`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("n is %v\n", n)
-		fmt.Printf("a is %v\n", a)
-		fmt.Printf("s is %v\n", s)
-		q, _ := cmd.Flags().GetBool("q")
-		fmt.Printf("q is %v\n", q)
-		bbb, _ := cmd.Flags().GetInt("bbb")
-		fmt.Printf("bbb is %v\n", bbb)
-	},
+    Use:   "new",
+    Short: "A brief description of your command",
+    Long: `A longer description...`,
+    Run: func(cmd *cobra.Command, args []string) {
+        fmt.Printf("n is %v\n", n)
+        fmt.Printf("a is %v\n", a)
+        fmt.Printf("s is %v\n", s)
+        q, _ := cmd.Flags().GetBool("q")
+        fmt.Printf("q is %v\n", q)
+        bbb, _ := cmd.Flags().GetInt("bbb")
+        fmt.Printf("bbb is %v\n", bbb)
+    },
 }
 
 func init() {
-	rootCmd.AddCommand(newCmd)
+    rootCmd.AddCommand(newCmd)
 
-	newCmd.Flags().IntVar(&n, "intf", 0, "Set Int")
-	newCmd.Flags().StringVar(&s, "stringf", "sss", "Set String")
-	newCmd.Flags().Bool("q", false, "Set Bool")
+    newCmd.Flags().IntVar(&n, "intf", 0, "Set Int")
+    newCmd.Flags().StringVar(&s, "stringf", "sss", "Set String")
+    newCmd.Flags().Bool("q", false, "Set Bool")
 
-	newCmd.Flags().IntVarP(&a, "aaa", "a", 1, "Set A")
-	newCmd.Flags().IntP("bbb", "b", -1, "Set B")
+    newCmd.Flags().IntVarP(&a, "aaa", "a", 1, "Set A")
+    newCmd.Flags().IntP("bbb", "b", -1, "Set B")
 }
 {{< /highlight >}}
 
@@ -274,56 +274,56 @@ bbb is 2
 package main
 
 import (
-	"fmt"
-	"github.com/urfave/cli"
-	"log"
-	"os"
+    "fmt"
+    "github.com/urfave/cli"
+    "log"
+    "os"
 )
 
 var (
-	flags []cli.Flag
-	host  string
-	port  int
+    flags []cli.Flag
+    host  string
+    port  int
 )
 
 func init() {
-	flags = []cli.Flag{
-		cli.StringFlag{
-			Name:        "t, host, ip-address",
-			Value:       "127.0.0.1",
-			Usage:       "Server host",
-			Destination: &host,
-		},
-		cli.IntFlag{
-			Name:        "p, port",
-			Value:       8000,
-			Usage:       "Server port",
-			Destination: &port,
-		},
-	}
+    flags = []cli.Flag{
+        cli.StringFlag{
+            Name:        "t, host, ip-address",
+            Value:       "127.0.0.1",
+            Usage:       "Server host",
+            Destination: &host,
+        },
+        cli.IntFlag{
+            Name:        "p, port",
+            Value:       8000,
+            Usage:       "Server port",
+            Destination: &port,
+        },
+    }
 }
 func main() {
-	app := cli.NewApp()
-	app.Name = "AppName"
-	app.Usage = "Application Usage"
-	app.HideVersion = true
-	app.Flags = flags
-	app.Action = Action
+    app := cli.NewApp()
+    app.Name = "AppName"
+    app.Usage = "Application Usage"
+    app.HideVersion = true
+    app.Flags = flags
+    app.Action = Action
 
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
-	}
+    err := app.Run(os.Args)
+    if err != nil {
+        log.Fatal(err)
+    }
 }
 
 func Action(c *cli.Context) error {
-	if c.Int("port") < 1024 {
-		cli.ShowAppHelp(c)
-		return cli.NewExitError("Ports below 1024 is not available", 2)
-	}
+    if c.Int("port") < 1024 {
+        cli.ShowAppHelp(c)
+        return cli.NewExitError("Ports below 1024 is not available", 2)
+    }
 
     fmt.Printf("Listening at: http://%s:%d", host, c.Int("port"))
-	return nil
+    return nil
 }
 {{< /highlight >}}
 
@@ -383,62 +383,62 @@ exit status 2
 package main
 
 import (
-	"fmt"
-	"log"
-	"os"
+    "fmt"
+    "log"
+    "os"
 
-	"github.com/urfave/cli"
+    "github.com/urfave/cli"
 )
 
 func main() {
-	app := cli.NewApp()
+    app := cli.NewApp()
 
-	app.Commands = []cli.Command{
-		{
-			Name:     "add",
-			Aliases:  []string{"a"},
-			Usage:    "add a task to the list",
-			Category: "Add",
-			Action: func(c *cli.Context) error {
-				fmt.Println("added task: ", c.Args().First())
-				return nil
-			},
-		},
-		{
-			Name:     "template",
-			Aliases:  []string{"t", "tmpl"},
-			Usage:    "options for task templates",
-			Category: "Template",
-			Subcommands: []cli.Command{
-				{
-					Name:  "add",
-					Usage: "add a new template",
-					Action: func(c *cli.Context) error {
-						fmt.Println("new task template: ", c.Args().First())
-						return nil
-					},
-				},
-				{
-					Name:  "remove",
-					Usage: "remove an existing template",
-					Action: func(c *cli.Context) error {
-						fmt.Println("removed task template: ", c.Args().First())
-						return nil
-					},
-				},
-			},
-		},
-	}
+    app.Commands = []cli.Command{
+        {
+            Name:     "add",
+            Aliases:  []string{"a"},
+            Usage:    "add a task to the list",
+            Category: "Add",
+            Action: func(c *cli.Context) error {
+                fmt.Println("added task: ", c.Args().First())
+                return nil
+            },
+        },
+        {
+            Name:     "template",
+            Aliases:  []string{"t", "tmpl"},
+            Usage:    "options for task templates",
+            Category: "Template",
+            Subcommands: []cli.Command{
+                {
+                    Name:  "add",
+                    Usage: "add a new template",
+                    Action: func(c *cli.Context) error {
+                        fmt.Println("new task template: ", c.Args().First())
+                        return nil
+                    },
+                },
+                {
+                    Name:  "remove",
+                    Usage: "remove an existing template",
+                    Action: func(c *cli.Context) error {
+                        fmt.Println("removed task template: ", c.Args().First())
+                        return nil
+                    },
+                },
+            },
+        },
+    }
 
-	app.Name = "AppName"
-	app.Usage = "application usage"
-	app.Description = "application description"  // 描述
-	app.Version = "1.0.1" // 版本
+    app.Name = "AppName"
+    app.Usage = "application usage"
+    app.Description = "application description"  // 描述
+    app.Version = "1.0.1" // 版本
 
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
-	}
+    err := app.Run(os.Args)
+    if err != nil {
+        log.Fatal(err)
+    }
 }
 {{< /highlight >}}
 

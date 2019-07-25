@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Golang开发必备: 打造MacOS下开发环境"/>
+<meta name="twitter:description" content="学习一门编程语言除了学习它的语法，也要搭建一个正确好用的开发环境，这篇文章分享一下我的Golang开发环境。
+安装Golang 在MacOS下我一般都是用Homebrew：
+❯ brew update ❯ brew install golang ❯ go version # 安装完成了 go version go1.12.6 darwin/amd64 Go环境变量配置 安装之后要做一点环境变量配置。
+GOPATH GOPATH环境变量表示Go的工作目录，这个目录指定了需要从哪个地方寻找GO的包、可执行程序等。用go get下载的包都放在这个目录下。
+从Go 1.8开始，GOPATH默认是$HOME/go，如果你希望使用其他目录可以在你用的Shell配置文件(如~/.zshrc、~/.bashrc、.bash_profile)里面指定，我推荐显示的指定GOPATH，哪怕用了默认的目录。
+GOROOT GOROOT指Go语言编译、工具、标准库等的安装路径。
+从Go 1.0开始，也不必显示地设置GOROOT环境变量。通常这个路径是/usr/local/go，当使用Homebrew安装Golang时目录会放在&rdquo;$(brew &ndash;prefix golang)/libexec&rdquo;这个目录下。
+小结 我的.zshrc里面是这样配置的：
+export GOPATH=&#34;${HOME}/.go&#34; # 我的个人习惯 export GOROOT=&#34;$(brew --prefix golang)/libexec&#34; # 默认路径 export PATH=&#34;$PATH:${GOPATH}/bin:${GOROOT}/bin&#34; IDE 现在有非常多成熟的集成开发环境（IDE），如Emacs、GoLand、VS Code、Vim、LiteIDE等。它们都是跨平台的，支持代码语法高亮、自动补全、错误检查、代码引用查询与跳转、格式化和调试等特性，可以作为Golang程序开发工具。
+其实选择哪个IDE没有标准答案，看你的习惯和喜好，如果你愿意花时间去深入和琢磨一套属于自己的用法和快捷键，上面提到的任何一个 IDE 都可以帮助你完成开发。
+我日常用的编辑器是VS Code，所以开发环境都是基于VS Code搞的。
+安装VS Code 从官网下载对应平台安装文件安装就可以了。
+接着安装官方扩展Go for Visual Studio Code，浏览器访问后直接点击install按钮即可自动打开VS Code安装之。
+安装必要的包 接着需要安装一些必要的包。
+如果你在VS Code(下文简称Code)里面打开(新建)一个go程序文件，右下角会有类似这样的提示：
+The &#34;go-outline&#34; command is not available."/>
+
+    <meta property="og:title" content="Golang开发必备: 打造MacOS下开发环境" />
+<meta property="og:description" content="学习一门编程语言除了学习它的语法，也要搭建一个正确好用的开发环境，这篇文章分享一下我的Golang开发环境。
+安装Golang 在MacOS下我一般都是用Homebrew：
+❯ brew update ❯ brew install golang ❯ go version # 安装完成了 go version go1.12.6 darwin/amd64 Go环境变量配置 安装之后要做一点环境变量配置。
+GOPATH GOPATH环境变量表示Go的工作目录，这个目录指定了需要从哪个地方寻找GO的包、可执行程序等。用go get下载的包都放在这个目录下。
+从Go 1.8开始，GOPATH默认是$HOME/go，如果你希望使用其他目录可以在你用的Shell配置文件(如~/.zshrc、~/.bashrc、.bash_profile)里面指定，我推荐显示的指定GOPATH，哪怕用了默认的目录。
+GOROOT GOROOT指Go语言编译、工具、标准库等的安装路径。
+从Go 1.0开始，也不必显示地设置GOROOT环境变量。通常这个路径是/usr/local/go，当使用Homebrew安装Golang时目录会放在&rdquo;$(brew &ndash;prefix golang)/libexec&rdquo;这个目录下。
+小结 我的.zshrc里面是这样配置的：
+export GOPATH=&#34;${HOME}/.go&#34; # 我的个人习惯 export GOROOT=&#34;$(brew --prefix golang)/libexec&#34; # 默认路径 export PATH=&#34;$PATH:${GOPATH}/bin:${GOROOT}/bin&#34; IDE 现在有非常多成熟的集成开发环境（IDE），如Emacs、GoLand、VS Code、Vim、LiteIDE等。它们都是跨平台的，支持代码语法高亮、自动补全、错误检查、代码引用查询与跳转、格式化和调试等特性，可以作为Golang程序开发工具。
+其实选择哪个IDE没有标准答案，看你的习惯和喜好，如果你愿意花时间去深入和琢磨一套属于自己的用法和快捷键，上面提到的任何一个 IDE 都可以帮助你完成开发。
+我日常用的编辑器是VS Code，所以开发环境都是基于VS Code搞的。
+安装VS Code 从官网下载对应平台安装文件安装就可以了。
+接着安装官方扩展Go for Visual Studio Code，浏览器访问后直接点击install按钮即可自动打开VS Code安装之。
+安装必要的包 接着需要安装一些必要的包。
+如果你在VS Code(下文简称Code)里面打开(新建)一个go程序文件，右下角会有类似这样的提示：
+The &#34;go-outline&#34; command is not available." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/setup-env-on-macos/" />
+<meta property="article:published_time" content="2019-07-25T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-25T00:00:00&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/setup-env-on-macos/">
+    
+    <title>
+  Golang开发必备: 打造MacOS下开发环境 · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/setup-env-on-macos/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Golang开发必备: 打造MacOS下开发环境</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-07-25T00:00:00Z'>
+                July 25, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              2 minutes read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/macos/">macos</a></div>
+
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="https://strconv.com/tags/macos/">macos</a>
+      <span class="separator">•</span>
+    <a href="https://strconv.com/tags/env/">env</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+
+<p>学习一门编程语言除了学习它的语法，也要搭建一个正确好用的开发环境，这篇文章分享一下我的Golang开发环境。</p>
+
+<h3 id="安装golang">安装Golang</h3>
+
+<p>在MacOS下我一般都是用Homebrew：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ brew update
+❯ brew install golang
+❯ go version  <span style="color:#6272a4"># 安装完成了</span>
+go version go1.12.6 darwin/amd64</code></pre></div>
+
+<h3 id="go环境变量配置">Go环境变量配置</h3>
+
+<p>安装之后要做一点环境变量配置。</p>
+
+<h4 id="gopath">GOPATH</h4>
+
+<p>GOPATH环境变量表示Go的工作目录，这个目录指定了需要从哪个地方寻找GO的包、可执行程序等。用<code>go get</code>下载的包都放在这个目录下。</p>
+
+<p>从Go 1.8开始，GOPATH默认是$HOME/go，如果你希望使用其他目录可以在你用的Shell配置文件(如~/.zshrc、~/.bashrc、.bash_profile)里面指定，<strong>我推荐显示的指定GOPATH，哪怕用了默认的目录</strong>。</p>
+
+<h4 id="goroot">GOROOT</h4>
+
+<p>GOROOT指Go语言编译、工具、标准库等的安装路径。</p>
+
+<p>从Go 1.0开始，也不必显示地设置GOROOT环境变量。通常这个路径是<code>/usr/local/go</code>，当使用Homebrew安装Golang时目录会放在&rdquo;$(brew &ndash;prefix golang)/libexec&rdquo;这个目录下。</p>
+
+<h4 id="小结">小结</h4>
+
+<p>我的<code>.zshrc</code>里面是这样配置的：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#8be9fd;font-style:italic">export</span> <span style="color:#8be9fd;font-style:italic">GOPATH</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">${</span><span style="color:#8be9fd;font-style:italic">HOME</span><span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">/.go&#34;</span>  <span style="color:#6272a4"># 我的个人习惯</span>
+<span style="color:#8be9fd;font-style:italic">export</span> <span style="color:#8be9fd;font-style:italic">GOROOT</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;</span><span style="color:#ff79c6">$(</span>brew --prefix golang<span style="color:#ff79c6">)</span><span style="color:#f1fa8c">/libexec&#34;</span>  <span style="color:#6272a4"># 默认路径</span>
+<span style="color:#8be9fd;font-style:italic">export</span> <span style="color:#8be9fd;font-style:italic">PATH</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$PATH</span><span style="color:#f1fa8c">:</span><span style="color:#f1fa8c">${</span><span style="color:#8be9fd;font-style:italic">GOPATH</span><span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">/bin:</span><span style="color:#f1fa8c">${</span><span style="color:#8be9fd;font-style:italic">GOROOT</span><span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">/bin&#34;</span></code></pre></div>
+
+<h3 id="ide">IDE</h3>
+
+<p>现在有非常多成熟的集成开发环境（IDE），如Emacs、GoLand、VS Code、Vim、LiteIDE等。它们都是跨平台的，支持代码语法高亮、自动补全、错误检查、代码引用查询与跳转、格式化和调试等特性，可以作为Golang程序开发工具。</p>
+
+<p>其实选择哪个IDE没有标准答案，看你的习惯和喜好，如果你愿意花时间去深入和琢磨一套属于自己的用法和快捷键，上面提到的任何一个 IDE 都可以帮助你完成开发。</p>
+
+<p>我日常用的编辑器是VS Code，所以开发环境都是基于VS Code搞的。</p>
+
+<h3 id="安装vs-code">安装VS Code</h3>
+
+<p>从<a href="https://code.visualstudio.com/">官网</a>下载对应平台安装文件安装就可以了。</p>
+
+<p>接着安装官方扩展<a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go">Go for Visual Studio Code</a>，浏览器访问后直接点击<code>install</code>按钮即可自动打开VS Code安装之。</p>
+
+<h3 id="安装必要的包">安装必要的包</h3>
+
+<p>接着需要安装一些必要的包。</p>
+
+<p>如果你在VS Code(下文简称Code)里面打开(新建)一个go程序文件，右下角会有类似这样的提示：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">The <span style="color:#f1fa8c">&#34;go-outline&#34;</span> <span style="color:#8be9fd;font-style:italic">command</span> is not available. Use <span style="color:#f1fa8c">&#34;go get -v github.com/ramya-rao-a/go-outline&#34;</span> to install.<span style="color:#f1fa8c">`</span></code></pre></div>
+
+<p>然后是2个按钮<code>Install</code>和<code>Install All</code>，因为这样的相关包还很多，通常可以直接选择<code>Install All</code>，但是由于某些包被不明原因限制访问，最后会超时失败，错误信息差不多是这样的：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Installing <span style="color:#bd93f9">1</span> tool at /Users/xiaoxi/bin
+  go-outline
+
+Installing github.com/mdempsky/gocode FAILED
+Installing github.com/ramya-rao-a/go-outline FAILED
+
+<span style="color:#bd93f9">1</span> tools failed to install.
+
+go-outline:
+Error: Command failed: /Users/xiaoxi/opt/go/libexec/bin/go get -u -v github.com/ramya-rao-a/go-outline
+github.com/ramya-rao-a/go-outline <span style="color:#ff79c6">(</span>download<span style="color:#ff79c6">)</span>
+Fetching https://golang.org/x/tools/go/buildutil?go-get<span style="color:#ff79c6">=</span><span style="color:#bd93f9">1</span>
+https fetch failed: Get https://golang.org/x/tools/go/buildutil?go-get<span style="color:#ff79c6">=</span><span style="color:#bd93f9">1</span>: dial tcp <span style="color:#bd93f9">216</span>.239.37.1:443: i/o timeout
+golang.org/x/tools <span style="color:#ff79c6">(</span>download<span style="color:#ff79c6">)</span>
+<span style="color:#6272a4"># cd /Users/xiaoxi/src/golang.org/x/tools; git pull --ff-only</span>
+fatal: unable to access <span style="color:#f1fa8c">&#39;https://go.googlesource.com/tools/&#39;</span>: Failed to connect to go.googlesource.com port <span style="color:#bd93f9">443</span>: Operation timed out
+package golang.org/x/tools/go/buildutil: <span style="color:#8be9fd;font-style:italic">exit</span> status <span style="color:#bd93f9">1</span>
+...</code></pre></div>
+
+<p>这时候需要在Code里面设置代理(Proxy)，为了让大家知道都安装了那些包，另外我一般喜欢在命令行下执行，所以在终端可以这样安装：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#8be9fd;font-style:italic">export</span> <span style="color:#8be9fd;font-style:italic">http_proxy</span><span style="color:#ff79c6">=</span>http://10.8.0.1:8118;<span style="color:#8be9fd;font-style:italic">export</span> <span style="color:#8be9fd;font-style:italic">https_proxy</span><span style="color:#ff79c6">=</span>http://10.8.0.1:8118;  <span style="color:#6272a4"># 设置代理，这里你可以替换成你自己的代理</span>
+
+go get -u -v github.com/mdempsky/gocode
+go get -u -v github.com/rogpeppe/godef
+go get -u -v golang.org/x/tools/cmd/guru
+go get -u -v golang.org/x/tools/cmd/gorename
+go get -u -v golang.org/x/tools/cmd/goimports
+go get -u -v github.com/uudashr/gopkgs/cmd/gopkgs
+go get -u -v github.com/golangci/golangci-lint/cmd/golangci-lint
+go get -u -v github.com/ramya-rao-a/go-outline
+go get -u -v github.com/acroca/go-symbols
+go get -u -v github.com/zmb3/gogetdoc
+go get -u -v github.com/fatih/gomodifytags
+go get -u -v github.com/cweill/gotests/...
+go get -u -v github.com/josharian/impl
+go get -u -v github.com/uudashr/gopkgs/cmd/gopkgs
+go get -u -v github.com/davidrjenni/reftools/cmd/fillstruct</code></pre></div>
+
+<p>一眼看去好多包啊。我来分别介绍一下它们是用来做什么的：</p>
+
+<ol>
+<li>gocode。代码补全，注意，网上有很多文章用的是<a href="https://github.com/nsf/gocode，这是错误的，因为nsf/gocode现在已经不维护了。">https://github.com/nsf/gocode，这是错误的，因为nsf/gocode现在已经不维护了。</a></li>
+<li>godef。跳转到代码对应定义的，这个可以说是各种编程语言IDE必备的功能。</li>
+<li>guru。guru原来叫做oracle，能获得全部代码对应引用</li>
+<li>gorename。重命名Go源码文件</li>
+<li>goimports。自动帮你格式化import语句的，它来帮你决定import顺序</li>
+<li>gopkgs。列出Go包。</li>
+<li>golangci-lint。旧的用法是gometalinter，现在应该选择快5倍的golangci-lint，这个工具用来做静态检查工具，它会反馈代码风格并给出建议，这样就可以在源码保存是运行它能告诉你现有代码中有什么问题</li>
+<li>go-outline。当前文件做符号(Symbol)搜索，相当于文件大纲</li>
+<li>go-symbols。工作区符号搜索</li>
+<li>gogetdoc。鼠标悬停时可以显示文档(方法和类的签名等帮助信息)</li>
+<li>gomodifytags。提供tags管理，可以对struct的tag增删改</li>
+<li>gotests。用例测试</li>
+<li>impl。自动生成接口实现代码(stubs)</li>
+<li>gopkgs。导入包时自动补全(列出可导入的包列表，主要用于包导入时的提示功能)</li>
+<li>fillstruct。根据结构体定义在使用时自动填充默认值</li>
+</ol>
+
+<p>更多信息可以看延伸阅读链接1。注意有些包我没有安装，如golint、gometalinter、goreturns等，因为在对应场景下使用了其他包，就没必要装了(大家不要直接粘贴我或者其他开发者安装的包列表，有自己的思考选择性的安装)</p>
+
+<p>另外这些包其实不止针对于Code，对于其他编辑器也是适用的，你可以根据包名搜索有没有对应编辑器的扩展或者插件，大部分都可以集成进去。</p>
+
+<h3 id="配置vs-code">配置VS Code</h3>
+
+<p>安装之后需要对Code做一些设置。首先使用快捷键<code>Command+,</code>打开设置页面(用IDE一定要学好快捷键)，搜索<code>Go configuration</code>就可以看到Golang语言相关设置项了。不同的设置项类型不同：有下拉菜单、单选框、Input框，设置需要直接编辑配置文件settings.json。</p>
+
+<p>Code给每一项都设置了默认值，settings.json文件里面的设置会覆盖默认的，你可以直接编辑settings.json文件，也可以在设置页面对设置项做选择（如打勾、从下拉菜单选择你要的选项、在输入框输入对应值等）。我一般直接修改settings.json文件，这样换一台电脑这些配置项可以直接拷贝过去就可用了。下面是我的设置项，都带了说明：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+    <span style="color:#ff79c6">&#34;go.docsTool&#34;</span>: <span style="color:#f1fa8c">&#34;gogetdoc&#34;</span>, // 使用gogetdoc获取方法和类的签名帮助信息
+    <span style="color:#ff79c6">&#34;workbench.colorTheme&#34;</span>: <span style="color:#f1fa8c">&#34;Dracula&#34;</span>, // 换成我喜欢的主题
+    <span style="color:#ff79c6">&#34;go.formatTool&#34;</span>: <span style="color:#f1fa8c">&#34;goimports&#34;</span>, // 指定代码格式化工具，其他的如gofmt goreturns goformat
+    <span style="color:#ff79c6">&#34;go.autocompleteUnimportedPackages&#34;</span>: <span style="color:#ff79c6">true</span>, // 未完成的包会自动补全
+    <span style="color:#ff79c6">&#34;go.inferGopath&#34;</span>: <span style="color:#ff79c6">true</span>, // 让编辑器自动推断 GOPATH(包含全局的GOPATH，并沿着当前文件向上找到src目录)
+    <span style="color:#ff79c6">&#34;go.useCodeSnippetsOnFunctionSuggest&#34;</span>: <span style="color:#ff79c6">true</span>, // 使用代码片段提示，一会会继续说Snippets
+    <span style="color:#ff79c6">&#34;go.useCodeSnippetsOnFunctionSuggestWithoutType&#34;</span>: <span style="color:#ff79c6">true</span>,
+    <span style="color:#ff79c6">&#34;go.lintTool&#34;</span>: <span style="color:#f1fa8c">&#34;golangci-lint&#34;</span>, // 代码静态检查工具，其他的如gometalinter golint revive staticcheck
+    <span style="color:#ff79c6">&#34;go.gotoSymbol.includeGoroot&#34;</span>: <span style="color:#ff79c6">true</span>, // 在工作空间进行符号搜索文件时(Shift+cOMMAND+O, #开头)包含位于GOROOT里面的标准库
+}</code></pre></div>
+
+<p>PS: 在MacOS下配置文件的路径是<code>$HOME/Library/Application Support/Code/User/settings.json</code>。</p>
+
+<p>有一点要说明，我之前也在网上看过别人的配置，发现很多项的键值其实现在都已经不再可用了。怎么知道可用选项、设置说明、可选项等信息呢？</p>
+
+<p>答案是: 看官方vscode-go项目下的package.json文件(延伸阅读链接3)，都在那里面。举个<code>go.formatTool</code>的例子：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">    ...
+    <span style="color:#f1fa8c">&#34;go.formatTool&#34;</span>: {
+      <span style="color:#ff79c6">&#34;type&#34;</span>: <span style="color:#f1fa8c">&#34;string&#34;</span>,
+      <span style="color:#ff79c6">&#34;default&#34;</span>: <span style="color:#f1fa8c">&#34;goreturns&#34;</span>,
+      <span style="color:#ff79c6">&#34;description&#34;</span>: <span style="color:#f1fa8c">&#34;Pick &#39;gofmt&#39;, &#39;goimports&#39;, &#39;goreturns&#39; or &#39;goformat&#39; to run on format. Not applicable when using the language server. Choosing &#39;goimport&#39; or &#39;goreturns&#39; will add missing imports and remove unused imports.&#34;</span>,
+      <span style="color:#ff79c6">&#34;scope&#34;</span>: <span style="color:#f1fa8c">&#34;resource&#34;</span>,
+      <span style="color:#ff79c6">&#34;enum&#34;</span>: [
+        <span style="color:#f1fa8c">&#34;gofmt&#34;</span>,
+        <span style="color:#f1fa8c">&#34;goimports&#34;</span>,
+        <span style="color:#f1fa8c">&#34;goreturns&#34;</span>,
+        <span style="color:#f1fa8c">&#34;goformat&#34;</span>
+      ]
+    },
+    ...</code></pre></div>
+
+<p>直接在文件里面搜很方便，特别适合我这种喜欢在终端打开文件的开发者。</p>
+
+<h3 id="使用snippets-代码片段">使用Snippets(代码片段)</h3>
+
+<p>Code中添加Snippet可以提高写代码的效率，就是用别人写好的代码片段实现一些功能。在前面装的官方扩展「Go for Visual Studio Code」里面就带了很多代码片段。举个例子，如果想写一个<code>for range</code>语句，你只需要在编辑文件是打入<code>forr</code>，然后按Tab，就会出现这样的一段代码：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">for</span> _, <span style="color:#8be9fd;font-style:italic">var</span> <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">range</span> <span style="color:#8be9fd;font-style:italic">var</span> {
+
+}</code></pre></div>
+
+<p>并且把游标定位到循环里面，非常方便。全部的代码片段可以看延伸阅读链接5</p>
+
+<p>另外Code市场有专门的<a href="https://marketplace.visualstudio.com/items?itemName=banxi.go-snippets">Go Snippets</a>插件，里面也有很多片段。</p>
+
+<p>当然可以自定义代码片段，可以把你日常常用的一些代码做成代码片段，首先使用<code>Shift + Command + P</code>调出命令窗口，输入「snippets」，选择 「Preferences: Open User Snippets」，然后选择需要添加Snippet的语言(对我们来说就是选 go.json)，go.json默认是一个包含详细注释的例子，按它的格式写就可以。我这里举个例子：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">{
+    <span style="color:#f1fa8c">&#34;println&#34;</span>:{
+        <span style="color:#f1fa8c">&#34;prefix&#34;</span>: <span style="color:#f1fa8c">&#34;pln&#34;</span>,
+        <span style="color:#f1fa8c">&#34;body&#34;</span>:<span style="color:#f1fa8c">&#34;fmt.Println($0)&#34;</span>,
+        <span style="color:#f1fa8c">&#34;description&#34;</span>: <span style="color:#f1fa8c">&#34;Snippet for Println&#34;</span>
+    },
+    <span style="color:#f1fa8c">&#34;printf&#34;</span>:{
+        <span style="color:#f1fa8c">&#34;prefix&#34;</span>: <span style="color:#f1fa8c">&#34;plf&#34;</span>,
+        <span style="color:#f1fa8c">&#34;body&#34;</span>: <span style="color:#f1fa8c">&#34;fmt.Printf(\&#34;$0\&#34;)&#34;</span>,
+        <span style="color:#f1fa8c">&#34;description&#34;</span>: <span style="color:#f1fa8c">&#34;Snippet for Printf&#34;</span>
+    }
+}</code></pre></div>
+
+<p>这样写代码时用<code>pln</code>再按Tab就能打出对应的<code>fmt.Println</code>。当然这只是举个栗子，这种常用的代码在vscode-go项目中都有(分别是<code>fp</code>和<code>ff</code>)</p>
+
+<p>PS: 使用Snippets最重要的是要记住各种缩写前缀(如前面的forr、pln)，写起来代码来飞快~</p>
+
+<h3 id="后记">后记</h3>
+
+<p>好啦，就先说到这里，以后有其他的设置和用法我再更新~</p>
+
+<h3 id="延伸阅读">延伸阅读</h3>
+
+<ol>
+<li><a href="https://github.com/Microsoft/vscode-go/wiki/Go-tools-that-the-Go-extension-depends-on">https://github.com/Microsoft/vscode-go/wiki/Go-tools-that-the-Go-extension-depends-on</a></li>
+<li><a href="https://code.visualstudio.com/docs/getstarted/settings">https://code.visualstudio.com/docs/getstarted/settings</a></li>
+<li><a href="https://github.com/microsoft/vscode-go/blob/master/package.json">https://github.com/microsoft/vscode-go/blob/master/package.json</a></li>
+<li><a href="https://code.visualstudio.com/docs/languages/go">https://code.visualstudio.com/docs/languages/go</a></li>
+<li><a href="https://github.com/microsoft/vscode-go/blob/master/snippets/go.json">https://github.com/microsoft/vscode-go/blob/master/snippets/go.json</a></li>
+</ol>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://cdn.commento.io/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
+</html>
