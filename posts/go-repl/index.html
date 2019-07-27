@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Golang语言中的REPL库"/>
+<meta name="twitter:description" content="REPL REPL是Read-Eval-Print Loop的缩写，是一种简单的，交互式的编程环境，其中REPL分别指：
+Read。获得用户输入 Eval。对输入求值 Print。打印，输出求值的结果 Loop。循环，可以不断的重复Read-Eval-Print
+REPL对于学习一门新的编程语言非常有帮助，你可以再这个交互环境里面通过输出快速验证你的理解是不是正确。CPython自带了一个这样的编程环境：
+❯ python3 Python 3.7.1 (default, Dec 13 2018, 22:28:16) [Clang 10.0.0 (clang-1000.11.45.5)] on darwin Type &#34;help&#34;, &#34;copyright&#34;, &#34;credits&#34; or &#34;license&#34; for more information. &gt;&gt;&gt; a = 1 &gt;&gt;&gt; a &#43; 2 3 &gt;&gt;&gt; print(a - 1) 0 &gt;&gt;&gt; def b(n): ... return n &#43; 2 ... &gt;&gt;&gt; b(3) 5 IPython 使用Python开发、DEBUG效率高的一个重要原因是由于IPython这个工具，相信做过Python开发的同学都有体会。IPython是一个基于Python Shell的交互式解释器，可以快速验证代码运行结果是否符合预期。它有以下主要特性：
+ Tab自动补全。可以用Tab对变量、函数、方法等自动补全，比如import os后，输入os.再按Tab就能列出全部方法，在按Tab就会一个个的选择它们，另外可以输入os.p再按Tab会列出以p开头的全部方法等。 能快速获得模块/函数/类的信息，如参数、文档、原始代码等。有时候忘记方法名字或者签名可以直接在IPython里面获得对应信息，甚至可以看到原始代码，这非常方便。 支持Python语法高亮。不用再面对纯白色的一大片代码了。  当然IPython还有很多很多其他的功能，如历史记录、各种Magic函数、autoreload等扩展，这些对于开发和调试都非常有帮助，可以说是Python工程师必备工具。
+开始学习Golang后，对于这种REPL编程环境非常渴望，因为它对于初学者友好且对于熟悉Golang非常有帮助。
+一番调研，目前Golang世界中共有6个可用的REPL解释环境：3个终端使用，3个在线编辑，本文分别介绍它们。"/>
+
+    <meta property="og:title" content="Golang语言中的REPL库" />
+<meta property="og:description" content="REPL REPL是Read-Eval-Print Loop的缩写，是一种简单的，交互式的编程环境，其中REPL分别指：
+Read。获得用户输入 Eval。对输入求值 Print。打印，输出求值的结果 Loop。循环，可以不断的重复Read-Eval-Print
+REPL对于学习一门新的编程语言非常有帮助，你可以再这个交互环境里面通过输出快速验证你的理解是不是正确。CPython自带了一个这样的编程环境：
+❯ python3 Python 3.7.1 (default, Dec 13 2018, 22:28:16) [Clang 10.0.0 (clang-1000.11.45.5)] on darwin Type &#34;help&#34;, &#34;copyright&#34;, &#34;credits&#34; or &#34;license&#34; for more information. &gt;&gt;&gt; a = 1 &gt;&gt;&gt; a &#43; 2 3 &gt;&gt;&gt; print(a - 1) 0 &gt;&gt;&gt; def b(n): ... return n &#43; 2 ... &gt;&gt;&gt; b(3) 5 IPython 使用Python开发、DEBUG效率高的一个重要原因是由于IPython这个工具，相信做过Python开发的同学都有体会。IPython是一个基于Python Shell的交互式解释器，可以快速验证代码运行结果是否符合预期。它有以下主要特性：
+ Tab自动补全。可以用Tab对变量、函数、方法等自动补全，比如import os后，输入os.再按Tab就能列出全部方法，在按Tab就会一个个的选择它们，另外可以输入os.p再按Tab会列出以p开头的全部方法等。 能快速获得模块/函数/类的信息，如参数、文档、原始代码等。有时候忘记方法名字或者签名可以直接在IPython里面获得对应信息，甚至可以看到原始代码，这非常方便。 支持Python语法高亮。不用再面对纯白色的一大片代码了。  当然IPython还有很多很多其他的功能，如历史记录、各种Magic函数、autoreload等扩展，这些对于开发和调试都非常有帮助，可以说是Python工程师必备工具。
+开始学习Golang后，对于这种REPL编程环境非常渴望，因为它对于初学者友好且对于熟悉Golang非常有帮助。
+一番调研，目前Golang世界中共有6个可用的REPL解释环境：3个终端使用，3个在线编辑，本文分别介绍它们。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/go-repl/" />
+<meta property="article:published_time" content="2019-07-27T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-27T00:00:00&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/go-repl/">
+    
+    <title>
+  Golang语言中的REPL库 · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/go-repl/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Golang语言中的REPL库</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-07-27T00:00:00Z'>
+                July 27, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              5 minutes read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/repl/">repl</a></div>
+
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="https://strconv.com/tags/repl/">repl</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+
+<h3 id="repl">REPL</h3>
+
+<p>REPL是<code>Read-Eval-Print Loop</code>的缩写，是一种简单的，交互式的编程环境，其中REPL分别指：</p>
+
+<p>Read。获得用户输入
+Eval。对输入求值
+Print。打印，输出求值的结果
+Loop。循环，可以不断的重复Read-Eval-Print</p>
+
+<p>REPL对于学习一门新的编程语言非常有帮助，你可以再这个交互环境里面通过输出快速验证你的理解是不是正确。CPython自带了一个这样的编程环境：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">❯ python3
+Python <span style="color:#bd93f9">3.7</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">1</span> (default, Dec <span style="color:#bd93f9">13</span> <span style="color:#bd93f9">2018</span>, <span style="color:#bd93f9">22</span>:<span style="color:#bd93f9">28</span>:<span style="color:#bd93f9">16</span>)
+[Clang <span style="color:#bd93f9">10.0</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">0</span> (clang<span style="color:#ff79c6">-</span><span style="color:#bd93f9">1000.11</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">45.5</span>)] on darwin
+Type <span style="color:#f1fa8c">&#34;help&#34;</span>, <span style="color:#f1fa8c">&#34;copyright&#34;</span>, <span style="color:#f1fa8c">&#34;credits&#34;</span> <span style="color:#ff79c6">or</span> <span style="color:#f1fa8c">&#34;license&#34;</span> <span style="color:#ff79c6">for</span> more information<span style="color:#ff79c6">.</span>
+<span style="color:#ff79c6">&gt;&gt;&gt;</span> a <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>
+<span style="color:#ff79c6">&gt;&gt;&gt;</span> a <span style="color:#ff79c6">+</span> <span style="color:#bd93f9">2</span>
+<span style="color:#bd93f9">3</span>
+<span style="color:#ff79c6">&gt;&gt;&gt;</span> <span style="color:#ff79c6">print</span>(a <span style="color:#ff79c6">-</span> <span style="color:#bd93f9">1</span>)
+<span style="color:#bd93f9">0</span>
+<span style="color:#ff79c6">&gt;&gt;&gt;</span> <span style="color:#ff79c6">def</span> <span style="color:#50fa7b">b</span>(n):
+<span style="color:#ff79c6">...</span>     <span style="color:#ff79c6">return</span> n <span style="color:#ff79c6">+</span> <span style="color:#bd93f9">2</span>
+<span style="color:#ff79c6">...</span>
+<span style="color:#ff79c6">&gt;&gt;&gt;</span> b(<span style="color:#bd93f9">3</span>)
+<span style="color:#bd93f9">5</span></code></pre></div>
+
+<h3 id="ipython">IPython</h3>
+
+<p>使用Python开发、DEBUG效率高的一个重要原因是由于IPython这个工具，相信做过Python开发的同学都有体会。IPython是一个基于Python Shell的交互式解释器，可以快速验证代码运行结果是否符合预期。它有以下主要特性：</p>
+
+<ol>
+<li>Tab自动补全。可以用Tab对变量、函数、方法等自动补全，比如<code>import os</code>后，输入<code>os.</code>再按Tab就能列出全部方法，在按Tab就会一个个的选择它们，另外可以输入<code>os.p</code>再按Tab会列出以p开头的全部方法等。</li>
+<li>能快速获得模块/函数/类的信息，如参数、文档、原始代码等。有时候忘记方法名字或者签名可以直接在IPython里面获得对应信息，甚至可以看到原始代码，这非常方便。</li>
+<li>支持Python语法高亮。不用再面对纯白色的一大片代码了。</li>
+</ol>
+
+<p>当然IPython还有很多很多其他的功能，如历史记录、各种Magic函数、autoreload等扩展，这些对于开发和调试都非常有帮助，可以说是Python工程师必备工具。</p>
+
+<p>开始学习Golang后，对于这种REPL编程环境非常渴望，因为它对于初学者友好且对于熟悉Golang非常有帮助。</p>
+
+<p>一番调研，目前Golang世界中共有6个可用的REPL解释环境：3个终端使用，3个在线编辑，本文分别介绍它们。</p>
+
+<h3 id="gomacro">gomacro</h3>
+
+<p><a href="https://github.com/cosmos72/gomacro">gomacro</a>是一个具有REPL，Eval，泛型和类似Lisp宏的交互式Go解释器和调试器。</p>
+
+<p>先安装它：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go get -u github.com/cosmos72/gomacro</code></pre></div>
+
+<p>体验一下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ gomacro
+...   // 省略一些输出
+gomacro&gt; a :<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>
+gomacro&gt; a
+<span style="color:#bd93f9">1</span>	// int
+gomacro&gt; import <span style="color:#f1fa8c">&#34;fmt&#34;</span>
+gomacro&gt; fmt.Println<span style="color:#ff79c6">(</span>a<span style="color:#ff79c6">)</span>
+<span style="color:#bd93f9">1</span>
+<span style="color:#bd93f9">2</span>	// int
+&lt;nil&gt;	// error
+gomacro&gt; func Add<span style="color:#ff79c6">(</span>a, b int<span style="color:#ff79c6">)</span> int <span style="color:#ff79c6">{</span>
+. . . .    <span style="color:#ff79c6">return</span> a + b
+. . . .    <span style="color:#ff79c6">}</span>
+gomacro&gt; Add<span style="color:#ff79c6">(</span><span style="color:#bd93f9">1</span>, <span style="color:#bd93f9">2</span><span style="color:#ff79c6">)</span>
+<span style="color:#bd93f9">3</span>	// int
+gomacro&gt; <span style="color:#8be9fd;font-style:italic">type</span> Comment struct <span style="color:#ff79c6">{</span>
+. . . .    A int
+. . . .    <span style="color:#ff79c6">}</span>
+gomacro&gt; c :<span style="color:#ff79c6">=</span> Comment<span style="color:#ff79c6">{}</span>
+gomacro&gt; c.A
+<span style="color:#bd93f9">0</span>	// int
+gomacro&gt; :inspect fmt.Printf  // 全部支持功能可以输入<span style="color:#f1fa8c">`</span>:help<span style="color:#f1fa8c">`</span>回车看到
+fmt.Printf	<span style="color:#ff79c6">=</span> 0x5084730	// func<span style="color:#ff79c6">(</span>string, ...interface <span style="color:#ff79c6">{})</span> <span style="color:#ff79c6">(</span>int, error<span style="color:#ff79c6">)</span>  // 查看方法签名
+// <span style="color:#8be9fd;font-style:italic">type</span> ? <span style="color:#ff79c6">for</span> inspector <span style="color:#8be9fd;font-style:italic">help</span>
+gomacro&gt; :debug Add<span style="color:#ff79c6">(</span><span style="color:#bd93f9">1</span>, <span style="color:#bd93f9">2</span><span style="color:#ff79c6">)</span>  // 进入DEBUG模式
+// stopped at repl.go:1:1 <span style="color:#8be9fd;font-style:italic">IP</span><span style="color:#ff79c6">=</span><span style="color:#bd93f9">0</span>, call <span style="color:#8be9fd;font-style:italic">depth</span><span style="color:#ff79c6">=</span><span style="color:#bd93f9">1</span>. <span style="color:#8be9fd;font-style:italic">type</span> ? <span style="color:#ff79c6">for</span> debugger <span style="color:#8be9fd;font-style:italic">help</span>
+func Add<span style="color:#ff79c6">(</span>a, b int<span style="color:#ff79c6">)</span> int <span style="color:#ff79c6">{</span>
+^^^
+debug&gt; print a  // 打印a的值和类型
+<span style="color:#bd93f9">1</span>	// int
+debug&gt; vars  // 查看本地变量
+// ----------
+<span style="color:#8be9fd;font-style:italic">a</span>	<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>	// int
+<span style="color:#8be9fd;font-style:italic">b</span>	<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">2</span>	// int
+debug&gt; ?  // 查看帮助信息
+// debugger commands:
+backtrace       show call stack
+env <span style="color:#ff79c6">[</span>NAME<span style="color:#ff79c6">]</span>      show available functions, variables and constants
+                in current scope, or from imported package NAME
+?               show this <span style="color:#8be9fd;font-style:italic">help</span>
+<span style="color:#8be9fd;font-style:italic">help</span>            show this <span style="color:#8be9fd;font-style:italic">help</span>
+inspect EXPR    inspect expression interactively
+<span style="color:#8be9fd;font-style:italic">kill</span>   <span style="color:#ff79c6">[</span>EXPR<span style="color:#ff79c6">]</span>   terminate execution with panic<span style="color:#ff79c6">(</span>EXPR<span style="color:#ff79c6">)</span>
+print   EXPR    print expression, statement or declaration
+list            show current <span style="color:#8be9fd;font-style:italic">source</span> code
+<span style="color:#ff79c6">continue</span>        resume normal execution
+finish          run <span style="color:#ff79c6">until</span> the end of current <span style="color:#ff79c6">function</span>
+next            execute a single statement, skipping functions
+step            execute a single statement, entering functions
+vars            show <span style="color:#8be9fd;font-style:italic">local</span> variables
+// abbreviations are allowed <span style="color:#ff79c6">if</span> unambiguous. enter repeats last command.</code></pre></div>
+
+<p>总体上的体验就是一个支持基本功能的REPL，支持Tab自动补全(例如输入<code>fmt.Print</code>按Tab会在<code>fmt.Print</code>、<code>fmt.Printf</code>和<code>fmt.Println</code>之前切换)、调试和简单的查看函数签名，但是不支持语法高亮。</p>
+
+<p>gomacro对于基本的快速验证代码运行结果是够的，但是不能获取获取源代码，看不了对应实现文档。</p>
+
+<h3 id="go-pry">go-pry</h3>
+
+<p><a href="https://github.com/d4l3k/go-pry">go-pry</a>对自己的描述是「一个Go的交互式REPL，可让你在任何执行点放入代码」。官网有一个动态图非常好的说明它的效果：</p>
+
+<p><img src="https://camo.githubusercontent.com/4acbd203127f5c6f4460655f556d432c8aed4cd9/68747470733a2f2f692e696d6775722e636f6d2f483868467a50562e676966" alt="" /></p>
+
+<p>先安装它：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go get github.com/d4l3k/go-pry
+❯ go install -i github.com/d4l3k/go-pry</code></pre></div>
+
+<p>我把它理解为类似于Python里面的IPDB（IPython Debugger），是一个代码命令行调试工具，这个PEPL功能非常有限。体验它一下就能理解了：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go-pry -i<span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;fmt&#34;</span>  <span style="color:#6272a4"># 启动后自动导入了fmt包</span>
+
+From /var/folders/x6/vg82csf90dl3mnnqtbb32d580000gn/T/pry130526050/main.go @ line <span style="color:#bd93f9">9</span> :
+
+     <span style="color:#bd93f9">4</span>:
+     <span style="color:#bd93f9">5</span>:   <span style="color:#f1fa8c">&#34;fmt&#34;</span>
+     <span style="color:#bd93f9">6</span>: <span style="color:#ff79c6">)</span>
+     <span style="color:#bd93f9">7</span>: func main<span style="color:#ff79c6">()</span> <span style="color:#ff79c6">{</span>
+     <span style="color:#bd93f9">8</span>:
+ <span style="color:#ff79c6">=</span>&gt;  <span style="color:#bd93f9">9</span>:   pry.Pry<span style="color:#ff79c6">()</span>
+    <span style="color:#bd93f9">10</span>: <span style="color:#ff79c6">}</span>
+    <span style="color:#bd93f9">11</span>:
+
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">2</span><span style="color:#ff79c6">]</span> go-pry&gt; a :<span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">1</span>
+<span style="color:#ff79c6">=</span>&gt; <span style="color:#bd93f9">1</span>
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">3</span><span style="color:#ff79c6">]</span> go-pry&gt; a + <span style="color:#8be9fd;font-style:italic">2</span>
+<span style="color:#ff79c6">=</span>&gt; <span style="color:#bd93f9">3</span>
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">4</span><span style="color:#ff79c6">]</span> go-pry&gt; fmt.Println<span style="color:#ff79c6">(</span>a<span style="color:#ff79c6">)</span>
+<span style="color:#8be9fd;font-style:italic">1</span>
+<span style="color:#ff79c6">=</span>&gt; <span style="color:#ff79c6">[]</span>interface <span style="color:#ff79c6">{}{</span><span style="color:#bd93f9">2</span>, interface <span style="color:#ff79c6">{}(</span>nil<span style="color:#ff79c6">)}</span>
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">5</span><span style="color:#ff79c6">]</span> go-pry&gt; func Add <span style="color:#ff79c6">(</span>a, b int<span style="color:#ff79c6">)</span> int <span style="color:#ff79c6">{</span> <span style="color:#ff79c6">return</span> a + b<span style="color:#ff79c6">}</span>
+Error:  <span style="color:#bd93f9">1</span>:13: expected <span style="color:#f1fa8c">&#39;(&#39;</span>, found Add &lt;nil&gt;
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">6</span><span style="color:#ff79c6">]</span> go-pry&gt; <span style="color:#8be9fd;font-style:italic">type</span> Comment struct <span style="color:#ff79c6">{</span>
+Error:  <span style="color:#bd93f9">1</span>:30: expected <span style="color:#f1fa8c">&#39;;&#39;</span>, found <span style="color:#f1fa8c">&#39;(&#39;</span> &lt;nil&gt;</code></pre></div>
+
+<p>在使用中时可以感受到，它只支持基本的表达式和函数调用，在输出的过程中会有补全的提示（但是不能自动补全）和函数签名信息。所以它只适合在特定的环境里面调试代码。举个例子，下面这个程序会把终端输入的参数转成整数：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+    <span style="color:#f1fa8c">&#34;fmt&#34;</span>
+    <span style="color:#f1fa8c">&#34;os&#34;</span>
+    <span style="color:#f1fa8c">&#34;strconv&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+    args <span style="color:#ff79c6">:=</span> os.Args
+    <span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">1</span>; i &lt; <span style="color:#8be9fd;font-style:italic">len</span>(args); i<span style="color:#ff79c6">++</span> {
+        ret, err <span style="color:#ff79c6">:=</span> strconv.<span style="color:#50fa7b">Atoi</span>(args[i])
+        <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+            fmt.<span style="color:#50fa7b">Println</span>(err.<span style="color:#50fa7b">Error</span>())
+        } <span style="color:#ff79c6">else</span> {
+            fmt.<span style="color:#50fa7b">Println</span>(ret)
+        }
+    }
+}</code></pre></div>
+
+<p>试一下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run example.go <span style="color:#bd93f9">1</span> <span style="color:#bd93f9">2</span> <span style="color:#bd93f9">4</span>
+<span style="color:#bd93f9">1</span>
+<span style="color:#bd93f9">2</span>
+<span style="color:#bd93f9">4</span>
+
+❯ go run example.go <span style="color:#bd93f9">1</span> <span style="color:#bd93f9">3</span> b
+<span style="color:#bd93f9">1</span>
+<span style="color:#bd93f9">3</span>
+strconv.Atoi: parsing <span style="color:#f1fa8c">&#34;b&#34;</span>: invalid syntax</code></pre></div>
+
+<p>其实作为开发者一眼就能看出来&rdquo;b&rdquo;是不能转换的。借用go-pry可以在对应的位置直接插入（就像项目描述说的那样「可让你在任何执行点放入代码」）：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+    <span style="color:#f1fa8c">&#34;fmt&#34;</span>
+    <span style="color:#f1fa8c">&#34;os&#34;</span>
+    <span style="color:#f1fa8c">&#34;strconv&#34;</span>
+
+    <span style="color:#f1fa8c">&#34;github.com/d4l3k/go-pry/pry&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+    args <span style="color:#ff79c6">:=</span> os.Args
+    <span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">1</span>; i &lt; <span style="color:#8be9fd;font-style:italic">len</span>(args); i<span style="color:#ff79c6">++</span> {
+        ret, err <span style="color:#ff79c6">:=</span> strconv.<span style="color:#50fa7b">Atoi</span>(args[i])
+        pry.<span style="color:#50fa7b">Pry</span>() <span style="color:#6272a4">// 加在了这里，每次循环都会「断点」停下来
+</span><span style="color:#6272a4"></span>        <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+            fmt.<span style="color:#50fa7b">Println</span>(err.<span style="color:#50fa7b">Error</span>())
+        } <span style="color:#ff79c6">else</span> {
+            fmt.<span style="color:#50fa7b">Println</span>(ret)
+        }
+    }
+}</code></pre></div>
+
+<p>这次我们再看：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go-pry run exampleWithPry.go <span style="color:#bd93f9">1</span> <span style="color:#bd93f9">3</span> b
+
+From /Users/xiaoxi/strconv.code/repl/goPry/exampleWithPry.go @ line <span style="color:#bd93f9">15</span> :
+
+    <span style="color:#bd93f9">10</span>:
+    <span style="color:#bd93f9">11</span>: func main<span style="color:#ff79c6">()</span> <span style="color:#ff79c6">{</span>
+    <span style="color:#bd93f9">12</span>:   args :<span style="color:#ff79c6">=</span> os.Args
+    <span style="color:#bd93f9">13</span>:   <span style="color:#ff79c6">for</span> i :<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>; i &lt; len<span style="color:#ff79c6">(</span>args<span style="color:#ff79c6">)</span>; i++ <span style="color:#ff79c6">{</span>
+    <span style="color:#bd93f9">14</span>:     ret, err :<span style="color:#ff79c6">=</span> strconv.Atoi<span style="color:#ff79c6">(</span>args<span style="color:#ff79c6">[</span>i<span style="color:#ff79c6">])</span>
+ <span style="color:#ff79c6">=</span>&gt; <span style="color:#bd93f9">15</span>:     pry.Pry<span style="color:#ff79c6">()</span>
+    <span style="color:#bd93f9">16</span>:     <span style="color:#ff79c6">if</span> err !<span style="color:#ff79c6">=</span> nil <span style="color:#ff79c6">{</span>
+    <span style="color:#bd93f9">17</span>:       fmt.Println<span style="color:#ff79c6">(</span>err.Error<span style="color:#ff79c6">())</span>
+    <span style="color:#bd93f9">18</span>:     <span style="color:#ff79c6">}</span> <span style="color:#ff79c6">else</span> <span style="color:#ff79c6">{</span>
+    <span style="color:#bd93f9">19</span>:       fmt.Println<span style="color:#ff79c6">(</span>ret<span style="color:#ff79c6">)</span>
+    <span style="color:#bd93f9">20</span>:     <span style="color:#ff79c6">}</span>
+
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">13</span><span style="color:#ff79c6">]</span> go-pry&gt; <span style="color:#8be9fd;font-style:italic">ret</span>
+<span style="color:#ff79c6">=</span>&gt; <span style="color:#bd93f9">1</span>
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">14</span><span style="color:#ff79c6">]</span> go-pry&gt; <span style="color:#8be9fd;font-style:italic">err</span>
+<span style="color:#ff79c6">=</span>&gt; &lt;nil&gt;
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">15</span><span style="color:#ff79c6">]</span> go-pry&gt; <span style="color:#8be9fd;font-style:italic">args</span>
+<span style="color:#ff79c6">=</span>&gt; <span style="color:#ff79c6">[]</span>string<span style="color:#ff79c6">{</span><span style="color:#f1fa8c">&#34;/var/folders/x6/vg82csf90dl3mnnqtbb32d580000gn/T/go-build624971651/b001/exe/exampleWithPry&#34;</span>, <span style="color:#f1fa8c">&#34;1&#34;</span>, <span style="color:#f1fa8c">&#34;3&#34;</span>, <span style="color:#f1fa8c">&#34;b&#34;</span><span style="color:#ff79c6">}</span>
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">16</span><span style="color:#ff79c6">]</span> go-pry&gt;  // Ctrl+D 退出当前循环
+<span style="color:#bd93f9">1</span>
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">16</span><span style="color:#ff79c6">]</span> go-pry&gt;  // 继续退出一次循环
+<span style="color:#bd93f9">3</span>
+From /Users/xiaoxi/strconv.code/repl/goPry/exampleWithPry.go @ line <span style="color:#bd93f9">15</span> :
+    <span style="color:#bd93f9">10</span>:
+    <span style="color:#bd93f9">11</span>: func main<span style="color:#ff79c6">()</span> <span style="color:#ff79c6">{</span> <span style="color:#ff79c6">[]</span>string
+    <span style="color:#bd93f9">12</span>:   args :<span style="color:#ff79c6">=</span> os.Args
+    <span style="color:#bd93f9">13</span>:   <span style="color:#ff79c6">for</span> i :<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>; i &lt; len<span style="color:#ff79c6">(</span>args<span style="color:#ff79c6">)</span>; i++ <span style="color:#ff79c6">{</span>
+    <span style="color:#bd93f9">14</span>:     ret, err :<span style="color:#ff79c6">=</span> strconv.Atoi<span style="color:#ff79c6">(</span>args<span style="color:#ff79c6">[</span>i<span style="color:#ff79c6">])</span>
+ <span style="color:#ff79c6">=</span>&gt; <span style="color:#bd93f9">15</span>:     pry.Pry<span style="color:#ff79c6">()</span>
+    <span style="color:#bd93f9">16</span>:     <span style="color:#ff79c6">if</span> err !<span style="color:#ff79c6">=</span> nil <span style="color:#ff79c6">{</span>
+    <span style="color:#bd93f9">17</span>:       fmt.Println<span style="color:#ff79c6">(</span>err.Error<span style="color:#ff79c6">())</span>
+    <span style="color:#bd93f9">18</span>:     <span style="color:#ff79c6">}</span> <span style="color:#ff79c6">else</span> <span style="color:#ff79c6">{</span>
+    <span style="color:#bd93f9">19</span>:       fmt.Println<span style="color:#ff79c6">(</span>ret<span style="color:#ff79c6">)</span>
+    <span style="color:#bd93f9">20</span>:     <span style="color:#ff79c6">}</span>
+
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">16</span><span style="color:#ff79c6">]</span> go-pry&gt; <span style="color:#8be9fd;font-style:italic">ret</span>
+<span style="color:#ff79c6">=</span>&gt; <span style="color:#bd93f9">0</span>
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">17</span><span style="color:#ff79c6">]</span> go-pry&gt; <span style="color:#8be9fd;font-style:italic">err</span>
+<span style="color:#ff79c6">=</span>&gt; strconv.NumError<span style="color:#ff79c6">{</span>Func:<span style="color:#f1fa8c">&#34;Atoi&#34;</span>, Num:<span style="color:#f1fa8c">&#34;b&#34;</span>, Err:<span style="color:#ff79c6">(</span>*errors.errorString<span style="color:#ff79c6">)(</span>0xc000064010<span style="color:#ff79c6">)}</span>
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">18</span><span style="color:#ff79c6">]</span> go-pry&gt; args<span style="color:#ff79c6">[</span>i<span style="color:#ff79c6">]</span>
+<span style="color:#ff79c6">=</span>&gt; <span style="color:#f1fa8c">&#34;b&#34;</span>
+<span style="color:#ff79c6">[</span><span style="color:#bd93f9">19</span><span style="color:#ff79c6">]</span> go-pry&gt; strconv.Atoi<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;b&#34;</span><span style="color:#ff79c6">)</span>
+<span style="color:#ff79c6">=</span>&gt; <span style="color:#ff79c6">[]</span>interface <span style="color:#ff79c6">{}{</span><span style="color:#bd93f9">0</span>, <span style="color:#ff79c6">(</span>*strconv.NumError<span style="color:#ff79c6">)(</span>0xc0003c7b30<span style="color:#ff79c6">)}</span></code></pre></div>
+
+<p>这样就定位到抛错的这一次循环中的各个本地环境变量，知道上下文是什么可以在这个交互环境下试验，就很容易知道问题出在哪里了</p>
+
+<h3 id="gore">gore</h3>
+
+<p><a href="https://github.com/motemen/gore">gore</a>是另外一个Go REPL，支持行编辑、自动补全等特性。官网有一个动态图可以体验到它：</p>
+
+<p><img src="https://github.com/motemen/gore/raw/master/doc/screencast.gif" alt="" /></p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ <span style="color:#8be9fd;font-style:italic">GO111MODULE</span><span style="color:#ff79c6">=</span>off go get -u github.com/motemen/gore/cmd/gore
+<span style="color:#6272a4"># 如果希望支持自动补全和更好的输出效果需要安装：</span>
+<span style="color:#8be9fd;font-style:italic">GO111MODULE</span><span style="color:#ff79c6">=</span>off go get -u github.com/mdempsky/gocode
+<span style="color:#8be9fd;font-style:italic">GO111MODULE</span><span style="color:#ff79c6">=</span>off go get -u github.com/k0kubun/pp <span style="color:#6272a4"># 或者用github.com/davecgh/go-spew/spew</span></code></pre></div>
+
+<p>然后体验它：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ gore
+gore version <span style="color:#bd93f9">0</span>.4.1  :help <span style="color:#ff79c6">for</span> <span style="color:#8be9fd;font-style:italic">help</span>
+gore&gt; a :<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>
+<span style="color:#bd93f9">1</span>
+gore&gt; a + <span style="color:#bd93f9">2</span>
+<span style="color:#bd93f9">3</span>
+gore&gt; func Add<span style="color:#ff79c6">(</span>a, b int<span style="color:#ff79c6">)</span> int <span style="color:#ff79c6">{</span> <span style="color:#ff79c6">return</span> a + b <span style="color:#ff79c6">}</span>
+gore&gt; Add<span style="color:#ff79c6">(</span><span style="color:#bd93f9">1</span>, <span style="color:#bd93f9">2</span><span style="color:#ff79c6">)</span>
+<span style="color:#bd93f9">3</span>
+gore&gt; <span style="color:#8be9fd;font-style:italic">type</span> Comment struct <span style="color:#ff79c6">{</span>
+.....     B string
+..... <span style="color:#ff79c6">}</span>
+gore&gt; c :<span style="color:#ff79c6">=</span> Comment<span style="color:#ff79c6">{}</span>
+main.Comment<span style="color:#ff79c6">{</span>
+  B: <span style="color:#f1fa8c">&#34;&#34;</span>,
+<span style="color:#ff79c6">}</span>
+gore&gt; c.B
+<span style="color:#f1fa8c">&#34;&#34;</span>
+gore&gt; :import fmt
+gore&gt; fmt.Println<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;Hello&#34;</span><span style="color:#ff79c6">)</span>
+Hello
+<span style="color:#bd93f9">6</span>
+nil
+gore&gt; fmt.Println<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;Hello&#34;</span><span style="color:#ff79c6">)</span>  // 竟然有BUG！！ 多执行一次多重复输出一行
+Hello
+Hello
+<span style="color:#bd93f9">6</span>
+nil
+gore&gt; :help
+    :import &lt;package&gt;     import a package
+    :type &lt;expr&gt;          print the <span style="color:#8be9fd;font-style:italic">type</span> of expression
+    :print                print current <span style="color:#8be9fd;font-style:italic">source</span>
+    :write <span style="color:#ff79c6">[</span>&lt;file&gt;<span style="color:#ff79c6">]</span>       write out current <span style="color:#8be9fd;font-style:italic">source</span>
+    :clear                clear the codes
+    :doc &lt;expr or pkg&gt;    show documentation
+    :help                 show this <span style="color:#8be9fd;font-style:italic">help</span>
+    :quit                 quit the session
+gore&gt; :type Add
+func<span style="color:#ff79c6">(</span>a int, b int<span style="color:#ff79c6">)</span> int
+gore&gt; :type a
+int
+gore&gt; :print Add
+package main
+
+import <span style="color:#ff79c6">(</span>
+    <span style="color:#f1fa8c">&#34;github.com/k0kubun/pp&#34;</span>
+    <span style="color:#f1fa8c">&#34;fmt&#34;</span>
+<span style="color:#ff79c6">)</span>
+
+func __gore_p<span style="color:#ff79c6">(</span>xx ...interface<span style="color:#ff79c6">{})</span> <span style="color:#ff79c6">{</span>
+    <span style="color:#ff79c6">for</span> _, x :<span style="color:#ff79c6">=</span> range xx <span style="color:#ff79c6">{</span>
+        pp.Println<span style="color:#ff79c6">(</span>x<span style="color:#ff79c6">)</span>
+    <span style="color:#ff79c6">}</span>
+<span style="color:#ff79c6">}</span>
+func main<span style="color:#ff79c6">()</span> <span style="color:#ff79c6">{</span>
+    a :<span style="color:#ff79c6">=</span> <span style="color:#bd93f9">1</span>
+    <span style="color:#8be9fd;font-style:italic">_</span> <span style="color:#ff79c6">=</span> Add<span style="color:#ff79c6">(</span><span style="color:#bd93f9">1</span>, <span style="color:#bd93f9">2</span><span style="color:#ff79c6">)</span>
+    <span style="color:#8be9fd;font-style:italic">type</span> Comment struct<span style="color:#ff79c6">{</span> B string <span style="color:#ff79c6">}</span>
+    c :<span style="color:#ff79c6">=</span> Comment<span style="color:#ff79c6">{}</span>
+    _, <span style="color:#8be9fd;font-style:italic">_</span> <span style="color:#ff79c6">=</span> fmt.Println<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;Hello&#34;</span><span style="color:#ff79c6">)</span>
+    _, <span style="color:#8be9fd;font-style:italic">_</span> <span style="color:#ff79c6">=</span> fmt.Println<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;Hello&#34;</span><span style="color:#ff79c6">)</span>
+<span style="color:#ff79c6">}</span>
+
+func Add<span style="color:#ff79c6">(</span>a, b int<span style="color:#ff79c6">)</span> int <span style="color:#ff79c6">{</span> <span style="color:#ff79c6">return</span> a + b <span style="color:#ff79c6">}</span>
+
+gore&gt; :doc fmt.Println
+func Println<span style="color:#ff79c6">(</span>a ...interface<span style="color:#ff79c6">{})</span> <span style="color:#ff79c6">(</span>n int, err error<span style="color:#ff79c6">)</span>
+    Println formats using the default formats <span style="color:#ff79c6">for</span> its operands and writes to
+    standard output. Spaces are always added between operands and a newline is
+    appended. It returns the number of bytes written and any write error
+    encountered.</code></pre></div>
+
+<p>可以感受到，虽然gore不支持写代码时高亮，但是输出的结果带了颜色还算体验好一些。另外它支持自动补全、查看签名、类型和对应文档，还能看在gore交互环境中的函数的源码(用<code>:print</code>)，不过导入包的方法略奇怪(要用<code>:import</code>)，且有fmt模块打印相关的BUG(有点不应该了)。</p>
+
+<p>但总体上gore是上述三个库中效果最好的REPL了！</p>
+
+<h3 id="repl-it">Repl.it</h3>
+
+<p>接着介绍Web端的REPL工具。<code>Repl.it</code>是一个云端的在线编辑器和IDE，它支持全部主流的编程语言，包括<a href="https://repl.it/languages/go">Go</a>。在这个Web端的页面里面可以编辑代码并执行，Web端也会输出结果。它支持显示补全列表和语法高亮，且支持静态检查，直接在对应行显示错误原因。另外可以生成短连接方便分享出去，非常适合快速验证、教学和演示等用途。</p>
+
+<h3 id="lgo-gophernotes">lgo/gophernotes</h3>
+
+<p><a href="https://github.com/yunabe/lgo">lgo</a>和<a href="https://github.com/gopherdata/gophernotes">gophernotes</a>都是Golang语言的Jupyter Notebook内核，实现了在Jupyter Notebook(原来的IPython Notebook)上编写Golang代码并执行。</p>
+
+<p>Jupyter Notebook是一个交互式笔记本应用，是一个Web应用，算法和数据分析工程师用的比较多。</p>
+
+<p>lgo和gophernotes具体安装就不演示了，个人觉得还是在终端REPL更好用。有兴趣的可以看一下gophernotes项目下的动态图看效果：</p>
+
+<p><img src="https://github.com/gopherdata/gophernotes/raw/master/files/jupyter.gif" alt="" /></p>
+
+<h3 id="代码地址">代码地址</h3>
+
+<p>完整代码可以在<a href="https://github.com/golang-dev/strconv.code/blob/master/repl">这个地址</a>找到。</p>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://cdn.commento.io/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
+</html>
