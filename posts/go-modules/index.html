@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Golang中的包管理工具 - Go Modules"/>
+<meta name="twitter:description" content="GO包管理的前世今生 先来了解下Go包管理的发展历程
+GOPATH 在Go1.5之前使用GOROOT和GOPATH这2个系统环境变量来决定包的位置，对于开发者主要使用GOPATH。GOPATH 解决了第三方源码依赖的问题，看一下我本机$GOPATH/src下的目录：
+❯ tree -L 1 $GOPATH/src/ /Users/dongwm/src/ ├── github.com ├── golang.org ├── google.golang.org └── gopkg.in 5 directories, 0 files 如果执行go get github.com/UserA/ProjectB，就会把对应的内容里下载到$GOPATH/src/github.com/UserA/ProjectB目录。如果在代码中引用这个依赖，需要这么写：
+import &#34;github.com/UserA/ProjectB&#34; go会去到$GOPATH下面找这个路径，就能找到这个包了。
+一开始Golang这么设计是有原因的，因为Google是一个实践Mono Repo(把所有的相关项目都放在一个仓库中)的公司。但更多的公司和组织更多的是用Multi Repo(按模块分为多个仓库)。GOPATH在一定程度上简化了项目构建，但是这种系统级别的环境变量，要求你的全部项目必须位于 GOPATH 下，否则编译器找不到它。如果想要使用你自己的项目组织结构，要么你需要为每个项目设置一个 GOPATH，或者使用软链接来实现。
+另外由于GOPATH对其管理下的库不能区分版本，都是指master最新代码，就有了依赖包的管理问题。举个例子，2个项目都依赖了库X，但是A项目要求库的v1版本，B项目要求库的版本是v2版本。那必须设置两个GOPATH来区分，并且在切换工程的时候GOPATH也得切换，徒增开发和实现的复杂度。当然这么设计也是收到了Google 内部广泛使用的基于主干 (trunk/mainline based) 的开发模型影响。所以说GOPATH带有鲜明的Google色彩。
+Go Vendoring 到了 2014 年，有人提出了external packages的概念，在项目的目录下增加一个 vendor 目录来存放外部的包，同时让 go 的 tools 能够感知到这是一个 vendor。在Go 1.5 中vendor作为试验推出，在Go 1.6中作为默认参数被启用。
+在这种模式下，会将第三方依赖的源码下载到本地，不同项目下可以有自己不同的vendor。但是这样做又引入了新的问题，因为随着项目的依赖增多，代码库会越来越大，尤其很多带前端资源的项目，几十M到几百M都是很常见的，你的项目可以就依赖它某一点内容，但是却集成了全部资源。
+百花齐放 基于前面的问题，Golang 团队成员确定意识到要对包管理提出一个统一的规则。但是问题不是没有规则，而是规则太多了。往往就是一个意见不合，一下子就杀出来一个新的工具。仅官方推荐的包管理工具就有 15 种之多。其中著名的包含如下几个：
+ Godep。它的原理是扫描记录版本控制的信息，并在go命令前加壳来做到依赖管理。 Govendor。Govendor是在vendor之后出来的，功能相对Godep多一点，不过就核心问题的解决来说基本是一样的，知不是在vendor目录下通过 vendor.json 文件来记录依赖包的版本。 Glide。它算是一个完整的包管理工具，比较像Node里面的npm或者Python里面的pip/pipenv，它通过glide.yaml记录依赖信息，通过glide.lock文件追踪每个包的具体修改(这样就能够重用依赖树)。  dep 对于从零构建项目的新用户来说，Glide功能足够，是个不错的选择。由于那个时间点Golang 依赖管理工具混乱，最终由谁终结这个场面需要官方来决定。后来Golang官方接纳了由社区组织合作开发的dep为official experiment(Go 1."/>
+
+    <meta property="og:title" content="Golang中的包管理工具 - Go Modules" />
+<meta property="og:description" content="GO包管理的前世今生 先来了解下Go包管理的发展历程
+GOPATH 在Go1.5之前使用GOROOT和GOPATH这2个系统环境变量来决定包的位置，对于开发者主要使用GOPATH。GOPATH 解决了第三方源码依赖的问题，看一下我本机$GOPATH/src下的目录：
+❯ tree -L 1 $GOPATH/src/ /Users/dongwm/src/ ├── github.com ├── golang.org ├── google.golang.org └── gopkg.in 5 directories, 0 files 如果执行go get github.com/UserA/ProjectB，就会把对应的内容里下载到$GOPATH/src/github.com/UserA/ProjectB目录。如果在代码中引用这个依赖，需要这么写：
+import &#34;github.com/UserA/ProjectB&#34; go会去到$GOPATH下面找这个路径，就能找到这个包了。
+一开始Golang这么设计是有原因的，因为Google是一个实践Mono Repo(把所有的相关项目都放在一个仓库中)的公司。但更多的公司和组织更多的是用Multi Repo(按模块分为多个仓库)。GOPATH在一定程度上简化了项目构建，但是这种系统级别的环境变量，要求你的全部项目必须位于 GOPATH 下，否则编译器找不到它。如果想要使用你自己的项目组织结构，要么你需要为每个项目设置一个 GOPATH，或者使用软链接来实现。
+另外由于GOPATH对其管理下的库不能区分版本，都是指master最新代码，就有了依赖包的管理问题。举个例子，2个项目都依赖了库X，但是A项目要求库的v1版本，B项目要求库的版本是v2版本。那必须设置两个GOPATH来区分，并且在切换工程的时候GOPATH也得切换，徒增开发和实现的复杂度。当然这么设计也是收到了Google 内部广泛使用的基于主干 (trunk/mainline based) 的开发模型影响。所以说GOPATH带有鲜明的Google色彩。
+Go Vendoring 到了 2014 年，有人提出了external packages的概念，在项目的目录下增加一个 vendor 目录来存放外部的包，同时让 go 的 tools 能够感知到这是一个 vendor。在Go 1.5 中vendor作为试验推出，在Go 1.6中作为默认参数被启用。
+在这种模式下，会将第三方依赖的源码下载到本地，不同项目下可以有自己不同的vendor。但是这样做又引入了新的问题，因为随着项目的依赖增多，代码库会越来越大，尤其很多带前端资源的项目，几十M到几百M都是很常见的，你的项目可以就依赖它某一点内容，但是却集成了全部资源。
+百花齐放 基于前面的问题，Golang 团队成员确定意识到要对包管理提出一个统一的规则。但是问题不是没有规则，而是规则太多了。往往就是一个意见不合，一下子就杀出来一个新的工具。仅官方推荐的包管理工具就有 15 种之多。其中著名的包含如下几个：
+ Godep。它的原理是扫描记录版本控制的信息，并在go命令前加壳来做到依赖管理。 Govendor。Govendor是在vendor之后出来的，功能相对Godep多一点，不过就核心问题的解决来说基本是一样的，知不是在vendor目录下通过 vendor.json 文件来记录依赖包的版本。 Glide。它算是一个完整的包管理工具，比较像Node里面的npm或者Python里面的pip/pipenv，它通过glide.yaml记录依赖信息，通过glide.lock文件追踪每个包的具体修改(这样就能够重用依赖树)。  dep 对于从零构建项目的新用户来说，Glide功能足够，是个不错的选择。由于那个时间点Golang 依赖管理工具混乱，最终由谁终结这个场面需要官方来决定。后来Golang官方接纳了由社区组织合作开发的dep为official experiment(Go 1." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/go-modules/" />
+<meta property="article:published_time" content="2019-07-28T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-28T00:00:00&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/go-modules/">
+    
+    <title>
+  Golang中的包管理工具 - Go Modules · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/go-modules/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Golang中的包管理工具 - Go Modules</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-07-28T00:00:00Z'>
+                July 28, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              4 minutes read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/modules/">modules</a></div>
+
+          
+        </div>
+      </header>
+
+      <div>
+        
+
+<h3 id="go包管理的前世今生">GO包管理的前世今生</h3>
+
+<p>先来了解下Go包管理的发展历程</p>
+
+<h4 id="gopath">GOPATH</h4>
+
+<p>在Go1.5之前使用GOROOT和GOPATH这2个系统环境变量来决定包的位置，对于开发者主要使用GOPATH。GOPATH 解决了第三方源码依赖的问题，看一下我本机<code>$GOPATH/src</code>下的目录：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ tree -L <span style="color:#bd93f9">1</span> <span style="color:#8be9fd;font-style:italic">$GOPATH</span>/src/
+/Users/dongwm/src/
+├── github.com
+├── golang.org
+├── google.golang.org
+└── gopkg.in
+
+<span style="color:#bd93f9">5</span> directories, <span style="color:#bd93f9">0</span> files</code></pre></div>
+
+<p>如果执行<code>go get github.com/UserA/ProjectB</code>，就会把对应的内容里下载到<code>$GOPATH/src/github.com/UserA/ProjectB</code>目录。如果在代码中引用这个依赖，需要这么写：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">import</span> <span style="color:#f1fa8c">&#34;github.com/UserA/ProjectB&#34;</span></code></pre></div>
+
+<p>go会去到$GOPATH下面找这个路径，就能找到这个包了。</p>
+
+<p>一开始Golang这么设计是有原因的，因为Google是一个实践Mono Repo(把所有的相关项目都放在一个仓库中)的公司。但更多的公司和组织更多的是用Multi Repo(按模块分为多个仓库)。GOPATH在一定程度上简化了项目构建，但是这种系统级别的环境变量，要求你的全部项目必须位于 GOPATH 下，否则编译器找不到它。如果想要使用你自己的项目组织结构，要么你需要为每个项目设置一个 GOPATH，或者使用软链接来实现。</p>
+
+<p>另外由于GOPATH对其管理下的库不能区分版本，都是指master最新代码，就有了依赖包的管理问题。举个例子，2个项目都依赖了库X，但是A项目要求库的v1版本，B项目要求库的版本是v2版本。那必须设置两个GOPATH来区分，并且在切换工程的时候GOPATH也得切换，徒增开发和实现的复杂度。当然这么设计也是收到了Google 内部广泛使用的基于主干 (trunk/mainline based) 的开发模型影响。所以说GOPATH带有鲜明的Google色彩。</p>
+
+<h4 id="go-vendoring">Go Vendoring</h4>
+
+<p>到了 2014 年，有人提出了<code>external packages</code>的概念，在项目的目录下增加一个 vendor 目录来存放外部的包，同时让 go 的 tools 能够感知到这是一个 vendor。在Go 1.5 中vendor作为试验推出，在Go 1.6中作为默认参数被启用。</p>
+
+<p>在这种模式下，会将第三方依赖的源码下载到本地，不同项目下可以有自己不同的vendor。但是这样做又引入了新的问题，因为随着项目的依赖增多，代码库会越来越大，尤其很多带前端资源的项目，几十M到几百M都是很常见的，你的项目可以就依赖它某一点内容，但是却集成了全部资源。</p>
+
+<h4 id="百花齐放">百花齐放</h4>
+
+<p>基于前面的问题，Golang 团队成员确定意识到要对包管理提出一个统一的规则。但是问题不是没有规则，而是规则太多了。往往就是一个意见不合，一下子就杀出来一个新的工具。仅官方推荐的包管理工具就有 15 种之多。其中著名的包含如下几个：</p>
+
+<ol>
+<li>Godep。它的原理是扫描记录版本控制的信息，并在go命令前加壳来做到依赖管理。</li>
+<li>Govendor。Govendor是在vendor之后出来的，功能相对Godep多一点，不过就核心问题的解决来说基本是一样的，知不是在vendor目录下通过 vendor.json 文件来记录依赖包的版本。</li>
+<li>Glide。它算是一个完整的包管理工具，比较像Node里面的npm或者Python里面的pip/pipenv，它通过<code>glide.yaml</code>记录依赖信息，通过<code>glide.lock</code>文件追踪每个包的具体修改(这样就能够重用依赖树)。</li>
+</ol>
+
+<h4 id="dep">dep</h4>
+
+<p>对于从零构建项目的新用户来说，Glide功能足够，是个不错的选择。由于那个时间点Golang 依赖管理工具混乱，最终由谁终结这个场面需要官方来决定。后来Golang官方接纳了由社区组织合作开发的<a href="https://github.com/golang/dep">dep</a>为<code>official experiment</code>(Go 1.9)，在相当长的一段时间里面作为标准成为事实上的官方包管理工具。</p>
+
+<p>由于dep已经成为了<code>official experiment</code>的过去时，现在我们就不必再去学习了，直接去了解谁才是未来的<code>official experiment</code>！</p>
+
+<h3 id="go-modules">Go Modules</h3>
+
+<p>Modules是Go 1.11中新增的实验性功能，基于vgo演变而来，是Golang官方的包管理工具，本文就来感受一下它。</p>
+
+<p>先铺垫点准备知识。通常我们会在一个Repo(仓库)中创建一组Go Package。举个例子Gorm中共有5个包，一个是gorm，还有4个不同数据库驱动，这么用：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">import <span style="color:#ff79c6">(</span>
+  <span style="color:#f1fa8c">&#34;github.com/jinzhu/gorm&#34;</span>
+  _ <span style="color:#f1fa8c">&#34;github.com/jinzhu/gorm/dialects/sqlite&#34;</span>
+<span style="color:#ff79c6">)</span></code></pre></div>
+
+<p>Go 1.11给这样的一组在同一Repo下面的packages赋予了一个新的抽象概念: module，module是可以版本化的。使用Modules启用一个新的文件go.mod记录module的元信息。</p>
+
+<p>当然一个Repo下也可以有多个module。</p>
+
+<h3 id="如何激活modules">如何激活Modules?</h3>
+
+<p>首先要确保你使用的Go要&gt;=1.11，目前我本地的是最新的1.12所以不需要升级Go：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go version
+go version go1.12.6 darwin/amd64</code></pre></div>
+
+<p>再则，目前Modules并不是默认启用的，可以通过环境变量GO111MODULE开启或者关闭，它有三个可选值：off、on、auto，默认值是 auto。</p>
+
+<ol>
+<li>off。关闭支持，go 会从GOPATH和vendor文件夹寻找包。</li>
+<li>on。开启支持，go 会忽略 GOPATH 和 vendor 文件夹，只根据go.mod下载依赖。</li>
+<li>auto。当项目在$GOPATH/src外，且项目根目录有go.mod文件时，开启模块支持。</li>
+</ol>
+
+<p>注意，使用Modules后就不再依赖GOPATH了，但目前我推荐用auto，因为还有一些库没有支持Go Modules，相信从很快就发布的Go 1.13开始，GOPATH就会逐渐退出Go开发者是视线了。届时就不需要<code>export GOPATH</code>，忘掉它吧！</p>
+
+<h3 id="使用go-modules">使用Go Modules</h3>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ <span style="color:#8be9fd;font-style:italic">export</span> <span style="color:#8be9fd;font-style:italic">GO111MODULE</span><span style="color:#ff79c6">=</span>on  <span style="color:#6272a4"># 对于当前终端会一直让Go Modules在开启状态</span>
+❯ go mod init hello  <span style="color:#6272a4"># 初始化，创建hello.mod文件</span>
+go: creating new go.mod: module hello
+❯ ls
+go.mod
+❯ cat go.mod
+module hello
+
+go <span style="color:#bd93f9">1</span>.12</code></pre></div>
+
+<p>默认的go.mod里面只定义了module名字是hello，并指定了Go的版本。接着创建一个程序hello.go：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+  log <span style="color:#f1fa8c">&#34;github.com/sirupsen/logrus&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+  log.<span style="color:#50fa7b">WithFields</span>(log.Fields{
+    <span style="color:#f1fa8c">&#34;animal&#34;</span>: <span style="color:#f1fa8c">&#34;walrus&#34;</span>,
+  }).<span style="color:#50fa7b">Info</span>(<span style="color:#f1fa8c">&#34;A walrus appears&#34;</span>)
+}</code></pre></div>
+
+<p>这里面用了第三方的包<code>github.com/sirupsen/logrus</code>，在main函数中打印了一个日志。构建一下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go build
+go: finding github.com/sirupsen/logrus v1.4.2
+go: downloading github.com/sirupsen/logrus v1.4.2
+go: extracting github.com/sirupsen/logrus v1.4.2
+go: finding github.com/stretchr/objx v0.1.1
+go: finding github.com/stretchr/testify v1.2.2
+go: finding github.com/davecgh/go-spew v1.1.1
+go: finding github.com/pmezard/go-difflib v1.0.0
+go: finding github.com/konsorten/go-windows-terminal-sequences v1.0.1
+go: finding golang.org/x/sys v0.0.0-20190422165155-953cdadca894
+go: downloading golang.org/x/sys v0.0.0-20190422165155-953cdadca894
+go: extracting golang.org/x/sys v0.0.0-20190422165155-953cdadca894
+❯ ./hello
+INFO<span style="color:#ff79c6">[</span><span style="color:#bd93f9">0000</span><span style="color:#ff79c6">]</span> A walrus appears                              <span style="color:#8be9fd;font-style:italic">animal</span><span style="color:#ff79c6">=</span>walrus</code></pre></div>
+
+<p>构建过程会更新go.mod文件(在执行go get、go build、 go test、 go list等命令时都会根据需要的依赖自动和更新require语句)：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ cat go.mod
+module hello
+
+go <span style="color:#bd93f9">1</span>.12
+
+require github.com/sirupsen/logrus v1.4.2</code></pre></div>
+
+<p>显示的用require声明依赖<code>github.com/sirupsen/logrus</code>，版本为1.4.2。这个<code>v1.4.2</code>是一个semver标签，就是语义化版本号。它的格式应该是<code>v(major).(minor).(patch)</code>：</p>
+
+<ol>
+<li>v不可省略</li>
+<li>major: 当做了不兼容的升级时升</li>
+<li>minor: 当做了向前兼容的升级时升</li>
+<li>patch: 未改变功能，只是修了bug之类的问题时升</li>
+</ol>
+
+<p>具体的语义化内容可以看延伸阅读链接6。另外在目录下新增了go.sum文件：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ cat go.sum
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38<span style="color:#ff79c6">=</span>
+github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ<span style="color:#ff79c6">=</span>
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4<span style="color:#ff79c6">=</span>
+github.com/sirupsen/logrus v1.4.2 h1:SPIRibHv4MatM3XXNO2BJeFLZwZ2LvZgfQ5+UNI2im4<span style="color:#ff79c6">=</span>
+github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE<span style="color:#ff79c6">=</span>
+github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME<span style="color:#ff79c6">=</span>
+github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs<span style="color:#ff79c6">=</span>
+golang.org/x/sys v0.0.0-20190422165155-953cdadca894 h1:Cz4ceDQGXuKRnVBDTS23GTn/pU5OE2C0WrNTOYK1Uuc<span style="color:#ff79c6">=</span>
+golang.org/x/sys v0.0.0-20190422165155-953cdadca894/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs<span style="color:#ff79c6">=</span></code></pre></div>
+
+<p>这个文件表示了logrus依赖的那些包的具体版本和hash值。它的作用相当于Npm里面的package-lock.json。</p>
+
+<p>这些依赖的包都会被下载到<code>$GOPATH/pkg/mod</code>中：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ tree <span style="color:#8be9fd;font-style:italic">$GOPATH</span>/pkg/mod/github.com/ -L <span style="color:#bd93f9">2</span>
+/Users/dongweiming/.go/pkg/mod/github.com/
+├── davecgh
+│   └── go-spew@v1.1.1
+├── konsorten
+│   └── go-windows-terminal-sequences@v1.0.1
+├── pmezard
+│   └── go-difflib@v1.0.0
+├── sirupsen
+│   └── logrus@v1.4.2
+└── stretchr
+    ├── objx@v0.1.1
+    └── testify@v1.2.2
+
+<span style="color:#bd93f9">11</span> directories, <span style="color:#bd93f9">0</span> files</code></pre></div>
+
+<p><code>github.com/sirupsen/logrus</code>用了这些依赖包对应的版本，其实就是在它的go.mod里面定义的：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ cat <span style="color:#8be9fd;font-style:italic">$GOPATH</span>/pkg/mod/github.com/sirupsen/logrus@v1.4.2/go.mod
+module github.com/sirupsen/logrus
+
+require <span style="color:#ff79c6">(</span>
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/konsorten/go-windows-terminal-sequences v1.0.1
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/stretchr/objx v0.1.1 // indirect
+	github.com/stretchr/testify v1.2.2
+	golang.org/x/sys v0.0.0-20190422165155-953cdadca894
+<span style="color:#ff79c6">)</span></code></pre></div>
+
+<p>其中indirect表示间接引用。GoModules支持很多包管理命令，常用的go mod命令如下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go list -m all  <span style="color:#6272a4"># 列出全部依赖包</span>
+hello
+github.com/davecgh/go-spew v1.1.1
+github.com/konsorten/go-windows-terminal-sequences v1.0.1
+github.com/pmezard/go-difflib v1.0.0
+github.com/sirupsen/logrus v1.4.2
+github.com/stretchr/objx v0.1.1
+github.com/stretchr/testify v1.2.2
+golang.org/x/sys v0.0.0-20190422165155-953cdadca894
+❯ go get github.com/sirupsen/logrus@v1.4.1  <span style="color:#6272a4"># 下载指定版本的module(非最新)</span>
+❯ grep logrus go.mod
+	github.com/sirupsen/logrus v1.4.1
+❯ go get -u github.com/sirupsen/logrus  <span style="color:#6272a4"># 更新到最新</span>
+❯ grep logrus go.mod
+	github.com/sirupsen/logrus v1.4.2
+❯ tree <span style="color:#8be9fd;font-style:italic">$GOPATH</span>/pkg/mod/github.com/sirupsen -L <span style="color:#bd93f9">1</span>
+/Users/dongweiming/.go/pkg/mod/github.com/sirupsen
+├── logrus@v1.4.1
+└── logrus@v1.4.2</code></pre></div>
+
+<p>可以看到本地有了2个版本的<code>github.com/sirupsen/logrus</code>，按需使用之。另外还可以使用<code>go get -u=patch</code>升级到最新的修订版本。</p>
+
+<h3 id="发布到github">发布到Github</h3>
+
+<p>如果你希望你的包被别人使用就需要发布到Github或者其他平台上。首先在Github创建一个项目，然后克隆下来，再把前面创建的三个文件拷贝进来，不过go.mod中的module和package要改一下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ git clone https://github.com/golang-dev/helloworld
+❯ <span style="color:#8be9fd;font-style:italic">cd</span> hello
+❯ head -n1 go.mod
+module github.com/golang-dev/helloworld</code></pre></div>
+
+<p>为了方便大家体验，创建分支v1存储第一个版本，并发布v1.0.0版本(省略git add /commit等操作)：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ gco -b v1
+❯ git push -u origin v1
+❯ git tag v1.0.0  <span style="color:#6272a4"># 创建v1.0.0版本</span>
+❯ git push --tags
+❯ gco master  <span style="color:#6272a4"># 切回master分支</span></code></pre></div>
+
+<p>在下一个版本中替换日志库，改用zap:</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">package hello
+
+import <span style="color:#ff79c6">(</span>
+	<span style="color:#f1fa8c">&#34;time&#34;</span>
+
+	<span style="color:#f1fa8c">&#34;go.uber.org/zap&#34;</span>
+<span style="color:#ff79c6">)</span>
+
+func Test<span style="color:#ff79c6">()</span> <span style="color:#ff79c6">{</span>
+	sugar :<span style="color:#ff79c6">=</span> zap.NewExample<span style="color:#ff79c6">()</span>.Sugar<span style="color:#ff79c6">()</span>
+	defer sugar.Sync<span style="color:#ff79c6">()</span>
+	sugar.Infow<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;failed to fetch URL&#34;</span>,
+		<span style="color:#f1fa8c">&#34;url&#34;</span>, <span style="color:#f1fa8c">&#34;http://example.com&#34;</span>,
+		<span style="color:#f1fa8c">&#34;attempt&#34;</span>, <span style="color:#bd93f9">3</span>,
+		<span style="color:#f1fa8c">&#34;backoff&#34;</span>, time.Second,
+	<span style="color:#ff79c6">)</span>
+<span style="color:#ff79c6">}</span>
+
+func main<span style="color:#ff79c6">()</span> <span style="color:#ff79c6">{</span>
+    Test<span style="color:#ff79c6">()</span>
+<span style="color:#ff79c6">}</span></code></pre></div>
+
+<p>注意为了让包可导出，package 后面不是main而是hello。在执行<code>go build</code>之后，go.mod和go.sum都改变了，都添加了相关的依赖信息。如go.mod：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">diff --git a/go.mod b/go.mod
+index 668236a..e6fff1d <span style="color:#bd93f9">100644</span>
+--- a/go.mod
++++ b/go.mod
+@@ -6,5 +6,9 @@ require <span style="color:#ff79c6">(</span>
+        github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
+        github.com/sirupsen/logrus v1.4.2
+        github.com/stretchr/testify v1.3.0 // indirect
++       github.com/uber-go/zap v1.10.0
++       go.uber.org/atomic v1.4.0 // indirect
++       go.uber.org/multierr v1.1.0 // indirect
++       go.uber.org/zap v1.10.0
+        golang.org/x/sys v0.0.0-20190726091711-fc99dfbffb4e // indirect
+ <span style="color:#ff79c6">)</span></code></pre></div>
+
+<p>这个时候可以使用tidy清理那些用不到的包(发布前都应该清理一下)：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go mod tidy</code></pre></div>
+
+<p>接着发布成v2版本：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ gco -b v1.01
+❯ git push -f origin v1.01
+❯ git tag v1.01
+❯ git push --tags</code></pre></div>
+
+<p>现在<code>github.com/golang-dev/helloworld</code>就有2个版本了。</p>
+
+<p>然后在另外一个目录下初始化一个新的go.mod就可以依赖并使用它了：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ <span style="color:#8be9fd;font-style:italic">cd</span> ~/strconv.code/modules/github
+❯ go mod init hello2
+❯ go get github.com/golang-dev/helloworld@v1  <span style="color:#6272a4"># 先安装v1版本的</span>
+❯ cat go.mod
+module hello2
+
+go <span style="color:#bd93f9">1</span>.12
+
+require github.com/golang-dev/hello v1.0.0 // indirect</code></pre></div>
+
+<p>然后写一个简单的例子运行一下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">❯ cat test.<span style="color:#ff79c6">go</span>
+<span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	hello <span style="color:#f1fa8c">&#34;github.com/golang-dev/helloworld&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	hello.<span style="color:#50fa7b">Test</span>()
+}
+❯ <span style="color:#ff79c6">go</span> run test.<span style="color:#ff79c6">go</span>
+INFO[<span style="color:#bd93f9">0000</span>] A walrus appears                              animal=walrus</code></pre></div>
+
+<p>这样可以用hello包里面导出的函数Test了。当然，我这里仅仅是为了测试，这个包完全没有用！</p>
+
+<p>接着下载最新的hello包版本再体验：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go get -u github.com/golang-dev/helloworld
+go: finding github.com/golang-dev/helloworld v1.0.1
+...
+❯ go run test.go
+<span style="color:#ff79c6">{</span><span style="color:#f1fa8c">&#34;level&#34;</span>:<span style="color:#f1fa8c">&#34;info&#34;</span>,<span style="color:#f1fa8c">&#34;msg&#34;</span>:<span style="color:#f1fa8c">&#34;failed to fetch URL&#34;</span>,<span style="color:#f1fa8c">&#34;url&#34;</span>:<span style="color:#f1fa8c">&#34;http://example.com&#34;</span>,<span style="color:#f1fa8c">&#34;attempt&#34;</span>:3,<span style="color:#f1fa8c">&#34;backoff&#34;</span>:<span style="color:#f1fa8c">&#34;1s&#34;</span><span style="color:#ff79c6">}</span></code></pre></div>
+
+<p>这样就更新到最新的版本1.0.1了。</p>
+
+<h3 id="后记">后记</h3>
+
+<p>Modules将成为Go 1.13默认的依赖包管理方法。目前很多开源项目已经改用Go Modules，如果你在Github上看到项目根目录下包含go.mod 和 go.sum 就说明它支持最新的Go Modules。如果大家之后再开源新的项目，应该支持Go Modules。</p>
+
+<h3 id="代码地址">代码地址</h3>
+
+<p>完整代码可以在<a href="https://github.com/golang-dev/strconv.code/blob/master/modules">这个地址</a>和<a href="https://github.com/golang-dev/helloworld">这个项目</a>找到。</p>
+
+<h3 id="延伸阅读">延伸阅读</h3>
+
+<ol>
+<li><a href="https://xuanwo.io/2019/05/27/go-modules/">https://xuanwo.io/2019/05/27/go-modules/</a></li>
+<li><a href="https://github.com/golang/dep">https://github.com/golang/dep</a></li>
+<li><a href="https://github.com/golang/go/wiki/Modules">https://github.com/golang/go/wiki/Modules</a></li>
+<li><a href="https://roberto.selbach.ca/intro-to-go-modules/">https://roberto.selbach.ca/intro-to-go-modules/</a></li>
+<li><a href="https://blog.golang.org/using-go-modules">https://blog.golang.org/using-go-modules</a></li>
+<li><a href="https://semver.org/">https://semver.org/</a></li>
+</ol>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://cdn.commento.io/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
+</html>
