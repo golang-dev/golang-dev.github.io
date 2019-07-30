@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="操作Memcached(附Golang代码)"/>
+<meta name="twitter:description" content="Memcached是一个高性能、分布式内存对象缓存系统。可以把数据库查询结果缓存到Memcached里，达到减少数据库访问次数的目的，从而提高动态Web应用的速度、提高可扩展性。Memcached虽然诞生的非常早，但是由于使用运维简单且作用巨大直到现在依然被很多互联网公司使用。
+在Golang语言中主流的客户端是gomemcache，它是Memcached作者实现的，所以在代码质量和执行效率上肯定会有保障的。
+安装 首先安装它：
+❯ brew install memcached # 安装Memcached ❯ go get github.com/bradfitz/gomemcache/memcache # 下载gomemcache 使用gomemcache 接着我们体验一下Memcached的基本操作：
+package main import ( &#34;fmt&#34; &#34;log&#34; &#34;github.com/bradfitz/gomemcache/memcache&#34; ) var ( server = &#34;127.0.0.1:11211&#34; ) func main() { mc := memcache.New(server) if mc == nil { log.Fatal(&#34;New failed&#34;) } // Create 	err := mc.Set(&amp;memcache.Item{Key: &#34;a&#34;, Value: []byte(&#34;abcd&#34;)}) if err != nil { log.Fatal(&#34;Set failed&#34;, err) } mc.Set(&amp;memcache.Item{Key: &#34;b&#34;, Value: []byte(&#34;123&#34;)}) // Retrieve 	item, err := mc."/>
+
+    <meta property="og:title" content="操作Memcached(附Golang代码)" />
+<meta property="og:description" content="Memcached是一个高性能、分布式内存对象缓存系统。可以把数据库查询结果缓存到Memcached里，达到减少数据库访问次数的目的，从而提高动态Web应用的速度、提高可扩展性。Memcached虽然诞生的非常早，但是由于使用运维简单且作用巨大直到现在依然被很多互联网公司使用。
+在Golang语言中主流的客户端是gomemcache，它是Memcached作者实现的，所以在代码质量和执行效率上肯定会有保障的。
+安装 首先安装它：
+❯ brew install memcached # 安装Memcached ❯ go get github.com/bradfitz/gomemcache/memcache # 下载gomemcache 使用gomemcache 接着我们体验一下Memcached的基本操作：
+package main import ( &#34;fmt&#34; &#34;log&#34; &#34;github.com/bradfitz/gomemcache/memcache&#34; ) var ( server = &#34;127.0.0.1:11211&#34; ) func main() { mc := memcache.New(server) if mc == nil { log.Fatal(&#34;New failed&#34;) } // Create 	err := mc.Set(&amp;memcache.Item{Key: &#34;a&#34;, Value: []byte(&#34;abcd&#34;)}) if err != nil { log.Fatal(&#34;Set failed&#34;, err) } mc.Set(&amp;memcache.Item{Key: &#34;b&#34;, Value: []byte(&#34;123&#34;)}) // Retrieve 	item, err := mc." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/use-memcached/" />
+<meta property="article:published_time" content="2019-07-30T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-30T00:00:00&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/use-memcached/">
+    
+    <title>
+  操作Memcached(附Golang代码) · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/use-memcached/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">操作Memcached(附Golang代码)</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-07-30T00:00:00Z'>
+                July 30, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              2 minutes read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/memcached/">memcached</a></div>
+
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="https://strconv.com/tags/memcached/">memcached</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+
+<p>Memcached是一个高性能、分布式内存对象缓存系统。可以把数据库查询结果缓存到Memcached里，达到减少数据库访问次数的目的，从而提高动态Web应用的速度、提高可扩展性。Memcached虽然诞生的非常早，但是由于使用运维简单且作用巨大直到现在依然被很多互联网公司使用。</p>
+
+<p>在Golang语言中主流的客户端是<a href="https://github.com/bradfitz/gomemcache">gomemcache</a>，它是Memcached作者实现的，所以在代码质量和执行效率上肯定会有保障的。</p>
+
+<h3 id="安装">安装</h3>
+
+<p>首先安装它：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ brew install memcached  <span style="color:#6272a4"># 安装Memcached</span>
+❯ go get github.com/bradfitz/gomemcache/memcache  <span style="color:#6272a4"># 下载gomemcache</span></code></pre></div>
+
+<h3 id="使用gomemcache">使用gomemcache</h3>
+
+<p>接着我们体验一下Memcached的基本操作：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+	<span style="color:#f1fa8c">&#34;fmt&#34;</span>
+	<span style="color:#f1fa8c">&#34;log&#34;</span>
+
+	<span style="color:#f1fa8c">&#34;github.com/bradfitz/gomemcache/memcache&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">var</span> (
+	server = <span style="color:#f1fa8c">&#34;127.0.0.1:11211&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+	mc <span style="color:#ff79c6">:=</span> memcache.<span style="color:#50fa7b">New</span>(server)
+	<span style="color:#ff79c6">if</span> mc <span style="color:#ff79c6">==</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Fatal</span>(<span style="color:#f1fa8c">&#34;New failed&#34;</span>)
+	}
+	<span style="color:#6272a4">// Create
+</span><span style="color:#6272a4"></span>	err <span style="color:#ff79c6">:=</span> mc.<span style="color:#50fa7b">Set</span>(<span style="color:#ff79c6">&amp;</span>memcache.Item{Key: <span style="color:#f1fa8c">&#34;a&#34;</span>, Value: []<span style="color:#8be9fd;font-style:italic">byte</span>(<span style="color:#f1fa8c">&#34;abcd&#34;</span>)})
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Fatal</span>(<span style="color:#f1fa8c">&#34;Set failed&#34;</span>, err)
+	}
+	mc.<span style="color:#50fa7b">Set</span>(<span style="color:#ff79c6">&amp;</span>memcache.Item{Key: <span style="color:#f1fa8c">&#34;b&#34;</span>, Value: []<span style="color:#8be9fd;font-style:italic">byte</span>(<span style="color:#f1fa8c">&#34;123&#34;</span>)})
+	<span style="color:#6272a4">// Retrieve
+</span><span style="color:#6272a4"></span>	item, err <span style="color:#ff79c6">:=</span> mc.<span style="color:#50fa7b">Get</span>(<span style="color:#f1fa8c">&#34;a&#34;</span>)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> { <span style="color:#6272a4">// err 为 ErrCacheMiss 表示没有这个键的缓存
+</span><span style="color:#6272a4"></span>		log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Key a &#39;s value is %s&#34;</span>, item.Value)
+	}
+	items, err <span style="color:#ff79c6">:=</span> mc.<span style="color:#50fa7b">GetMulti</span>([]<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;a&#34;</span>, <span style="color:#f1fa8c">&#34;b&#34;</span>, <span style="color:#f1fa8c">&#34;c&#34;</span>})
+	<span style="color:#ff79c6">for</span> k, v <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">range</span> items {
+		log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;k=%s, v=%s&#34;</span>, k, v.Value)
+	}
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		log.<span style="color:#50fa7b">Print</span>(<span style="color:#f1fa8c">&#34;GetMulti failed: %v&#34;</span>, err)
+	}
+	<span style="color:#6272a4">// Delete
+</span><span style="color:#6272a4"></span>	err = mc.<span style="color:#50fa7b">Delete</span>(<span style="color:#f1fa8c">&#34;a&#34;</span>)
+
+	item, err = mc.<span style="color:#50fa7b">Get</span>(<span style="color:#f1fa8c">&#34;a&#34;</span>)
+	log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Get failed: %v, item=%v&#34;</span>, err, item)
+
+	err = mc.<span style="color:#50fa7b">Delete</span>(<span style="color:#f1fa8c">&#34;a&#34;</span>)
+	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Delete failed:&#34;</span>, err)
+	}
+	<span style="color:#6272a4">// Incrby
+</span><span style="color:#6272a4"></span>	mc.<span style="color:#50fa7b">Set</span>(<span style="color:#ff79c6">&amp;</span>memcache.Item{Key: <span style="color:#f1fa8c">&#34;num&#34;</span>, Value: []<span style="color:#8be9fd;font-style:italic">byte</span>(<span style="color:#f1fa8c">&#34;1&#34;</span>)})
+
+	num, err <span style="color:#ff79c6">:=</span> mc.<span style="color:#50fa7b">Increment</span>(<span style="color:#f1fa8c">&#34;num&#34;</span>, <span style="color:#bd93f9">7</span>) <span style="color:#6272a4">// 结果为1+7=8
+</span><span style="color:#6272a4"></span>	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Increment failed&#34;</span>, err)
+	} <span style="color:#ff79c6">else</span> {
+		fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;The current value is :&#34;</span>, num)
+	}
+	<span style="color:#6272a4">// Decrby
+</span><span style="color:#6272a4"></span>	num, err = mc.<span style="color:#50fa7b">Decrement</span>(<span style="color:#f1fa8c">&#34;num&#34;</span>, <span style="color:#bd93f9">3</span>) <span style="color:#6272a4">// 结果为8-3=5
+</span><span style="color:#6272a4"></span>	<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+		fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Decrement failed&#34;</span>, err)
+	} <span style="color:#ff79c6">else</span> {
+		fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;The current value is :&#34;</span>, num)
+	}
+}</code></pre></div>
+
+<p>在这个程序中体验了Set/Get/GetMulti/Delete/Increment/Decrement等操作，运行一下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run main.go
+<span style="color:#bd93f9">2019</span>/07/30 <span style="color:#bd93f9">12</span>:40:36 <span style="color:#8be9fd;font-style:italic">k</span><span style="color:#ff79c6">=</span>a, <span style="color:#8be9fd;font-style:italic">v</span><span style="color:#ff79c6">=</span>abcd
+<span style="color:#bd93f9">2019</span>/07/30 <span style="color:#bd93f9">12</span>:40:36 <span style="color:#8be9fd;font-style:italic">k</span><span style="color:#ff79c6">=</span>b, <span style="color:#8be9fd;font-style:italic">v</span><span style="color:#ff79c6">=</span><span style="color:#bd93f9">123</span>
+<span style="color:#bd93f9">2019</span>/07/30 <span style="color:#bd93f9">12</span>:40:36 Get failed: memcache: cache miss, <span style="color:#8be9fd;font-style:italic">item</span><span style="color:#ff79c6">=</span>&lt;nil&gt;
+Delete failed: memcache: cache miss
+The current value is : <span style="color:#bd93f9">8</span>
+The current value is : <span style="color:#bd93f9">5</span></code></pre></div>
+
+<h3 id="代码地址">代码地址</h3>
+
+<p>完整代码可以在<a href="https://github.com/golang-dev/strconv.code/blob/master/memcached">这个地址</a>找到。</p>
+
+<h3 id="延伸阅读">延伸阅读</h3>
+
+<ol>
+<li><a href="https://michaelheap.com/golang-using-memcached/">https://michaelheap.com/golang-using-memcached/</a></li>
+<li><a href="https://godoc.org/github.com/bradfitz/gomemcache/memcache">https://godoc.org/github.com/bradfitz/gomemcache/memcache</a></li>
+</ol>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://cdn.commento.io/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
+</html>
