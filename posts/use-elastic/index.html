@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="使用Elasticsearch(附Golang代码)"/>
+<meta name="twitter:description" content="Elasticsearch(以下简称es)是当今最流行的(全文)搜索引擎，在国内外使用它的公司和产品非常多。它使用Lucene作为其核心来实现所有索引和搜索的功能，但是它的目的是通过简单的RESTful API来隐藏Lucene的复杂性，从而让全文搜索变得简单。另外它还可以用作分布式的实时文件存储，每个字段都可以被索引并可被搜索。
+安装Elasticsearch Homebrew目前最新的版本是6.8，为了让本文更有价值，会选择更新的7.X版本，需要使用Elastic官方仓库：
+❯ brew tap elastic/tap ❯ brew install elastic/tap/elasticsearch-full ❯ brew services start elastic/tap/elasticsearch-full ❯ curl http://localhost:9200 { &#34;name&#34; : &#34;xiaoxiMacBook-Pro.local&#34;, &#34;cluster_name&#34; : &#34;elasticsearch_xiaoxi&#34;, &#34;cluster_uuid&#34; : &#34;L80N4IVOS7S3BVaXC3wAsw&#34;, &#34;version&#34; : { &#34;number&#34; : &#34;7.2.0&#34;, &#34;build_flavor&#34; : &#34;default&#34;, &#34;build_type&#34; : &#34;tar&#34;, &#34;build_hash&#34; : &#34;508c38a&#34;, &#34;build_date&#34; : &#34;2019-06-20T15:54:18.811730Z&#34;, &#34;build_snapshot&#34; : false, &#34;lucene_version&#34; : &#34;8.0.0&#34;, &#34;minimum_wire_compatibility_version&#34; : &#34;6.8.0&#34;, &#34;minimum_index_compatibility_version&#34; : &#34;6.0.0-beta1&#34; }, &#34;tagline&#34; : &#34;You Know, for Search&#34; } 这样说明安装并启动了，接着我们使用Golang操作它。目前有2个可供选择的Elasticsearch Golang客户端，我们分别体验它们。"/>
+
+    <meta property="og:title" content="使用Elasticsearch(附Golang代码)" />
+<meta property="og:description" content="Elasticsearch(以下简称es)是当今最流行的(全文)搜索引擎，在国内外使用它的公司和产品非常多。它使用Lucene作为其核心来实现所有索引和搜索的功能，但是它的目的是通过简单的RESTful API来隐藏Lucene的复杂性，从而让全文搜索变得简单。另外它还可以用作分布式的实时文件存储，每个字段都可以被索引并可被搜索。
+安装Elasticsearch Homebrew目前最新的版本是6.8，为了让本文更有价值，会选择更新的7.X版本，需要使用Elastic官方仓库：
+❯ brew tap elastic/tap ❯ brew install elastic/tap/elasticsearch-full ❯ brew services start elastic/tap/elasticsearch-full ❯ curl http://localhost:9200 { &#34;name&#34; : &#34;xiaoxiMacBook-Pro.local&#34;, &#34;cluster_name&#34; : &#34;elasticsearch_xiaoxi&#34;, &#34;cluster_uuid&#34; : &#34;L80N4IVOS7S3BVaXC3wAsw&#34;, &#34;version&#34; : { &#34;number&#34; : &#34;7.2.0&#34;, &#34;build_flavor&#34; : &#34;default&#34;, &#34;build_type&#34; : &#34;tar&#34;, &#34;build_hash&#34; : &#34;508c38a&#34;, &#34;build_date&#34; : &#34;2019-06-20T15:54:18.811730Z&#34;, &#34;build_snapshot&#34; : false, &#34;lucene_version&#34; : &#34;8.0.0&#34;, &#34;minimum_wire_compatibility_version&#34; : &#34;6.8.0&#34;, &#34;minimum_index_compatibility_version&#34; : &#34;6.0.0-beta1&#34; }, &#34;tagline&#34; : &#34;You Know, for Search&#34; } 这样说明安装并启动了，接着我们使用Golang操作它。目前有2个可供选择的Elasticsearch Golang客户端，我们分别体验它们。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/use-elastic/" />
+<meta property="article:published_time" content="2019-07-31T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2019-07-31T00:00:00&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/use-elastic/">
+    
+    <title>
+  使用Elasticsearch(附Golang代码) · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/use-elastic/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">使用Elasticsearch(附Golang代码)</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2019-07-31T00:00:00Z'>
+                July 31, 2019
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              6 minutes read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/elasticsearch/">elasticsearch</a></div>
+
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="https://strconv.com/tags/elasticsearch/">elasticsearch</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+
+<p>Elasticsearch(以下简称es)是当今最流行的(全文)搜索引擎，在国内外使用它的公司和产品非常多。它使用Lucene作为其核心来实现所有索引和搜索的功能，但是它的目的是通过简单的RESTful API来隐藏Lucene的复杂性，从而让全文搜索变得简单。另外它还可以用作分布式的实时文件存储，每个字段都可以被索引并可被搜索。</p>
+
+<h3 id="安装elasticsearch">安装Elasticsearch</h3>
+
+<p>Homebrew目前最新的版本是6.8，为了让本文更有价值，会选择更新的7.X版本，需要使用Elastic官方仓库：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ brew tap elastic/tap
+❯ brew install elastic/tap/elasticsearch-full
+❯ brew services start elastic/tap/elasticsearch-full
+
+❯ curl http://localhost:9200
+<span style="color:#ff79c6">{</span>
+  <span style="color:#f1fa8c">&#34;name&#34;</span> : <span style="color:#f1fa8c">&#34;xiaoxiMacBook-Pro.local&#34;</span>,
+  <span style="color:#f1fa8c">&#34;cluster_name&#34;</span> : <span style="color:#f1fa8c">&#34;elasticsearch_xiaoxi&#34;</span>,
+  <span style="color:#f1fa8c">&#34;cluster_uuid&#34;</span> : <span style="color:#f1fa8c">&#34;L80N4IVOS7S3BVaXC3wAsw&#34;</span>,
+  <span style="color:#f1fa8c">&#34;version&#34;</span> : <span style="color:#ff79c6">{</span>
+    <span style="color:#f1fa8c">&#34;number&#34;</span> : <span style="color:#f1fa8c">&#34;7.2.0&#34;</span>,
+    <span style="color:#f1fa8c">&#34;build_flavor&#34;</span> : <span style="color:#f1fa8c">&#34;default&#34;</span>,
+    <span style="color:#f1fa8c">&#34;build_type&#34;</span> : <span style="color:#f1fa8c">&#34;tar&#34;</span>,
+    <span style="color:#f1fa8c">&#34;build_hash&#34;</span> : <span style="color:#f1fa8c">&#34;508c38a&#34;</span>,
+    <span style="color:#f1fa8c">&#34;build_date&#34;</span> : <span style="color:#f1fa8c">&#34;2019-06-20T15:54:18.811730Z&#34;</span>,
+    <span style="color:#f1fa8c">&#34;build_snapshot&#34;</span> : false,
+    <span style="color:#f1fa8c">&#34;lucene_version&#34;</span> : <span style="color:#f1fa8c">&#34;8.0.0&#34;</span>,
+    <span style="color:#f1fa8c">&#34;minimum_wire_compatibility_version&#34;</span> : <span style="color:#f1fa8c">&#34;6.8.0&#34;</span>,
+    <span style="color:#f1fa8c">&#34;minimum_index_compatibility_version&#34;</span> : <span style="color:#f1fa8c">&#34;6.0.0-beta1&#34;</span>
+  <span style="color:#ff79c6">}</span>,
+  <span style="color:#f1fa8c">&#34;tagline&#34;</span> : <span style="color:#f1fa8c">&#34;You Know, for Search&#34;</span>
+<span style="color:#ff79c6">}</span></code></pre></div>
+
+<p>这样说明安装并启动了，接着我们使用Golang操作它。目前有2个可供选择的Elasticsearch Golang客户端，我们分别体验它们。</p>
+
+<h3 id="olivere-elastic">olivere/elastic</h3>
+
+<p>目前被广泛应用的是第三方开发者做的<a href="https://github.com/olivere/elastic/tree/release-branch.v7">olivere/elastic</a>，由于我们用的Elasticsearch的版本是7.X，所以大家要注意使用<code>release-branch.v7</code>版本。首先安装它，现在7.X版本要求使用GoModules，我们这样初始化：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ mkdir olivere-elasticsearch-app <span style="color:#ff79c6">&amp;&amp;</span> <span style="color:#8be9fd;font-style:italic">cd</span> olivere-elasticsearch-app
+❯ cat &gt; go.mod <span style="color:#f1fa8c">&lt;&lt;-END
+</span><span style="color:#f1fa8c">  module olivere-elasticsearch-app
+</span><span style="color:#f1fa8c">
+</span><span style="color:#f1fa8c">  require github.com/olivere/elastic/v7 7.x
+</span><span style="color:#f1fa8c">END</span></code></pre></div>
+
+<p>接着了解一下es的各种操作，首先导入相关的包，定义结构体和变量：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+    <span style="color:#f1fa8c">&#34;context&#34;</span>
+    <span style="color:#f1fa8c">&#34;encoding/json&#34;</span>
+    <span style="color:#f1fa8c">&#34;fmt&#34;</span>
+    <span style="color:#f1fa8c">&#34;reflect&#34;</span>
+    <span style="color:#f1fa8c">&#34;strconv&#34;</span>
+
+    <span style="color:#f1fa8c">&#34;github.com/olivere/elastic/v7&#34;</span>
+)
+
+
+<span style="color:#8be9fd;font-style:italic">var</span> (
+    subject   Subject
+    indexName = <span style="color:#f1fa8c">&#34;subject&#34;</span>
+    servers   = []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;http://localhost:9200/&#34;</span>}
+)
+
+<span style="color:#8be9fd;font-style:italic">type</span> Subject <span style="color:#8be9fd;font-style:italic">struct</span> {
+    ID     <span style="color:#8be9fd">int</span>      <span style="color:#f1fa8c">`json:&#34;id&#34;`</span>
+    Title  <span style="color:#8be9fd">string</span>   <span style="color:#f1fa8c">`json:&#34;title&#34;`</span>
+    Genres []<span style="color:#8be9fd">string</span> <span style="color:#f1fa8c">`json:&#34;genres&#34;`</span>
+}</code></pre></div>
+
+<p>由于我们用的是es7，所以<code>import &quot;github.com/olivere/elastic/v7&quot;</code>。结构体Subject是基于之前的豆瓣电影Top250的数据定义的，还扩充了genres字段，之后会把抓取部分逻辑集成进来。</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">const</span> mapping = <span style="color:#f1fa8c">`
+</span><span style="color:#f1fa8c">{
+</span><span style="color:#f1fa8c">    &#34;mappings&#34;: {
+</span><span style="color:#f1fa8c">        &#34;properties&#34;: {
+</span><span style="color:#f1fa8c">            &#34;id&#34;: {
+</span><span style="color:#f1fa8c">                &#34;type&#34;: &#34;long&#34;
+</span><span style="color:#f1fa8c">            },
+</span><span style="color:#f1fa8c">            &#34;title&#34;: {
+</span><span style="color:#f1fa8c">                &#34;type&#34;: &#34;text&#34;
+</span><span style="color:#f1fa8c">            },
+</span><span style="color:#f1fa8c">            &#34;genres&#34;: {
+</span><span style="color:#f1fa8c">                &#34;type&#34;: &#34;keyword&#34;
+</span><span style="color:#f1fa8c">            }
+</span><span style="color:#f1fa8c">        }
+</span><span style="color:#f1fa8c">    }
+</span><span style="color:#f1fa8c">}`</span>
+
+ctx <span style="color:#ff79c6">:=</span> context.<span style="color:#50fa7b">Background</span>()
+client, err <span style="color:#ff79c6">:=</span> elastic.<span style="color:#50fa7b">NewClient</span>(elastic.<span style="color:#50fa7b">SetURL</span>(servers<span style="color:#ff79c6">...</span>))
+<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+    <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+}
+
+exists, err <span style="color:#ff79c6">:=</span> client.<span style="color:#50fa7b">IndexExists</span>(indexName).<span style="color:#50fa7b">Do</span>(ctx)
+<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+    <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+}
+<span style="color:#ff79c6">if</span> !exists {
+    _, err <span style="color:#ff79c6">:=</span> client.<span style="color:#50fa7b">CreateIndex</span>(indexName).<span style="color:#50fa7b">BodyString</span>(mapping).<span style="color:#50fa7b">Do</span>(ctx)
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+    }
+}</code></pre></div>
+
+<p>上面这部分创建了client，用IndexExists检查索引是否存在。如果索引不存在用CreateIndex创建索引，mapping内容用BodyString传入。</p>
+
+<p>接着是写入数据：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">subject = Subject{
+    ID:     <span style="color:#bd93f9">1</span>,
+    Title:  <span style="color:#f1fa8c">&#34;肖恩克的救赎&#34;</span>,
+    Genres: []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;犯罪&#34;</span>, <span style="color:#f1fa8c">&#34;剧情&#34;</span>},
+}
+
+<span style="color:#6272a4">// 写入
+</span><span style="color:#6272a4"></span>doc, err <span style="color:#ff79c6">:=</span> client.<span style="color:#50fa7b">Index</span>().
+    <span style="color:#50fa7b">Index</span>(indexName).
+    <span style="color:#50fa7b">Id</span>(strconv.<span style="color:#50fa7b">Itoa</span>(subject.ID)).
+    <span style="color:#50fa7b">BodyJson</span>(subject).
+    <span style="color:#50fa7b">Refresh</span>(<span style="color:#f1fa8c">&#34;wait_for&#34;</span>).
+    <span style="color:#50fa7b">Do</span>(ctx)
+
+<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+    <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+}
+fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Indexed with id=%v, type=%s\n&#34;</span>, doc.Id, doc.Type)
+subject = Subject{
+    ID:     <span style="color:#bd93f9">2</span>,
+    Title:  <span style="color:#f1fa8c">&#34;千与千寻&#34;</span>,
+    Genres: []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;剧情&#34;</span>, <span style="color:#f1fa8c">&#34;喜剧&#34;</span>, <span style="color:#f1fa8c">&#34;爱情&#34;</span>, <span style="color:#f1fa8c">&#34;战争&#34;</span>},
+}
+fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#8be9fd;font-style:italic">string</span>(subject.ID))
+doc, err = client.<span style="color:#50fa7b">Index</span>().
+    <span style="color:#50fa7b">Index</span>(indexName).
+    <span style="color:#50fa7b">Id</span>(strconv.<span style="color:#50fa7b">Itoa</span>(subject.ID)).
+    <span style="color:#50fa7b">BodyJson</span>(subject).
+    <span style="color:#50fa7b">Refresh</span>(<span style="color:#f1fa8c">&#34;wait_for&#34;</span>).
+    <span style="color:#50fa7b">Do</span>(ctx)
+
+<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+    <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+}</code></pre></div>
+
+<p>上面写入2个文档(记录)，Index内传入索引名字，Id内传入对应字符串类型ID，BodyJson传入结构体变量，尤其要注意用<code>Refresh(&quot;wait_for&quot;)</code>，相当于sync方式的写入，最后的 Do就是执行操作。</p>
+
+<p>接着看获取：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">result, err <span style="color:#ff79c6">:=</span> client.<span style="color:#50fa7b">Get</span>().
+    <span style="color:#50fa7b">Index</span>(indexName).
+    <span style="color:#50fa7b">Id</span>(strconv.<span style="color:#50fa7b">Itoa</span>(subject.ID)).
+    <span style="color:#50fa7b">Do</span>(ctx)
+<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+    <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+}
+<span style="color:#ff79c6">if</span> result.Found {
+    fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Got document %v (version=%d, index=%s, type=%s)\n&#34;</span>,
+        result.Id, result.Version, result.Index, result.Type)
+    err <span style="color:#ff79c6">:=</span> json.<span style="color:#50fa7b">Unmarshal</span>(result.Source, <span style="color:#ff79c6">&amp;</span>subject)
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+    }
+    fmt.<span style="color:#50fa7b">Println</span>(subject.ID, subject.Title, subject.Genres)
+}</code></pre></div>
+
+<p>获取用<code>client.Get()</code>，传入索引名字和 想要找的记录ID。<code>result.Found</code>为真表示找到这个记录了，其中的数据在<code>result.Source</code>里面，可以手动用<code>json.Unmarshal</code>解析到结构体变量上。</p>
+
+<p>感受一下搜索：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">Search</span>(client <span style="color:#ff79c6">*</span>elastic.Client, ctx context.Context, genre <span style="color:#8be9fd">string</span>) {
+    fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Search: %s&#34;</span>, genre)
+    <span style="color:#6272a4">// Term搜索
+</span><span style="color:#6272a4"></span>    termQuery <span style="color:#ff79c6">:=</span> elastic.<span style="color:#50fa7b">NewTermQuery</span>(<span style="color:#f1fa8c">&#34;genres&#34;</span>, genre)
+    searchResult, err <span style="color:#ff79c6">:=</span> client.<span style="color:#50fa7b">Search</span>().
+        <span style="color:#50fa7b">Index</span>(indexName).
+        <span style="color:#50fa7b">Query</span>(termQuery).
+        <span style="color:#50fa7b">Sort</span>(<span style="color:#f1fa8c">&#34;id&#34;</span>, <span style="color:#ff79c6">true</span>). <span style="color:#6272a4">// 按id升序排序
+</span><span style="color:#6272a4"></span>        <span style="color:#50fa7b">From</span>(<span style="color:#bd93f9">0</span>).<span style="color:#50fa7b">Size</span>(<span style="color:#bd93f9">10</span>). <span style="color:#6272a4">// 拿前10个结果
+</span><span style="color:#6272a4"></span>        <span style="color:#50fa7b">Pretty</span>(<span style="color:#ff79c6">true</span>).
+        <span style="color:#50fa7b">Do</span>(ctx) <span style="color:#6272a4">// 执行
+</span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+    }
+    total <span style="color:#ff79c6">:=</span> searchResult.<span style="color:#50fa7b">TotalHits</span>()
+    fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Found %d subjects\n&#34;</span>, total)
+    <span style="color:#ff79c6">if</span> total &gt; <span style="color:#bd93f9">0</span> {
+        <span style="color:#ff79c6">for</span> _, item <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">range</span> searchResult.<span style="color:#50fa7b">Each</span>(reflect.<span style="color:#50fa7b">TypeOf</span>(subject)) {
+            <span style="color:#ff79c6">if</span> t, ok <span style="color:#ff79c6">:=</span> item.(Subject); ok {
+                fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Found: Subject(id=%d, title=%s)\n&#34;</span>, t.ID, t.Title)
+            }
+        }
+
+    } <span style="color:#ff79c6">else</span> {
+        fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Not found!&#34;</span>)
+    }
+}
+
+<span style="color:#50fa7b">Search</span>(client, ctx, <span style="color:#f1fa8c">&#34;剧情&#34;</span>)
+fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;****&#34;</span>)
+<span style="color:#50fa7b">Search</span>(client, ctx, <span style="color:#f1fa8c">&#34;犯罪&#34;</span>)</code></pre></div>
+
+<p>这个例子中把搜索抽象到函数，分别搜索类型中包含「剧情」和「犯罪」的记录，显示搜索结果总数，并且打印每个记录。这次没有用前面提到的<code>json.Unmarshal</code>，而是用<code>reflect.TypeOf</code>，同样可以拿到对应的结构体对象。</p>
+
+<p>最后是删除：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">res, err <span style="color:#ff79c6">:=</span> client.<span style="color:#50fa7b">Delete</span>().
+    <span style="color:#50fa7b">Index</span>(indexName).
+    <span style="color:#50fa7b">Id</span>(<span style="color:#f1fa8c">&#34;1&#34;</span>).
+    <span style="color:#50fa7b">Refresh</span>(<span style="color:#f1fa8c">&#34;wait_for&#34;</span>).
+    <span style="color:#50fa7b">Do</span>(ctx)
+<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+    <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+}
+<span style="color:#ff79c6">if</span> res.Result <span style="color:#ff79c6">==</span> <span style="color:#f1fa8c">&#34;deleted&#34;</span> {
+    fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Document 1: deleted&#34;</span>)
+}
+fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;****&#34;</span>)
+<span style="color:#50fa7b">Search</span>(client, ctx, <span style="color:#f1fa8c">&#34;犯罪&#34;</span>)</code></pre></div>
+
+<p>删除使用<code>client.Delete()</code>，传入索引名字和ID，另外也要注意使用<code>Refresh(&quot;wait_for&quot;)</code>，要不就是异步的删除，虽然速度快了，但是由于在没有确认删除就执行下一句<code>Search(client, ctx, &quot;犯罪&quot;)</code>，所以仍然可以搜到那条记录。</p>
+
+<p>上面这些代码片段都在basic.go里面，运行一下:</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">❯ <span style="color:#ff79c6">go</span> run basic.<span style="color:#ff79c6">go</span>
+Indexed with id=<span style="color:#bd93f9">1</span>, <span style="color:#8be9fd;font-style:italic">type</span>=_doc
+
+Got document <span style="color:#bd93f9">2</span> (version=<span style="color:#bd93f9">824633821488</span>, index=subject, <span style="color:#8be9fd;font-style:italic">type</span>=_doc)
+<span style="color:#bd93f9">2</span> 千与千寻 [剧情 喜剧 爱情 战争]
+Search: 剧情Found <span style="color:#bd93f9">2</span> subjects
+Found: <span style="color:#50fa7b">Subject</span>(id=<span style="color:#bd93f9">1</span>, title=肖恩克的救赎)
+Found: <span style="color:#50fa7b">Subject</span>(id=<span style="color:#bd93f9">2</span>, title=千与千寻)
+<span style="color:#ff79c6">****</span>
+Search: 犯罪Found <span style="color:#bd93f9">1</span> subjects
+Found: <span style="color:#50fa7b">Subject</span>(id=<span style="color:#bd93f9">1</span>, title=肖恩克的救赎)
+Document <span style="color:#bd93f9">1</span>: deleted
+<span style="color:#ff79c6">****</span>
+Search: 犯罪Found <span style="color:#bd93f9">0</span> subjects
+Not found!</code></pre></div>
+
+<h4 id="querydsl">QueryDSL</h4>
+
+<p>es提供了完整的QueryDSL，支持查询的种类很多。olivere/elastic都支持，有兴趣的可以去项目源代码以<code>search_queries_</code>开头的文件。前面我们的搜索用的是Termquery，可以感受下实际的请求的json数据((全部代码见query.go))：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#ff79c6">package</span> main
+
+<span style="color:#ff79c6">import</span> (
+    <span style="color:#f1fa8c">&#34;encoding/json&#34;</span>
+    <span style="color:#f1fa8c">&#34;fmt&#34;</span>
+
+    <span style="color:#f1fa8c">&#34;github.com/olivere/elastic/v7&#34;</span>
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">PrintQuery</span>(src <span style="color:#8be9fd;font-style:italic">interface</span>{}) {
+    fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;*****&#34;</span>)
+    data, err <span style="color:#ff79c6">:=</span> json.<span style="color:#50fa7b">MarshalIndent</span>(src, <span style="color:#f1fa8c">&#34;&#34;</span>, <span style="color:#f1fa8c">&#34;  &#34;</span>)
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+    }
+    fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#8be9fd;font-style:italic">string</span>(data))
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+    query <span style="color:#ff79c6">:=</span> elastic.<span style="color:#50fa7b">NewTermQuery</span>(<span style="color:#f1fa8c">&#34;genres&#34;</span>, <span style="color:#f1fa8c">&#34;动画&#34;</span>)
+    src, err <span style="color:#ff79c6">:=</span> query.<span style="color:#50fa7b">Source</span>()
+    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+    }
+    <span style="color:#50fa7b">PrintQuery</span>(src)
+}</code></pre></div>
+
+<p>它的JSON数据格式化后是这样的：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#ff79c6">&#34;term&#34;</span>: {
+    <span style="color:#ff79c6">&#34;genres&#34;</span>: <span style="color:#f1fa8c">&#34;动画&#34;</span>
+  }
+}</code></pre></div>
+
+<p>再举例2个Query：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">boolQuery <span style="color:#ff79c6">:=</span> elastic.<span style="color:#50fa7b">NewBoolQuery</span>()
+boolQuery = boolQuery.<span style="color:#50fa7b">Must</span>(elastic.<span style="color:#50fa7b">NewTermQuery</span>(<span style="color:#f1fa8c">&#34;genres&#34;</span>, <span style="color:#f1fa8c">&#34;剧情&#34;</span>))
+boolQuery = boolQuery.<span style="color:#50fa7b">Filter</span>(elastic.<span style="color:#50fa7b">NewTermQuery</span>(<span style="color:#f1fa8c">&#34;id&#34;</span>, <span style="color:#bd93f9">1</span>))
+src, err = boolQuery.<span style="color:#50fa7b">Source</span>()
+<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+    <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+}
+<span style="color:#50fa7b">PrintQuery</span>(src)
+
+rangeQuery <span style="color:#ff79c6">:=</span> elastic.<span style="color:#50fa7b">NewRangeQuery</span>(<span style="color:#f1fa8c">&#34;born&#34;</span>).
+    <span style="color:#50fa7b">Gte</span>(<span style="color:#f1fa8c">&#34;2012/01/01&#34;</span>).
+    <span style="color:#50fa7b">Lte</span>(<span style="color:#f1fa8c">&#34;now&#34;</span>).
+    <span style="color:#50fa7b">Format</span>(<span style="color:#f1fa8c">&#34;yyyy/MM/dd&#34;</span>)
+src, err = rangeQuery.<span style="color:#50fa7b">Source</span>()
+<span style="color:#50fa7b">PrintQuery</span>(src)</code></pre></div>
+
+<p>一个是布尔值Query，一个是区间Query，看一下实际的JSON数据：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">*****
+{
+  <span style="color:#ff79c6">&#34;bool&#34;</span>: {
+    <span style="color:#ff79c6">&#34;filter&#34;</span>: {
+      <span style="color:#ff79c6">&#34;term&#34;</span>: {
+        <span style="color:#ff79c6">&#34;id&#34;</span>: <span style="color:#bd93f9">1</span>
+      }
+    },
+    <span style="color:#ff79c6">&#34;must&#34;</span>: {
+      <span style="color:#ff79c6">&#34;term&#34;</span>: {
+        <span style="color:#ff79c6">&#34;genres&#34;</span>: <span style="color:#f1fa8c">&#34;剧情&#34;</span>
+      }
+    }
+  }
+}
+*****
+{
+  <span style="color:#ff79c6">&#34;range&#34;</span>: {
+    <span style="color:#ff79c6">&#34;born&#34;</span>: {
+      <span style="color:#ff79c6">&#34;format&#34;</span>: <span style="color:#f1fa8c">&#34;yyyy/MM/dd&#34;</span>,
+      <span style="color:#ff79c6">&#34;from&#34;</span>: <span style="color:#f1fa8c">&#34;2012/01/01&#34;</span>,
+      <span style="color:#ff79c6">&#34;include_lower&#34;</span>: <span style="color:#ff79c6">true</span>,
+      <span style="color:#ff79c6">&#34;include_upper&#34;</span>: <span style="color:#ff79c6">true</span>,
+      <span style="color:#ff79c6">&#34;to&#34;</span>: <span style="color:#f1fa8c">&#34;now&#34;</span>
+    }
+  }
+}</code></pre></div>
+
+<p>查询请求就是这么拼出来的，这部分很重要，具体的可以看延伸阅读链接1和链接2。</p>
+
+<h4 id="批量操作-bulk">批量操作(Bulk)</h4>
+
+<p>数据库都要支持批量执行的操作，如批量写入。否则设想有一亿条数据，如果一个一个插入并发满了效率太低，并发高了数据库负载扛不住。作为开发者好的习惯是在需要的时候应该一次性的写入一批数据，减少对数据库写入频率。在es里面也支持批量操作：这个「批量」定义要更泛化，不止是指一次多写，还可以删除更新等！</p>
+
+<p>看个例子(全部代码见bulk.go)：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">subjects <span style="color:#ff79c6">:=</span> []Subject{
+    Subject{
+        ID:     <span style="color:#bd93f9">1</span>,
+        Title:  <span style="color:#f1fa8c">&#34;肖恩克的救赎&#34;</span>,
+        Genres: []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;犯罪&#34;</span>, <span style="color:#f1fa8c">&#34;剧情&#34;</span>},
+    },
+    Subject{
+        ID:     <span style="color:#bd93f9">2</span>,
+        Title:  <span style="color:#f1fa8c">&#34;千与千寻&#34;</span>,
+        Genres: []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;剧情&#34;</span>, <span style="color:#f1fa8c">&#34;喜剧&#34;</span>, <span style="color:#f1fa8c">&#34;爱情&#34;</span>, <span style="color:#f1fa8c">&#34;战争&#34;</span>},
+    },
+}
+
+bulkRequest <span style="color:#ff79c6">:=</span> client.<span style="color:#50fa7b">Bulk</span>()
+<span style="color:#ff79c6">for</span> _, subject <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">range</span> subjects {
+    doc <span style="color:#ff79c6">:=</span> elastic.<span style="color:#50fa7b">NewBulkIndexRequest</span>().<span style="color:#50fa7b">Index</span>(indexName).<span style="color:#50fa7b">Id</span>(strconv.<span style="color:#50fa7b">Itoa</span>(subject.ID)).<span style="color:#50fa7b">Doc</span>(subject)
+    bulkRequest = bulkRequest.<span style="color:#50fa7b">Add</span>(doc)
+}
+
+response, err <span style="color:#ff79c6">:=</span> bulkRequest.<span style="color:#50fa7b">Do</span>(ctx)
+<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+    <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+}
+failed <span style="color:#ff79c6">:=</span> response.<span style="color:#50fa7b">Failed</span>()
+l <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">len</span>(failed)
+<span style="color:#ff79c6">if</span> l &gt; <span style="color:#bd93f9">0</span> {
+    fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Error(%d)&#34;</span>, l, response.Errors)
+}</code></pre></div>
+
+<p>这样就可以一次性的把2个记录写到es里面。再看一个复杂的例子：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">subject3 <span style="color:#ff79c6">:=</span> Subject{
+    ID:     <span style="color:#bd93f9">3</span>,
+    Title:  <span style="color:#f1fa8c">&#34;这个杀手太冷&#34;</span>,
+    Genres: []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;剧情&#34;</span>, <span style="color:#f1fa8c">&#34;动作&#34;</span>, <span style="color:#f1fa8c">&#34;犯罪&#34;</span>},
+}
+subject4 <span style="color:#ff79c6">:=</span> Subject{
+    ID:     <span style="color:#bd93f9">4</span>,
+    Title:  <span style="color:#f1fa8c">&#34;阿甘正传&#34;</span>,
+    Genres: []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;剧情&#34;</span>, <span style="color:#f1fa8c">&#34;爱情&#34;</span>},
+}
+
+subject5 <span style="color:#ff79c6">:=</span> subject3
+subject5.Title = <span style="color:#f1fa8c">&#34;这个杀手不太冷&#34;</span>
+
+index1Req <span style="color:#ff79c6">:=</span> elastic.<span style="color:#50fa7b">NewBulkIndexRequest</span>().<span style="color:#50fa7b">Index</span>(indexName).<span style="color:#50fa7b">Id</span>(<span style="color:#f1fa8c">&#34;3&#34;</span>).<span style="color:#50fa7b">Doc</span>(subject3)
+index2Req <span style="color:#ff79c6">:=</span> elastic.<span style="color:#50fa7b">NewBulkIndexRequest</span>().<span style="color:#50fa7b">OpType</span>(<span style="color:#f1fa8c">&#34;create&#34;</span>).<span style="color:#50fa7b">Index</span>(indexName).<span style="color:#50fa7b">Id</span>(<span style="color:#f1fa8c">&#34;4&#34;</span>).<span style="color:#50fa7b">Doc</span>(subject4)
+delete1Req <span style="color:#ff79c6">:=</span> elastic.<span style="color:#50fa7b">NewBulkDeleteRequest</span>().<span style="color:#50fa7b">Index</span>(indexName).<span style="color:#50fa7b">Id</span>(<span style="color:#f1fa8c">&#34;1&#34;</span>)
+update2Req <span style="color:#ff79c6">:=</span> elastic.<span style="color:#50fa7b">NewBulkUpdateRequest</span>().<span style="color:#50fa7b">Index</span>(indexName).<span style="color:#50fa7b">Id</span>(<span style="color:#f1fa8c">&#34;3&#34;</span>).
+            <span style="color:#50fa7b">Doc</span>(subject5)
+
+bulkRequest = client.<span style="color:#50fa7b">Bulk</span>()
+bulkRequest = bulkRequest.<span style="color:#50fa7b">Add</span>(index1Req)
+bulkRequest = bulkRequest.<span style="color:#50fa7b">Add</span>(index2Req)
+bulkRequest = bulkRequest.<span style="color:#50fa7b">Add</span>(delete1Req)
+bulkRequest = bulkRequest.<span style="color:#50fa7b">Add</span>(update2Req)
+
+_, err = bulkRequest.<span style="color:#50fa7b">Refresh</span>(<span style="color:#f1fa8c">&#34;wait_for&#34;</span>).<span style="color:#50fa7b">Do</span>(ctx)
+<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+    <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+}
+
+<span style="color:#ff79c6">if</span> bulkRequest.<span style="color:#50fa7b">NumberOfActions</span>() <span style="color:#ff79c6">==</span> <span style="color:#bd93f9">0</span> {
+    fmt.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Actions all clear!&#34;</span>)
+}
+
+searchResult, err <span style="color:#ff79c6">:=</span> client.<span style="color:#50fa7b">Search</span>().
+    <span style="color:#50fa7b">Index</span>(indexName).
+    <span style="color:#50fa7b">Sort</span>(<span style="color:#f1fa8c">&#34;id&#34;</span>, <span style="color:#ff79c6">false</span>). <span style="color:#6272a4">// 按id升序排序
+</span><span style="color:#6272a4"></span>    <span style="color:#50fa7b">Pretty</span>(<span style="color:#ff79c6">true</span>).
+    <span style="color:#50fa7b">Do</span>(ctx) <span style="color:#6272a4">// 执行
+</span><span style="color:#6272a4"></span><span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+    <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+}
+<span style="color:#8be9fd;font-style:italic">var</span> subject Subject
+<span style="color:#ff79c6">for</span> _, item <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">range</span> searchResult.<span style="color:#50fa7b">Each</span>(reflect.<span style="color:#50fa7b">TypeOf</span>(subject)) {
+    <span style="color:#ff79c6">if</span> t, ok <span style="color:#ff79c6">:=</span> item.(Subject); ok {
+        fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Found: Subject(id=%d, title=%s)\n&#34;</span>, t.ID, t.Title)
+    }
+}</code></pre></div>
+
+<p>这个批量操作里面做了4件事：添加subject3(ID为3)、添加subject4(ID为4)、删除ID为1的记录、更新ID为三的记录(subject5，在原来的subject3中Title故意写错了)。完成bulk操作之后通过搜索(无term条件，表示全部)验证下当前es里面的全部文档：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">❯ <span style="color:#ff79c6">go</span> run bulk.<span style="color:#ff79c6">go</span>
+Actions all clear!
+Found: <span style="color:#50fa7b">Subject</span>(id=<span style="color:#bd93f9">4</span>, title=阿甘正传)
+Found: <span style="color:#50fa7b">Subject</span>(id=<span style="color:#bd93f9">3</span>, title=这个杀手不太冷)
+Found: <span style="color:#50fa7b">Subject</span>(id=<span style="color:#bd93f9">2</span>, title=千与千寻)</code></pre></div>
+
+<p>可以看到ID3和ID4这2个文档插入了，而ID3的条目标题被更新成正确的，ID1的条目被删除了：这就是批量操作的效果。</p>
+
+<h3 id="go-elasticsearch">go-elasticsearch</h3>
+
+<p><a href="https://github.com/elastic/go-elasticsearch/tree/7.x">go-elasticsearch</a>是官方的Golang客户端。相比<code>olivere/elastic</code>它起步比较晚，客户端写的也比较简单，直到最近才更新活跃。所以在开发者使用的角度看大部分选择了<code>olivere/elastic</code>。</p>
+
+<p>之前我是想写一些例子体验它的，稍微试了下就放弃了。原因有2个：</p>
+
+<h4 id="封装度不够">封装度不够</h4>
+
+<p>我评价一个基础库的标准之一就是看其封装的是不是易用。在go-elasticsearch创建文件这样做：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">var</span> b strings.Builder
+b.<span style="color:#50fa7b">WriteString</span>(<span style="color:#f1fa8c">`{&#34;title&#34; : &#34;`</span>)
+b.<span style="color:#50fa7b">WriteString</span>(title)
+b.<span style="color:#50fa7b">WriteString</span>(<span style="color:#f1fa8c">`&#34;}`</span>)
+
+req <span style="color:#ff79c6">:=</span> esapi.IndexRequest{
+Index:      <span style="color:#f1fa8c">&#34;test&#34;</span>,
+DocumentID: strconv.<span style="color:#50fa7b">Itoa</span>(i <span style="color:#ff79c6">+</span> <span style="color:#bd93f9">1</span>),
+Body:       strings.<span style="color:#50fa7b">NewReader</span>(b.<span style="color:#50fa7b">String</span>()),
+Refresh:    <span style="color:#f1fa8c">&#34;true&#34;</span>,
+}</code></pre></div>
+
+<p>简单说的，就是用<code>b.WriteString</code>拼一个字符串类型的JSON数据，第一感觉是「丑」，第二是易用性很差：举个例子，如果要拼的JSON数据包含多个字段，可以设想需要很多次WriteString，非常容易写出BUG，而且维护性和可读性很差。</p>
+
+<p>再看反序列化：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">var</span> r <span style="color:#8be9fd;font-style:italic">map</span>[<span style="color:#8be9fd">string</span>]<span style="color:#8be9fd;font-style:italic">interface</span>{}
+<span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">:=</span> json.<span style="color:#50fa7b">NewDecoder</span>(res.Body).<span style="color:#50fa7b">Decode</span>(<span style="color:#ff79c6">&amp;</span>r); err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+    log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Error parsing the response body: %s&#34;</span>, err)
+} <span style="color:#ff79c6">else</span> {
+    log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;[%s] %s; version=%d&#34;</span>, res.<span style="color:#50fa7b">Status</span>(), r[<span style="color:#f1fa8c">&#34;result&#34;</span>], <span style="color:#8be9fd;font-style:italic">int</span>(r[<span style="color:#f1fa8c">&#34;_version&#34;</span>].(<span style="color:#8be9fd">float64</span>)))
+}</code></pre></div>
+
+<p>它完全没有封装成结构体，直接<code>json.NewDecoder(res.Body).Decode(&amp;r)</code>，非常原始。</p>
+
+<h4 id="不支持querydsl">不支持QueryDSL</h4>
+
+<p>如果使用关系型数据库我是非常推荐使用ORM的，因为拼SQL非常容易有安全问题也容易出错，还不利于代码复用。在文档型数据库中，DSL就是非常重要的。<code>olivere/elastic</code>中用比较清晰的QueryDSL写法就能拼出请求的JSON数据，而在这里还得用<code>b.WriteString</code>拼一个字符串类型的JSON数据，我只能说太难用了。</p>
+
+<p>所以我选择放弃go-elasticsearch。</p>
+
+<h3 id="豆瓣电影top250数据存入elasticsearch">豆瓣电影Top250数据存入Elasticsearch</h3>
+
+<p>现在终于在多个角度理解开发者为什么更喜欢<code>olivere/elastic</code>了。<code>olivere/elastic</code>功能齐全，项目一直在不断迭代，所以我选择使用它把豆瓣电影Top250数据存Elasticsearch。</p>
+
+<p>在这里修改<a href="https://strconv.com/posts/save-to-file/">用Golang写爬虫(七) - 如何保存数据到文件</a>中的抓取部分代码，再把对应es逻辑加进来。这里只展示parseUrls和main的部分(在对应位置加了一些注释，全部代码详见doubanCrawler.go)：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">var</span> (
+    indexName = <span style="color:#f1fa8c">&#34;subject&#34;</span>
+    servers   = []<span style="color:#8be9fd">string</span>{<span style="color:#f1fa8c">&#34;http://localhost:9200/&#34;</span>}
+    client, _ = elastic.<span style="color:#50fa7b">NewClient</span>(elastic.<span style="color:#50fa7b">SetURL</span>(servers<span style="color:#ff79c6">...</span>))
+)
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">parseUrls</span>(url <span style="color:#8be9fd">string</span>, ch <span style="color:#8be9fd;font-style:italic">chan</span> <span style="color:#8be9fd">bool</span>) {
+    doc <span style="color:#ff79c6">:=</span> <span style="color:#50fa7b">fetch</span>(url)
+    ctx <span style="color:#ff79c6">:=</span> context.<span style="color:#50fa7b">Background</span>()
+    nodes <span style="color:#ff79c6">:=</span> htmlquery.<span style="color:#50fa7b">Find</span>(doc, <span style="color:#f1fa8c">`//ol[@class=&#34;grid_view&#34;]/li`</span>)
+
+    subjects <span style="color:#ff79c6">:=</span> []Subject{}
+
+    <span style="color:#ff79c6">for</span> _, node <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">range</span> nodes {
+        url <span style="color:#ff79c6">:=</span> htmlquery.<span style="color:#50fa7b">FindOne</span>(node, <span style="color:#f1fa8c">`.//div[@class=&#34;hd&#34;]/a/@href`</span>)
+        title <span style="color:#ff79c6">:=</span> htmlquery.<span style="color:#50fa7b">FindOne</span>(node, <span style="color:#f1fa8c">`.//span[@class=&#34;title&#34;]/text()`</span>)
+        genre <span style="color:#ff79c6">:=</span> htmlquery.<span style="color:#50fa7b">Find</span>(node, <span style="color:#f1fa8c">`.//div[@class=&#34;bd&#34;]/p/text()`</span>) <span style="color:#6272a4">// 包含了演员、导演、类型等内容的文本Node
+</span><span style="color:#6272a4"></span>
+        id, _ <span style="color:#ff79c6">:=</span> strconv.<span style="color:#50fa7b">Atoi</span>(strings.<span style="color:#50fa7b">Split</span>(htmlquery.<span style="color:#50fa7b">InnerText</span>(url), <span style="color:#f1fa8c">&#34;/&#34;</span>)[<span style="color:#bd93f9">4</span>]) <span style="color:#6272a4">// 把ID转成数字
+</span><span style="color:#6272a4"></span>        genreStr <span style="color:#ff79c6">:=</span> strings.<span style="color:#50fa7b">Split</span>(htmlquery.<span style="color:#50fa7b">InnerText</span>(genre[<span style="color:#bd93f9">1</span>]), <span style="color:#f1fa8c">&#34;/&#34;</span>)[<span style="color:#bd93f9">2</span>] <span style="color:#6272a4">// 选择第二个Node，用`/`分割后选择第三部分就是类型了
+</span><span style="color:#6272a4"></span>        subject <span style="color:#ff79c6">:=</span> Subject{id, htmlquery.<span style="color:#50fa7b">InnerText</span>(title),
+            strings.<span style="color:#50fa7b">Split</span>(strings.<span style="color:#50fa7b">TrimSpace</span>(genreStr), <span style="color:#f1fa8c">&#34; &#34;</span>)}  <span style="color:#6272a4">// 拼一个结构体对象
+</span><span style="color:#6272a4"></span>        subjects = <span style="color:#8be9fd;font-style:italic">append</span>(subjects, subject)  <span style="color:#6272a4">// 使用append放到subjects slice里面
+</span><span style="color:#6272a4"></span>    }
+
+    bulkRequest <span style="color:#ff79c6">:=</span> client.<span style="color:#50fa7b">Bulk</span>() <span style="color:#6272a4">// 借用之前的批量操作的代码
+</span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">for</span> _, subject <span style="color:#ff79c6">:=</span> <span style="color:#ff79c6">range</span> subjects {
+        doc <span style="color:#ff79c6">:=</span> elastic.<span style="color:#50fa7b">NewBulkIndexRequest</span>().<span style="color:#50fa7b">Index</span>(indexName).<span style="color:#50fa7b">Id</span>(strconv.<span style="color:#50fa7b">Itoa</span>(subject.ID)).<span style="color:#50fa7b">Doc</span>(subject)
+        bulkRequest = bulkRequest.<span style="color:#50fa7b">Add</span>(doc)
+    }
+
+    response, err <span style="color:#ff79c6">:=</span> bulkRequest.<span style="color:#50fa7b">Do</span>(ctx) <span style="color:#6272a4">// 每页的25个文档一次性写入到es
+</span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">if</span> err <span style="color:#ff79c6">!=</span> <span style="color:#ff79c6">nil</span> {
+        <span style="color:#8be9fd;font-style:italic">panic</span>(err)
+    }
+    failed <span style="color:#ff79c6">:=</span> response.<span style="color:#50fa7b">Failed</span>()
+    l <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">len</span>(failed)
+    <span style="color:#ff79c6">if</span> l &gt; <span style="color:#bd93f9">0</span> {
+        fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Error(%d)&#34;</span>, l, response.Errors)
+    }
+
+    log.<span style="color:#50fa7b">Println</span>(<span style="color:#f1fa8c">&#34;Finished Url&#34;</span>, url)
+
+    ch <span style="color:#ff79c6">&lt;-</span> <span style="color:#ff79c6">true</span>
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+    start <span style="color:#ff79c6">:=</span> time.<span style="color:#50fa7b">Now</span>()
+    ch <span style="color:#ff79c6">:=</span> <span style="color:#8be9fd;font-style:italic">make</span>(<span style="color:#8be9fd;font-style:italic">chan</span> <span style="color:#8be9fd">bool</span>)
+
+    <span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">0</span>; i &lt; <span style="color:#bd93f9">10</span>; i<span style="color:#ff79c6">++</span> {
+        <span style="color:#ff79c6">go</span> <span style="color:#50fa7b">parseUrls</span>(<span style="color:#f1fa8c">&#34;https://movie.douban.com/top250?start=&#34;</span><span style="color:#ff79c6">+</span>strconv.<span style="color:#50fa7b">Itoa</span>(<span style="color:#bd93f9">25</span><span style="color:#ff79c6">*</span>i), ch)
+    }
+
+    <span style="color:#ff79c6">for</span> i <span style="color:#ff79c6">:=</span> <span style="color:#bd93f9">0</span>; i &lt; <span style="color:#bd93f9">10</span>; i<span style="color:#ff79c6">++</span> {
+        <span style="color:#ff79c6">&lt;-</span>ch
+    }
+
+    elapsed <span style="color:#ff79c6">:=</span> time.<span style="color:#50fa7b">Since</span>(start)
+    log.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;Took %s&#34;</span>, elapsed)
+}</code></pre></div>
+
+<p>运行一下：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ go run doubanCrawler.go
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:49 Fetch Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">0</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:49 Fetch Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">225</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:49 Fetch Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">100</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:49 Fetch Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">125</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:49 Fetch Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">25</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:49 Fetch Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">150</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:49 Fetch Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">50</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:49 Fetch Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">175</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:49 Fetch Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">200</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:49 Fetch Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">75</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:50 Finished Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">0</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:50 Finished Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">100</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:50 Finished Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">25</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:50 Finished Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">150</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:50 Finished Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">225</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:50 Finished Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">200</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:50 Finished Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">75</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:50 Finished Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">175</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:50 Finished Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">125</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:50 Finished Url https://movie.douban.com/top250?start<span style="color:#ff79c6">=</span><span style="color:#bd93f9">50</span>
+<span style="color:#bd93f9">2019</span>/07/31 <span style="color:#bd93f9">16</span>:48:50 Took <span style="color:#bd93f9">840</span>.198947ms</code></pre></div>
+
+<p>现在数据就已经写入到es了，这次不用Golang客户端Get了，直接在命令行：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">❯ http http://localhost:9200/subject/_doc/1291546
+HTTP/1.1 <span style="color:#bd93f9">200</span> OK
+content-encoding: gzip
+content-length: <span style="color:#bd93f9">192</span>
+content-type: application/json; <span style="color:#8be9fd;font-style:italic">charset</span><span style="color:#ff79c6">=</span>UTF-8
+
+<span style="color:#ff79c6">{</span>
+    <span style="color:#f1fa8c">&#34;_id&#34;</span>: <span style="color:#f1fa8c">&#34;1291546&#34;</span>,
+    <span style="color:#f1fa8c">&#34;_index&#34;</span>: <span style="color:#f1fa8c">&#34;subject&#34;</span>,
+    <span style="color:#f1fa8c">&#34;_primary_term&#34;</span>: <span style="color:#bd93f9">1</span>,
+    <span style="color:#f1fa8c">&#34;_seq_no&#34;</span>: <span style="color:#bd93f9">1043</span>,
+    <span style="color:#f1fa8c">&#34;_source&#34;</span>: <span style="color:#ff79c6">{</span>
+        <span style="color:#f1fa8c">&#34;genres&#34;</span>: <span style="color:#ff79c6">[</span>
+            <span style="color:#f1fa8c">&#34;剧情&#34;</span>,
+            <span style="color:#f1fa8c">&#34;爱情&#34;</span>,
+            <span style="color:#f1fa8c">&#34;同性&#34;</span>
+        <span style="color:#ff79c6">]</span>,
+        <span style="color:#f1fa8c">&#34;id&#34;</span>: <span style="color:#bd93f9">1291546</span>,
+        <span style="color:#f1fa8c">&#34;title&#34;</span>: <span style="color:#f1fa8c">&#34;霸王别姬&#34;</span>
+    <span style="color:#ff79c6">}</span>,
+    <span style="color:#f1fa8c">&#34;_type&#34;</span>: <span style="color:#f1fa8c">&#34;_doc&#34;</span>,
+    <span style="color:#f1fa8c">&#34;_version&#34;</span>: <span style="color:#bd93f9">3</span>,
+    <span style="color:#f1fa8c">&#34;found&#34;</span>: <span style="color:#8be9fd;font-style:italic">true</span>
+<span style="color:#ff79c6">}</span></code></pre></div>
+
+<p>请求的HTTP地址格式是<code>http://localhost:9200/{indeName}/{typeName}/{id}</code>，typeName之前没有用过，指es的docType，从Elasticsearch7.0开始已经不再用Type了(详情请看延伸阅读链接3)，7.x之前用的时候可以这样：</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">doc, err <span style="color:#ff79c6">:=</span> client.<span style="color:#50fa7b">Index</span>().
+    <span style="color:#50fa7b">Index</span>(indexName).
+    <span style="color:#50fa7b">Type</span>(<span style="color:#f1fa8c">&#34;movie&#34;</span>). <span style="color:#6272a4">// 多加这句
+</span><span style="color:#6272a4"></span>    <span style="color:#50fa7b">Id</span>(strconv.<span style="color:#50fa7b">Itoa</span>(subject.ID)).
+    <span style="color:#50fa7b">BodyJson</span>(subject).
+    <span style="color:#50fa7b">Refresh</span>(<span style="color:#f1fa8c">&#34;wait_for&#34;</span>).
+    <span style="color:#50fa7b">Do</span>(ctx)</code></pre></div>
+
+<p>如果不指定默认是<code>_doc</code>。</p>
+
+<h3 id="代码地址">代码地址</h3>
+
+<p>完整代码可以在<a href="https://github.com/golang-dev/strconv.code/blob/master/elasticsearch">这个地址</a>找到。</p>
+
+<h3 id="延伸阅读">延伸阅读</h3>
+
+<ol>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/7.0/query-dsl.html">https://www.elastic.co/guide/en/elasticsearch/reference/7.0/query-dsl.html</a></li>
+<li><a href="https://github.com/olivere/elastic/wiki/QueryDSL">https://github.com/olivere/elastic/wiki/QueryDSL</a></li>
+<li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/master/removal-of-types.html">https://www.elastic.co/guide/en/elasticsearch/reference/master/removal-of-types.html</a></li>
+</ol>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://cdn.commento.io/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2019
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
+</html>
