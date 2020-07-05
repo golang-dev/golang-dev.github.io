@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <meta name="description" content="strconv - 我是一个Golang模块">
+    <meta name="keywords" content="golang,go">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Golang中的结构体编码"/>
+<meta name="twitter:description" content="Go不支持类，而是提供了结构体支持面向对象的编程风格。可以给结构体中添加方法，将数据和操作数据的方法绑定在一起，实现与类相似的效果。
+结构体是由一系列具有相同类型或不同类型的数据构成的数据集合:
+type Person struct { FirstName string LastName string } 在这个结构体中有2个字段FirstName和LastName。Go的标准库默认就可以对结构体进行JSON编码:
+func main() { bytes, _ := json.Marshal(&amp;Person{&#34;Dany&#34;, &#34;Boon&#34;}) fmt.Printf(&#34;%s&#34;, bytes) } // 输出: {&#34;FirstName&#34;:&#34;Dany&#34;,&#34;LastName&#34;:&#34;Boon&#34;} 这是所见即所得的编码。当然我们可以通过结构体标签(Struct Tags)对字段进行自定义处理:
+type Person struct { FirstName string `json:&#34;first_name&#34;` LastName string `json:&#34;last_name&#34;` } Struct Tag是声明的每个类型后面的注释，这样在编码时就改变了键的值，现在的输出是:
+{&#34;first_name&#34;:&#34;Dany&#34;,&#34;last_name&#34;:&#34;Boon&#34;} 支持结构体标签的标准库列表可以看延伸阅读链接1
+当然我这篇文章主要时间记录在实际使用JSON编码是遇到的2个问题
+自定义JSON编码 前面的例子都是按字段值输出，但有时候编码需要改变这个原始值，最常见的就是Time类型，比如输出CreatedAt的值，默认是这样的:
+type Subject struct { ID int `json:id` CreatedAt time.Time } func main() { bytes, _ := json.Marshal(&amp;Subject{111, time.Now()}) fmt.Printf(&#34;%s&#34;, bytes) } // 输出: {&#34;ID&#34;:111,&#34;CreatedAt&#34;:&#34;2020-07-05T18:03:19."/>
+
+    <meta property="og:title" content="Golang中的结构体编码" />
+<meta property="og:description" content="Go不支持类，而是提供了结构体支持面向对象的编程风格。可以给结构体中添加方法，将数据和操作数据的方法绑定在一起，实现与类相似的效果。
+结构体是由一系列具有相同类型或不同类型的数据构成的数据集合:
+type Person struct { FirstName string LastName string } 在这个结构体中有2个字段FirstName和LastName。Go的标准库默认就可以对结构体进行JSON编码:
+func main() { bytes, _ := json.Marshal(&amp;Person{&#34;Dany&#34;, &#34;Boon&#34;}) fmt.Printf(&#34;%s&#34;, bytes) } // 输出: {&#34;FirstName&#34;:&#34;Dany&#34;,&#34;LastName&#34;:&#34;Boon&#34;} 这是所见即所得的编码。当然我们可以通过结构体标签(Struct Tags)对字段进行自定义处理:
+type Person struct { FirstName string `json:&#34;first_name&#34;` LastName string `json:&#34;last_name&#34;` } Struct Tag是声明的每个类型后面的注释，这样在编码时就改变了键的值，现在的输出是:
+{&#34;first_name&#34;:&#34;Dany&#34;,&#34;last_name&#34;:&#34;Boon&#34;} 支持结构体标签的标准库列表可以看延伸阅读链接1
+当然我这篇文章主要时间记录在实际使用JSON编码是遇到的2个问题
+自定义JSON编码 前面的例子都是按字段值输出，但有时候编码需要改变这个原始值，最常见的就是Time类型，比如输出CreatedAt的值，默认是这样的:
+type Subject struct { ID int `json:id` CreatedAt time.Time } func main() { bytes, _ := json.Marshal(&amp;Subject{111, time.Now()}) fmt.Printf(&#34;%s&#34;, bytes) } // 输出: {&#34;ID&#34;:111,&#34;CreatedAt&#34;:&#34;2020-07-05T18:03:19." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://strconv.com/posts/struct-marshaling/" />
+<meta property="article:published_time" content="2020-07-05T00:00:00&#43;00:00"/>
+<meta property="article:modified_time" content="2020-07-05T00:00:00&#43;00:00"/>
+
+
+    
+      <base href="https://strconv.com/posts/struct-marshaling/">
+    
+    <title>
+  Golang中的结构体编码 · strconv
+</title>
+
+    
+      <link rel="canonical" href="https://strconv.com/posts/struct-marshaling/">
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/normalize.css" integrity="" crossorigin="anonymous" media="screen" />
+    
+    
+    <link rel="stylesheet" href="https://strconv.com/css/coder.css" media="screen">
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://strconv.com/images/favicon-16x16.png" sizes="16x16">
+
+    <meta name="generator" content="Hugo 0.55.6" />
+  </head>
+
+  <body class=" ">
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://strconv.com">
+      strconv
+    </a>
+    <input type="checkbox" id="menu-toggle" />
+    <label class="menu-button float-right" for="menu-toggle"><i class="fas fa-bars"></i></label>
+    <ul class="navigation-list">
+      
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/">Home</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/tags/">Tags</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/categories/">Categories</a>
+          </li>
+        
+          <li class="navigation-item">
+            <a class="navigation-link" href="https://strconv.com/about/">About</a>
+          </li>
+        
+      
+      
+    </ul>
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Golang中的结构体编码</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fas fa-calendar"></i>
+              <time datetime='2020-07-05T00:00:00Z'>
+                July 5, 2020
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fas fa-clock"></i>
+              One minute read
+            </span>
+          </div>
+          <div class="categories">
+  <i class="fas fa-folder"></i>
+    <a href="https://strconv.com/categories/stdlib/">stdlib</a>
+      <span class="separator">•</span>
+    <a href="https://strconv.com/categories/struct/">struct</a></div>
+
+          <div class="tags">
+  <i class="fas fa-tag"></i>
+    <a href="https://strconv.com/tags/struct/">struct</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+
+<p>Go不支持类，而是提供了结构体支持面向对象的编程风格。可以给结构体中添加方法，将数据和操作数据的方法绑定在一起，实现与类相似的效果。</p>
+
+<p>结构体是由一系列具有相同类型或不同类型的数据构成的数据集合:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">type</span> Person <span style="color:#8be9fd;font-style:italic">struct</span> {
+    FirstName <span style="color:#8be9fd">string</span>
+    LastName  <span style="color:#8be9fd">string</span>
+}</code></pre></div>
+<p>在这个结构体中有2个字段<code>FirstName</code>和<code>LastName</code>。Go的标准库默认就可以对结构体进行JSON编码:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+    bytes, _ <span style="color:#ff79c6">:=</span> json.<span style="color:#50fa7b">Marshal</span>(<span style="color:#ff79c6">&amp;</span>Person{<span style="color:#f1fa8c">&#34;Dany&#34;</span>, <span style="color:#f1fa8c">&#34;Boon&#34;</span>})
+    fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;%s&#34;</span>, bytes)
+}
+
+<span style="color:#ff79c6">//</span> 输出: {<span style="color:#f1fa8c">&#34;FirstName&#34;</span>:<span style="color:#f1fa8c">&#34;Dany&#34;</span>,<span style="color:#f1fa8c">&#34;LastName&#34;</span>:<span style="color:#f1fa8c">&#34;Boon&#34;</span>}</code></pre></div>
+<p>这是所见即所得的编码。当然我们可以通过结构体标签(Struct Tags)对字段进行自定义处理:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">type</span> Person <span style="color:#8be9fd;font-style:italic">struct</span> {
+  FirstName <span style="color:#8be9fd">string</span> <span style="color:#f1fa8c">`json:&#34;first_name&#34;`</span>
+  LastName  <span style="color:#8be9fd">string</span> <span style="color:#f1fa8c">`json:&#34;last_name&#34;`</span>
+}</code></pre></div>
+<p>Struct Tag是声明的每个类型后面的注释，这样在编码时就改变了键的值，现在的输出是:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#ff79c6">{</span><span style="color:#f1fa8c">&#34;first_name&#34;</span>:<span style="color:#f1fa8c">&#34;Dany&#34;</span>,<span style="color:#f1fa8c">&#34;last_name&#34;</span>:<span style="color:#f1fa8c">&#34;Boon&#34;</span><span style="color:#ff79c6">}</span></code></pre></div>
+<p>支持结构体标签的标准库列表可以看延伸阅读链接1</p>
+
+<p>当然我这篇文章主要时间记录在实际使用JSON编码是遇到的2个问题</p>
+
+<h3 id="自定义json编码">自定义JSON编码</h3>
+
+<p>前面的例子都是按字段值输出，但有时候编码需要改变这个原始值，最常见的就是Time类型，比如输出CreatedAt的值，默认是这样的:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">type</span> Subject <span style="color:#8be9fd;font-style:italic">struct</span> {
+    ID        <span style="color:#8be9fd">int</span> <span style="color:#f1fa8c">`json:id`</span>
+    CreatedAt time.Time
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+    bytes, _ <span style="color:#ff79c6">:=</span> json.<span style="color:#50fa7b">Marshal</span>(<span style="color:#ff79c6">&amp;</span>Subject{<span style="color:#bd93f9">111</span>, time.<span style="color:#50fa7b">Now</span>()})
+    fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;%s&#34;</span>, bytes)
+}
+<span style="color:#ff79c6">//</span> 输出: {<span style="color:#f1fa8c">&#34;ID&#34;</span>:<span style="color:#bd93f9">111</span>,<span style="color:#f1fa8c">&#34;CreatedAt&#34;</span>:<span style="color:#f1fa8c">&#34;2020-07-05T18:03:19.753651+08:00&#34;</span>}</code></pre></div>
+<p>Go语言时间类型默认输出的是RFC 3339格式的，但实际上我们大部分API仅需要时间部分。这时我早期的写法是不用<code>time.Time</code>，自定义一个结构体，并定义它的MarshalJSON方法:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">type</span> JSONTime <span style="color:#8be9fd;font-style:italic">struct</span> {
+  time.Time
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> (t <span style="color:#ff79c6">*</span>JSONTime) <span style="color:#50fa7b">MarshalJSON</span>() ([]<span style="color:#8be9fd">byte</span>, <span style="color:#8be9fd">error</span>) {
+  <span style="color:#ff79c6">return</span> []<span style="color:#8be9fd;font-style:italic">byte</span>(fmt.<span style="color:#50fa7b">Sprintf</span>(<span style="color:#f1fa8c">`&#34;%s&#34;`</span>, t.<span style="color:#50fa7b">Format</span>(<span style="color:#f1fa8c">&#34;2006-01-02 15:04:05&#34;</span>))), <span style="color:#ff79c6">nil</span>
+}
+
+<span style="color:#8be9fd;font-style:italic">type</span> Subject <span style="color:#8be9fd;font-style:italic">struct</span> {
+  ID        <span style="color:#8be9fd">int</span> <span style="color:#f1fa8c">`json:id`</span>
+  CreatedAt JSONTime
+}
+
+<span style="color:#8be9fd;font-style:italic">func</span> <span style="color:#50fa7b">main</span>() {
+  bytes, _ <span style="color:#ff79c6">:=</span> json.<span style="color:#50fa7b">Marshal</span>(<span style="color:#ff79c6">&amp;</span>Subject{<span style="color:#bd93f9">111</span>, JSONTime{time.<span style="color:#50fa7b">Now</span>()}})
+  fmt.<span style="color:#50fa7b">Printf</span>(<span style="color:#f1fa8c">&#34;%s&#34;</span>, bytes)
+}
+<span style="color:#ff79c6">//</span> 输出: {<span style="color:#f1fa8c">&#34;ID&#34;</span>:<span style="color:#bd93f9">111</span>,<span style="color:#f1fa8c">&#34;CreatedAt&#34;</span>:<span style="color:#f1fa8c">&#34;2020-07-05 18:10:09&#34;</span>}</code></pre></div>
+<p>这样做的好处是通用, 不需要在用到的类型中反复实现。如果只在Subject中实现也可以:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">func</span> (s <span style="color:#ff79c6">*</span>Subject) <span style="color:#50fa7b">MarshalJSON</span>() ([]<span style="color:#8be9fd">byte</span>, <span style="color:#8be9fd">error</span>) {
+
+    <span style="color:#ff79c6">return</span> json.<span style="color:#50fa7b">Marshal</span>(<span style="color:#8be9fd;font-style:italic">struct</span> {
+        ID        <span style="color:#8be9fd">int</span> <span style="color:#f1fa8c">`json:id`</span>
+        CreatedAt <span style="color:#8be9fd">string</span>
+    }{
+        ID:        s.ID,
+        CreatedAt: s.CreatedAt.<span style="color:#50fa7b">Format</span>(<span style="color:#f1fa8c">&#34;2006-01-02 15:04:05&#34;</span>),
+    })
+}
+<span style="color:#ff79c6">//</span> 输出: {<span style="color:#f1fa8c">&#34;ID&#34;</span>:<span style="color:#bd93f9">111</span>,<span style="color:#f1fa8c">&#34;CreatedAt&#34;</span>:<span style="color:#f1fa8c">&#34;2020-07-05 18:13:56&#34;</span>}</code></pre></div>
+<p>在MarshalJSON方法中，引入一个附加的、匿名的结构体，重新声明了2个字段和类型(这次CreatedAt不再是Time而是string了)。这样就实现了结构体某个(些)字段输出值的自定义</p>
+
+<h3 id="扩展结构体字段">扩展结构体字段</h3>
+
+<p>想了很久没找到更好的子标题。先说一个Python例子吧:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#ff79c6">class</span> <span style="color:#50fa7b">Person</span>:
+    <span style="color:#ff79c6">def</span> __init__(self, first_name, last_name):
+        self<span style="color:#ff79c6">.</span>first_name <span style="color:#ff79c6">=</span> first_name
+        self<span style="color:#ff79c6">.</span>last_name <span style="color:#ff79c6">=</span> last_name
+
+    @property
+    <span style="color:#ff79c6">def</span> <span style="color:#50fa7b">full_name</span>(self):
+        <span style="color:#ff79c6">return</span> self<span style="color:#ff79c6">.</span>first_name <span style="color:#ff79c6">+</span> self<span style="color:#ff79c6">.</span>last_name</code></pre></div>
+<p>可以很容易的在里面扩展出其他的属性，例如上面的实例会有一个叫做<code>full_name</code>的属性。这件事在Go里面就很麻烦，因为JSON编码的那些内容可能并不是摆在那里设置好的，而是需要计算得出的。还是同样的例子，怎么返回<code>first_name</code>，<code>last_name</code>和<code>full_name</code>呢？</p>
+
+<p>可以这样写MarshalJSON方法:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#8be9fd;font-style:italic">func</span> (p <span style="color:#ff79c6">*</span>Person) <span style="color:#50fa7b">MarshalJSON</span>() ([]<span style="color:#8be9fd">byte</span>, <span style="color:#8be9fd">error</span>) {
+    <span style="color:#8be9fd;font-style:italic">type</span> Alias Person
+    <span style="color:#ff79c6">return</span> json.<span style="color:#50fa7b">Marshal</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#8be9fd;font-style:italic">struct</span> {
+        <span style="color:#ff79c6">*</span>Alias
+        FullName <span style="color:#8be9fd">string</span> <span style="color:#f1fa8c">`json:&#34;full_name&#34;`</span>
+    }{
+        Alias:    (<span style="color:#ff79c6">*</span>Alias)(p),
+        FullName: fmt.<span style="color:#50fa7b">Sprintf</span>(<span style="color:#f1fa8c">&#34;%s %s&#34;</span>, p.FirstName, p.LastName),
+    })
+}
+<span style="color:#ff79c6">//</span> 输出: {<span style="color:#f1fa8c">&#34;first_name&#34;</span>:<span style="color:#f1fa8c">&#34;Dany&#34;</span>,<span style="color:#f1fa8c">&#34;last_name&#34;</span>:<span style="color:#f1fa8c">&#34;Boon&#34;</span>,<span style="color:#f1fa8c">&#34;full_name&#34;</span>:<span style="color:#f1fa8c">&#34;Dany Boon&#34;</span>}</code></pre></div>
+<p>首先里面<code>type Alias Person</code>这句为原始类型Person起一个别名Alias，Alias会有原始struct所有的字段，但是不会继承它的方法，如果不这么用就会在编码时循环调用Person的MarshalJSON方法而造成堆栈溢出。</p>
+
+<p>其次是<code>json.Marshal</code>里面用的那个匿名的结构体除了组合了Alias，还扩展除了新的、我们需要的字段FullName。这样写是不是很优美也很灵活呢？</p>
+
+<h3 id="后记">后记</h3>
+
+<p>这里只讨论了编码方法，对应的解码可以通过自定义UnmarshalJSON来实现。</p>
+
+<h3 id="延伸阅读">延伸阅读</h3>
+
+<ol>
+<li><a href="https://github.com/golang/go/wiki/Well-known-struct-tags#list-of-well-known-struct-tags">https://github.com/golang/go/wiki/Well-known-struct-tags#list-of-well-known-struct-tags</a></li>
+<li><a href="http://choly.ca/post/go-json-marshalling">http://choly.ca/post/go-json-marshalling</a></li>
+<li><a href="https://go-academy.gitbook.io/go-academy/idioms/custom-json-marshaling">https://go-academy.gitbook.io/go-academy/idioms/custom-json-marshaling</a></li>
+</ol>
+
+      </div>
+
+      <footer>
+        
+
+
+        
+        <div id="commento"></div>
+<script src="https://cdn.commento.io/js/commento.js"></script>
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+    
+      <p>我是一个Golang模块.</p>
+    
+     © 2020
+    
+       · 
+      Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+    
+  </section>
+</footer>
+
+    </main>
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-143191829-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+  </body>
+
+</html>
