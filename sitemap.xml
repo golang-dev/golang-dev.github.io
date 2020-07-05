@@ -4,24 +4,41 @@
   
   <url>
     <loc>https://strconv.com/categories/</loc>
-    <lastmod>2019-07-31T00:00:00+00:00</lastmod>
+    <lastmod>2020-07-05T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
+    <loc>https://strconv.com/posts/time-fmt/</loc>
+    <lastmod>2020-07-05T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://strconv.com/</loc>
-    <lastmod>2019-07-31T00:00:00+00:00</lastmod>
+    <lastmod>2020-07-05T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://strconv.com/posts/</loc>
-    <lastmod>2019-07-31T00:00:00+00:00</lastmod>
+    <lastmod>2020-07-05T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://strconv.com/tags/</loc>
-    <lastmod>2019-07-31T00:00:00+00:00</lastmod>
+    <lastmod>2020-07-05T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://strconv.com/categories/stdlib/</loc>
+    <lastmod>2020-07-05T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://strconv.com/tags/time/</loc>
+    <lastmod>2020-07-05T00:00:00+00:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -140,12 +157,6 @@
   
   <url>
     <loc>https://strconv.com/tags/flag/</loc>
-    <lastmod>2019-07-20T10:10:10+00:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://strconv.com/categories/stdlib/</loc>
     <lastmod>2019-07-20T10:10:10+00:00</lastmod>
     <priority>0</priority>
   </url>
